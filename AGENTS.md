@@ -39,3 +39,4 @@ iOS first — see `ROADMAP.md` for phase plan (Phase 0 + phase MP done; next is 
 - Swift app uses a single xcodeproj; new source files must be added to the project/targets (no SPM for app code).
 - Server is Python 3, `from __future__ import annotations` style, FastAPI dependency-injection via `get_db`.
 - Sample data / classifier fixtures: `server/docs/diverse_fifty_samples.json` (used by the macOS sample-set regression test).
+- License: AGPL-3.0 + commercial dual licensing (see `README.md`). Submitting a contribution grants the project the right to publish it under both the AGPL-3.0 and the project's commercial license.

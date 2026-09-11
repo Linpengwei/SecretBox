@@ -100,9 +100,13 @@ testsets/             # persona-200 场景套件产物
 
 ## 许可
 
-本项目采用 [PolyForm Noncommercial 1.0.0](LICENSE) 协议：
+本项目采用**双许可**（dual licensing），你可以二选一：
 
-- **个人学习、研究、教学、业余项目及非营利组织使用——免费**，可自由使用、修改、分发（须保留本协议与声明）。
-- **商业使用需另行获得商业授权**，请联系：`<your-email@example.com>`（请替换为你的联系方式）。
+- **开源许可：[GNU AGPL-3.0（仅本版本）](LICENSE)** —— 免费，个人与商用皆可使用、修改、分发，但一切基于本项目的衍生作品（包括通过网络提供服务而不分发二进制的 SaaS 形态）必须以 AGPL-3.0 向用户提供完整对应源码。
+- **商业许可** —— 若不愿履行 AGPL 的开源义务（闭源修改、私有化部署、SaaS 不开源等），需获得商业授权：`<your-email@example.com>`（请替换为你的联系方式）。
 
-这不是 OSI 定义的"开源"协议（其允许商用），而是"源码可用 + 非商用免费"模式；GitHub 可正常托管与展示。
+说明：
+
+- 依赖兼容性：服务器端依赖（FastAPI / SQLAlchemy / cryptography / argon2 等）均为 MIT / Apache 等宽松协议，与 AGPL 组合无冲突。
+- 选择了「仅 AGPL-3.0 本版本」（而非 or-later），以便商业许可线保持可控。
+- ⚠️ 未来若将 iOS/macOS 客户端上架 Apple App Store，AGPL 与 Apple 分发条款存在已知的兼容性争议（VLC 下架先例）——届时以商业许可自有 App 形式分发是最干净的路径。
