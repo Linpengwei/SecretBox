@@ -1,3 +1,5 @@
+**English** · [简体中文](AGENTS.zh-CN.md)
+
 # SecretBox
 
 Password vault for ops credentials (redis, s3, database, kafka, custom). Two components:

@@ -1,80 +1,84 @@
+**English** · [简体中文](ROADMAP.zh-CN.md)
+
 # SecretBox Roadmap
 
-当前优先级：**iOS 先行**。macOS 功能与后端能力保持现状（可回归），新阶段围绕把 iOS 端做可编译、可用、可联调展开。
+**English** · [简体中文](ROADMAP.zh-CN.md)
 
-基线状态（2026-08-29 核实）：
+Current priority: **iOS first**. macOS features and backend capabilities are held at status quo (regression only); new phases focus on making the iOS target buildable, usable, and integration-testable.
 
-- iOS 构建当前失败：`RecordVaultView.swift` 导入 AppKit 导致编译不过；`SecretBoxApp.swift` 的 `MenuBarExtra` 是 macOS 专属 API。
-- 本机 Xcode 已装 iOS 26.2 SDK，但未安装 iOS 模拟器 runtime（无任何可用 iOS 模拟器）。
-- 服务端与 macOS 端功能完整（见 `server/README.md`、`TESTING.md`），认证为假登录，密钥为开发态。
+Baseline (verified 2026-08-29):
 
-基线更新（2026-09-08，阶段 MP 完成时核实）：
+- iOS build was failing: `RecordVaultView.swift` imported AppKit; `SecretBoxApp.swift` used the macOS-only `MenuBarExtra`.
+- Xcode had the iOS 26.2 SDK but no iOS simulator runtime (no usable simulators).
+- Server and macOS client feature-complete (see `server/README.md`, `TESTING.md`); auth was a fake login, keys in dev mode.
 
-- 阶段 0 实质完成：`scripts/test-ios.sh` 存在且全绿（iOS 26.3 runtime + iPhone 17 模拟器）。
-- 快照基建（`SnapshotLite.swift` / `ViewSnapshotTests.swift`）已加 `#if canImport(AppKit)` 门控，SecretBoxTests target 可在 iOS 构建。
+Baseline update (2026-09-08, verified at the close of phase MP):
 
-## 阶段 0：iOS 编译打通
+- Phase 0 substantially complete: `scripts/test-ios.sh` exists and is green (iOS 26.3 runtime + iPhone 17 simulator).
+- Snapshot infrastructure (`SnapshotLite.swift` / `ViewSnapshotTests.swift`) is gated with `#if canImport(AppKit)`, so the SecretBoxTests target builds on iOS.
 
-1. 平台条件编译：
-   - `SecretBoxApp.swift`：`MenuBarExtra` 场景用 `#if os(macOS)` 包裹；iOS 以主窗口为唯一入口。
-   - `RecordVaultView.swift:60` 的 `NSApp.activate(ignoringOtherApps:)` 用 `#if os(macOS)` 守卫。
-   - `SecretBoxAppModel.swift` 中两处 `NSPasteboard.general`（剪贴板读取/复制）抽成跨平台封装（iOS 用 `UIPasteboard`）。
-2. 安装 iOS 26.2 模拟器 runtime（Xcode → Settings → Components）。
-3. 新增 `scripts/test-ios.sh`：xcodebuild 以 `platform=iOS Simulator` 目的地跑单元测试；把分类器回归（50 样本）也跑一遍 iOS 目的地。
+## Phase 0: iOS compilation (complete)
 
-验收标准：`test-ios.sh` 全绿，macOS 三个脚本保持全绿。
+1. Platform conditional compilation:
+   - `SecretBoxApp.swift`: `MenuBarExtra` scene wrapped in `#if os(macOS)`; iOS uses the main window as the only entry.
+   - `NSApp.activate(ignoringOtherApps:)` in `RecordVaultView.swift` guarded with `#if os(macOS)`.
+   - `NSPasteboard.general` usage in `SecretBoxAppModel.swift` extracted into a cross-platform wrapper (`UIPasteboard` on iOS).
+2. iOS simulator runtime installed.
+3. `scripts/test-ios.sh`: unit tests plus the 50-sample classifier regression on the iOS Simulator destination.
 
-## 阶段 MP：MFA 无缝两步验证 + Bitwarden 式权限管理（已完成）
+Acceptance: `test-ios.sh` fully green; the three macOS scripts stay green.
 
-模仿 Bitwarden Integrated Authenticator 与细粒度访问控制，两条能力线一次落地：
+## Phase MP: seamless MFA + Bitwarden-style permissions (complete)
 
-**MFA（条目级 TOTP）**：
+Modeled on Bitwarden's Integrated Authenticator and granular access controls, delivered as one merged phase:
 
-1. `TOTPEngine.swift`：RFC 6238 + RFC 4648 base32 + `otpauth://` Key URI 解析（SHA1/256/512，6–8 位，15–120s）；时钟可注入。验证码生成全部在客户端，服务器只存取种子。
-2. 编辑器「两步验证」区：粘贴 base32 种子或完整 URI（实时解析预览，非法输入阻断保存）；iOS 相机扫码（macOS 手动，对齐 Bitwarden 桌面端）；种子保存后永不回显。
-3. 详情页实时验证码：`TimelineView` 驱动 30 秒轮换码 + 倒计时环（复制即环），紧贴「复制密码」实现无缝衔接；`hideSecret` 下码显示为掩码。
-4. 快速捕获自动识别：粘贴文本中的 `otpauth://` 自动提取挂载（Smart Preview 标注「两步验证」）；纯 URI 粘贴生成 account 型验证器条目。
-5. 服务器同步：`totp_encrypted`（Fernet 密文）新列 + 迁移分支；create/update/search 三路径往返；请求级 base32/参数校验（非法 422）；`pasted_text` 中的 Key URI 服务端强制清洗并路由到加密列。
+**MFA (per-item TOTP)**:
 
-**权限管理（条目级矩阵，多用户留阶段 2）**：
+1. `TOTPEngine.swift`: RFC 6238 + RFC 4648 base32 + `otpauth://` Key URI parsing (SHA1/256/512, 6–8 digits, 15–120 s), injectable clock. Codes are generated entirely client-side; the server only stores/retrieves the seed.
+2. Editor "两步验证" section: paste a base32 seed or a full URI (live parse preview; invalid input blocks saving); iOS camera scanning (macOS keeps manual entry); the seed is never echoed after saving.
+3. Detail page live code: `TimelineView`-driven 30-second rotating code + countdown ring (the ring is the copy button, turns red under 5 s), placed right next to Copy Password; masked under `hideSecret`.
+4. Quick-capture auto-detection: `otpauth://` in pasted text is extracted and attached (Smart Preview badges it); a URI-only paste creates an account-type authenticator entry.
+5. Server sync: new `totp_encrypted` (Fernet ciphertext) column + migration branch; round-trips through create/update/search; request-level base32/parameter validation (invalid → 422); Key URIs in `pasted_text` are forcibly scrubbed server-side and routed to the encrypted column.
 
-1. `RecordPermissions`：`readOnly`（只读锁定）、`hideSecret`（隐藏密码：可复制不可见，对应 Bitwarden Hide Passwords）、`requireReauth`（生物识别二次确认，对应主密码 re-prompt）、`aiAccess` 三级（none/metadata/metadata_and_tools）+ `subjects` 预留结构。
-2. `aiReadable` 布尔平滑升级为三级（`effectivePermissions` 兼容映射旧数据；保存时回写布尔镜像）；编辑器权限区（开关 + AI 分段选择器）；详情页 AI Access 三级 Menu。
-3. 执行：readOnly 锁编辑/删除（编辑器内解锁是唯一路径）；hideSecret 明文零回显；requireReauth 经 `LAContext`（`ReauthGate` 可注入）门控密码/验证码复制。
-4. MCP：三级权限生效（none = 与不存在不可区分；metadata = 仅脱敏元数据；metadata_and_tools = + `copy_password`/新增 `copy_totp`）；纯 stdlib RFC 6238，种子绝不进入 agent 上下文。
-5. 服务器 `permissions_json` 同步（非机密元数据，与 fields_json 同级）；服务器端 enforcement 待阶段 2 认证后补。
+**Permissions (per-item matrix; multi-user lands in phase 2)**:
 
-安全不变量（均有测试覆盖）：种子仅存密文、绝不进 AI 上下文/MCP 输出/fields_json；验证码生成仅客户端；`aiAccess=none` 与条目不存在不可区分；hideSecret 明文零回显；迁移不破坏既有数据。
+1. `RecordPermissions`: `readOnly` (lock), `hideSecret` (usable but never visible — Bitwarden Hide Passwords), `requireReauth` (biometric re-prompt — master-password re-prompt equivalent), `aiAccess` three levels (none/metadata/metadata_and_tools), plus a reserved `subjects` structure.
+2. `aiReadable` boolean upgraded smoothly to three levels (`effectivePermissions` maps legacy data; saves write back a boolean mirror); editor permission section (toggles + AI segmented picker); detail page three-level AI Access menu.
+3. Enforcement: readOnly locks edit/delete (unchecking it in the editor is the only unlock path); hideSecret zero plaintext echo; requireReauth gates password/code copying through `LAContext` (injectable `ReauthGate`).
+4. MCP: three levels effective (none = indistinguishable from missing; metadata = redacted details only; metadata_and_tools = + `copy_password` / new `copy_totp`); pure-stdlib RFC 6238; the seed never enters agent context.
+5. Server `permissions_json` sync (non-secret metadata, on par with fields_json); server-side enforcement waits for real auth in phase 2.
 
-## 阶段 1：iOS 可用性（已完成）
+Security invariants (all test-covered): seed stored only as ciphertext, never in AI context / MCP output / fields_json; code generation client-only; `aiAccess=none` indistinguishable from missing; hideSecret zero echo; migrations preserve existing data.
 
-1. iPhone 小屏布局适配：
-   - `VaultItemEditorView` 重构为「ScrollView 表单 + 底部固定操作栏（VStack 尾节点 + 键盘避让 + ultraThinMaterial 背景）」；标题/用户名/密码在紧凑宽度堆叠排列；`scrollDismissesKeyboard(.immediately)`；macOS 保持 760×560 与横排。
-   - `SettingsView` 宽度自适应（macOS 固定 520 / iOS `maxWidth: 560`）+ ScrollView 包裹。
-   - `SearchVaultView` iOS：详情推入页带 `navigationTitle`；结果/详情滚动即收起键盘；状态文案改为底部浮动胶囊（`ToolbarItem(placement: .status)` 在 iPhone 不渲染，属可用性缺陷）。
-   - `RecordVaultView` 为 macOS 菜单栏卡专属，真实 iOS 不呈现（仅 UI 测试面板引用），无需适配。
-   - 顺手修复存量缺陷：键盘附着时编程关闭 sheet 的竞态（`dismissEditor` 先 `resignFirstResponder`）；UI 测试 `activate` 帮助函数在 macOS 分支的自递归。
-2. iOS UI 冒烟测试：`scripts/test-ios.sh` 新增第 4 步，共 7 条（登录 / 种子搜索 / 捕获面板打开 / **捕获→保存→搜索→详情→复制密码全链路** / **otpauth 捕获→实时验证码→复制** / **只读权限锁定编辑与删除** / 设置面板开关）；菜单栏 4 条测试在 iOS 经 `XCTSkip` 跳过。
-3. 本地模式（Keychain 持久化）在 iOS 完整可用，不依赖服务器。
+## Phase 1: iOS usability (complete)
 
-验收标准：iPhone 模拟器上可完成"粘贴捕获 → Smart Preview → 保存 → 搜索 → 复制"全流程——由 `testCaptureSaveSearchDetailCopyFlow` 自动化覆盖并通过。
+1. Compact-width layouts:
+   - `VaultItemEditorView` restructured as scrollable form + pinned bottom action bar (VStack tail + keyboard avoidance + ultraThinMaterial); title/username/password stack on compact widths; `scrollDismissesKeyboard(.immediately)`; macOS keeps 760×560 with the row layout.
+   - `SettingsView` adaptive width (520 fixed on macOS / `maxWidth: 560` on iOS) + ScrollView.
+   - `SearchVaultView` on iOS: pushed detail gets a `navigationTitle`; results/detail dismiss the keyboard on scroll; status line became a floating bottom capsule (`ToolbarItem(placement: .status)` does not render on iPhone — a real usability defect).
+   - `RecordVaultView` is a macOS menu-bar-only surface (referenced only by the UI-test panel on iOS) — no adaptation needed.
+   - Fixed latent defects along the way: the keyboard-attached programmatic sheet-dismissal race (`dismissEditor` resigns first responder first); a self-recursion in the UI-test `activate` helper's macOS branch.
+2. iOS UI smoke tests: step 4 added to `scripts/test-ios.sh`, 7 chains total (login / seeded search / capture sheet open / **capture→save→search→detail→copy-password full chain** / **otpauth capture→live code→copy** / **read-only lock blocks edit & delete** / settings sheet); the 4 menu-bar tests skip on iOS via `XCTSkip`.
+3. Local mode (Keychain persistence) fully usable on iOS without a server.
 
-## 阶段 2：iOS 联调服务器与同步
+Acceptance: the "paste capture → Smart Preview → save → search → copy" flow on an iPhone simulator — automated by `testCaptureSaveSearchDetailCopyFlow`.
 
-1. iOS 网络接入：`NSLocalNetworkUsageDescription` 权限文案、ATS 例外（本地 HTTP 调试）、Settings 页填服务器地址。
-2. 服务端补 `GET /api/records`（列表拉取）；客户端实现本地/远端同步与冲突策略。
-3. 服务端真实认证（登录 + token），替换假登录；客户端接入。
-4. 权限管理多用户升级：在 `permissions.subjects` 预留结构上引入 Bitwarden 式集合/组/角色（Owner/Admin/Manager/User）与按集合授权（只读/隐藏密码/可编辑），服务端开始强制执行权限。
+## Phase 2: server integration & sync (next)
 
-## 阶段 3：生产化收尾
+1. iOS networking: `NSLocalNetworkUsageDescription`, an ATS exception for local HTTP debugging, server URL in Settings.
+2. Server `GET /api/records` (list pull); client-side local/remote sync and conflict strategy.
+3. Real server authentication (login + token), replacing the fake login; client integration.
+4. Multi-user permissions: Bitwarden-style collections/groups/roles (Owner/Admin/Manager/User) and per-collection grants (read-only / hide-password / edit) on top of the reserved `permissions.subjects` structure; the server starts enforcing permissions.
 
-1. 密钥治理：`ENCRYPTION_KEY` / `FINGERPRINT_KEY` 仅环境变量注入并轮换；把 `server/secretbox.db` 与 compose 中的开发密钥移出 git。
-2. 服务端补 `DELETE /api/records/{id}` 及客户端删除 UI。
-3. iOS 发布准备：图标、启动屏、权限文案、TestFlight。
+## Phase 3: productionization
 
-## 以后再说（backlog）
+1. Key governance: `ENCRYPTION_KEY` / `FINGERPRINT_KEY` env-only with rotation; move `server/secretbox.db` and the compose dev keys out of git.
+2. Server `DELETE /api/records/{id}` + client delete UI.
+3. iOS release prep: icon, launch screen, permission copy, TestFlight.
 
-- 手工样本自动化：`server/docs/FREEFORM_SAMPLE_LIBRARY.md` 中 `manual` 样本进回归。
-- 扩展解析器：JDBC、Oracle、SQLServer、redis sentinel、DigitalOcean Spaces 等。
-- HOTP（计数器型）、Steam TOTP、macOS 扫码。
-- macOS 专属增强、visionOS 适配。
+## Backlog
+
+- Automating the `manual` samples from `server/docs/FREEFORM_SAMPLE_LIBRARY.md`.
+- More parsers: JDBC, Oracle, SQLServer, redis sentinel, DigitalOcean Spaces, etc.
+- HOTP (counter-based), Steam TOTP, macOS QR scanning.
+- macOS-specific enhancements, visionOS.

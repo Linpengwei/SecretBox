@@ -1,112 +1,139 @@
+**English** · [简体中文](README.zh-CN.md)
+
 # SecretBox
 
-面向运维凭据的密码保险箱：一条粘贴自动整理成结构化条目，两步验证码内建生成，AI 助手按权限取用——明文永远不离开你的设备。
+**English** · [简体中文](README.zh-CN.md)
 
-SwiftUI 客户端（macOS 菜单栏 + 主窗口 / iPhone）+ FastAPI 服务器 + 零依赖 MCP 服务器三件套。
+A password vault for ops credentials: paste a connection string, get an organized item with built-in two-step verification codes and permission-gated AI access — plaintext secrets never leave your device.
 
-## 功能一览
+Three components: a SwiftUI client (macOS menu bar + main window / iPhone), a FastAPI server, and a zero-dependency MCP server.
 
-**捕获与整理**
-- 粘贴任意松散文本（redis/s3/database/kafka/account/aksk/custom 连接串、账号片段、中英文混排），自动解析字段、识别模板、信号聚类归档
-- Smart Preview 实时预览解析结果，可逐字段修正后再保存
-- 智能整理：阈值触发 + 周期性 + 手动三种模式的重聚类
+## Screenshots & Usage
 
-**搜索**
-- 语义搜索（描述/标签/字段）
-- 密码精确匹配：查询即原密码时经 keyed HMAC 指纹直接命中，全程不比对明文
+### 1. Sign in
 
-**MFA 无缝两步验证**（对标 Bitwarden Integrated Authenticator）
-- 条目挂 TOTP 种子：粘贴 base32 种子或完整 `otpauth://` 链接，或 iOS 扫二维码；捕获文本中的 `otpauth://` 自动提取
-- 详情页实时验证码：30 秒轮换 + 倒计时环，点环即复制，紧贴「复制密码」无缝衔接
-- 验证码全部本地生成（RFC 6238，SHA1/256/512，6–8 位，15–120 秒周期），服务器只密文存取种子
+Launch and sign in with any non-empty credentials (local demo login for now; real server auth is on the roadmap).
 
-**条目级权限矩阵**（对标 Bitwarden 细粒度访问控制）
-- 只读锁定（锁编辑/删除，编辑器内解锁是唯一路径）
-- 隐藏密码（可复制使用，明文与验证码永不显示）
-- 生物识别二次确认（Touch ID / Face ID / 设备密码，对应 Bitwarden 主密码 re-prompt）
-- AI 访问三级：禁止（默认）/ 仅元数据 / 元数据 + 剪贴板工具
+<img src="docs/screenshots/login.png" width="480" alt="Login screen">
 
-**AI 集成**
-- OpenAI 兼容 LLM 增强（模板归一、重排序），AI 只见脱敏元数据
-- `mcp-server/`：零依赖 stdio MCP 服务器，Claude Code / OpenCode / Codex 可查元数据、经剪贴板取密码与验证码——明文绝不进入 agent 上下文，未授权条目对 agent 完全不可见
+### 2. The vault
 
-**本地优先**
-- 默认本地模式：整库经 Keychain 加密存储，无需服务器
-- 可选 Server 模式：FastAPI 同步（TOTP 种子 Fernet 密文落库）
+The main window has three panes: filters and clusters on the left, the item browser in the middle, and the full detail on the right. Type a keyword (host / service / env / username / tag) and hit **Search** — or paste the password itself for an exact keyed-hash match.
 
-## 快速开始
+<img src="docs/screenshots/vault-main.png" width="1200" alt="Main vault window with detail open">
 
-### 客户端（macOS / iPhone）
+The detail pane shows the structured record: cluster schema, detected context, identity, fields, the secret, and — for items with two-step verification — the **live verification code** that rotates every 30 seconds. Click the countdown ring to copy the code; **Copy Password** sits right next to it.
+
+### 3. Quick capture
+
+Click **Quick Capture** (the + button) and paste anything loose — a redis URI, an S3 key pair, an account snippet, or text with an embedded `otpauth://` link. The Smart Preview shows what SecretBox detected (type, tags, fields) and lets you correct individual fields before saving.
+
+<img src="docs/screenshots/quick-capture.png" width="820" alt="Quick capture sheet with detected preview">
+
+Pasting an `otpauth://` Key URI alongside the credentials automatically attaches the TOTP seed to the record ("已检测到两步验证" badge); a URI-only paste creates a bare authenticator entry.
+
+### 4. Two-step verification & permissions
+
+Open **Edit** on any item and scroll down:
+
+- **两步验证 (TOTP)** — paste a base32 seed or a full `otpauth://` link (or scan a QR code on iPhone). The parsed issuer / digits / period preview validates as you type; the seed is never displayed again after saving.
+- **权限 (Permissions)** — the per-item matrix: read-only lock (blocks editing and deletion), hidden password (usable but never visible), biometric re-prompt before copying, and the three-level AI access selector (denied / metadata / metadata + tools).
+
+<img src="docs/screenshots/edit-totp-permissions.png" width="820" alt="Editor with TOTP section and permission matrix">
+
+Verification codes are generated entirely on-device (RFC 6238); the server only ever stores the seed as ciphertext.
+
+### 5. Settings
+
+Server mode (off by default — the vault lives in the encrypted Keychain locally), OpenAI-compatible provider configuration, and smart-organization cadence.
+
+<img src="docs/screenshots/settings.png" width="580" alt="Settings sheet">
+
+## Feature summary
+
+- **Capture & organize** — freeform parsing with template detection and signal clustering (redis / s3 / database / kafka / account / aksk / custom); threshold, periodic, and manual re-clustering
+- **Search** — semantic match over descriptions/tags/fields, plus exact keyed-hash match when the query *is* the password
+- **Seamless MFA** (Bitwarden Integrated Authenticator equivalent) — per-item TOTP seeds, live 30-second codes with a countdown ring, `otpauth://` auto-capture, QR scanning on iOS
+- **Per-item permission matrix** (Bitwarden-style granular access) — read-only, hide-password, biometric re-prompt, three-level AI access
+- **AI integration** — LLM enrichment/reranking on redacted metadata only; a stdio MCP server lets Claude Code / OpenCode / Codex query metadata and copy secrets via the clipboard — plaintext never enters the agent context, and unauthorized items are indistinguishable from missing ones
+- **Local-first** — encrypted Keychain storage by default, optional server sync (TOTP seeds stored as Fernet ciphertext)
+
+## Getting started
+
+### Client (macOS / iPhone)
 
 ```bash
-open SecretBox/SecretBox.xcodeproj   # Xcode 中选 SecretBox scheme，Cmd+R
+open SecretBox/SecretBox.xcodeproj   # Xcode: select the SecretBox scheme, Cmd+R
 ```
 
-iOS 需 Xcode 26+ 与 iOS 26 模拟器 runtime；本地模式开箱即用（登录为本地演示，任意非空账号密码）。
+iOS needs Xcode 26+ and an iOS 26 simulator runtime. Local mode works out of the box (sign-in is a local demo for now).
 
-### 服务器
+### Server
 
 ```bash
 cd server
 docker compose up --build    # http://127.0.0.1:8000
-python3 scripts/seed_demo.py # 可选：灌入演示数据
+python3 scripts/seed_demo.py # optional demo data
 ```
 
-或裸跑：`pip install -r requirements.txt && python3 -m uvicorn app.main:app`。首次启动自动建库迁移。
+Or run bare: `pip install -r requirements.txt && python3 -m uvicorn app.main:app`. The database and migrations are created automatically on first start.
 
-### MCP 服务器
+### MCP server
 
-见 `mcp-server/README.md`（注册进 Claude Code / OpenCode / Codex 的配置方法与安全模型）。
+See [mcp-server/README.md](mcp-server/README.md) for setup with Claude Code / OpenCode / Codex and the security model.
 
-## 测试
+## Testing
 
 ```bash
-./scripts/test.sh            # macOS 应用测试 + 服务器 pytest
-./scripts/test-macos.sh      # macOS 全量（单元 + 50 样本回归 + UI 冒烟）
-./scripts/test-ios.sh        # iOS 模拟器（单元 + 50 样本回归 + 7 条 UI 冒烟链路）
+./scripts/test.sh            # macOS app tests + server pytest
+./scripts/test-macos.sh      # macOS full suite (unit + 50-sample regression + UI smoke)
+./scripts/test-ios.sh        # iOS simulator (unit + 50-sample regression + 7 UI smoke chains)
 ```
 
-服务器：`cd server && python3 -m pytest tests`；MCP：`cd mcp-server && python3 -m pytest test_secretbox_mcp.py`。详见 `TESTING.md`。
+Server: `cd server && python3 -m pytest tests`. MCP: `cd mcp-server && python3 -m pytest test_secretbox_mcp.py`. Details in [TESTING.md](TESTING.md).
 
-## 安全模型（改动前必读）
+## Security model (read before contributing)
 
-完整定义见 `server/README.md`，要点：
+Full definition in [server/README.md](server/README.md). Highlights:
 
-- 密码三重存储：`encrypted_password`（Fernet 密文）/ `password_hash`（Argon2id）/ `password_fingerprint`（keyed HMAC，供精确搜索）
-- 明文密码与 TOTP 种子**绝不**进入 AI 上下文、fields、MCP 输出；种子服务器端仅存 `totp_encrypted` 密文
-- 验证码生成只在客户端；`pasted_text` 中的 `otpauth://` 在服务端强制清洗并路由到加密列
-- ⚠️ **当前为开发态**：服务器无认证、`ENCRYPTION_KEY`/`FINGERPRINT_KEY` 为开发默认值——请勿直接公网部署，路线图阶段 2/3 解决（见 `ROADMAP.md`）
+- Passwords are stored three ways: `encrypted_password` (Fernet ciphertext), `password_hash` (Argon2id), `password_fingerprint` (keyed HMAC for exact-match search)
+- Plaintext passwords and TOTP seeds **never** reach AI context, item fields, or MCP output; seeds are stored server-side only as `totp_encrypted` ciphertext
+- Verification codes are generated client-side only; `otpauth://` URIs are scrubbed from pasted text server-side and routed to the encrypted column
+- ⚠️ **Development state**: the server has no authentication and ships development default keys — do not deploy it to a public network (roadmap phases 2/3)
 
-## 目录结构
+## Repository layout
 
 ```
-SecretBox/            # SwiftUI 应用（Xcode 工程，macOS + iOS）
-  SecretBox/          #   源码（视图/AppModel/TOTP 引擎/平台适配）
-  SecretBoxTests/     #   单元测试 + 快照基线
-  SecretBoxUITests/   #   UI 冒烟
+SecretBox/            # SwiftUI app (Xcode project, macOS + iOS)
+  SecretBox/          #   sources (views / app model / TOTP engine / platform support)
+  SecretBoxTests/     #   unit tests + snapshot baselines + docs screenshot generator
+  SecretBoxUITests/   #   UI smoke chains
 server/               # FastAPI + SQLAlchemy + SQLite
-mcp-server/           # 零依赖 stdio MCP 服务器
-scripts/              # 测试/注册脚本
-testsets/             # persona-200 场景套件产物
+mcp-server/           # zero-dependency stdio MCP server
+scripts/              # test / registration scripts
+testsets/             # persona-200 scenario suite artifacts
+docs/screenshots/     # regenerated by DocsScreenshotsTests
 ```
 
-## 文档
+## Documentation
 
-- `ROADMAP.md` — 阶段规划与进度（阶段 0 / MP / 1 已完成，阶段 2 联调认证进行中）
-- `TESTING.md` — 测试矩阵与运行方式
-- `BETA_NOTES.md` — 内测说明与变更记录
-- `AGENTS.md` — 代码贡献约定与安全不变量
-- `server/README.md`、`mcp-server/README.md` — 各组件安全模型与 API
+- [ROADMAP.md](ROADMAP.md) — phase plan and progress (phases 0 / MP / 1 complete)
+- [TESTING.md](TESTING.md) — test matrix and how to run everything
+- [BETA_NOTES.md](BETA_NOTES.md) — beta program notes and change log
+- [AGENTS.md](AGENTS.md) — contribution conventions and security invariants
+- [server/README.md](server/README.md), [mcp-server/README.md](mcp-server/README.md) — per-component security models and APIs
 
-## 许可
+Each document has a 简体中文 counterpart (`.zh-CN.md`) linked at the top.
 
-本项目采用**双许可**（dual licensing），你可以二选一：
+## License
 
-- **开源许可：[GNU AGPL-3.0（仅本版本）](LICENSE)** —— 免费，个人与商用皆可使用、修改、分发，但一切基于本项目的衍生作品（包括通过网络提供服务而不分发二进制的 SaaS 形态）必须以 AGPL-3.0 向用户提供完整对应源码。
-- **商业许可** —— 若不愿履行 AGPL 的开源义务（闭源修改、私有化部署、SaaS 不开源等），需获得商业授权：`<your-email@example.com>`（请替换为你的联系方式）。
+Dual licensing — pick one:
 
-说明：
+- **Open-source: [GNU AGPL-3.0 (this version only)](LICENSE)** — free for personal and commercial use, modification, and distribution, but every derivative work (including SaaS offerings that expose the software over a network without distributing binaries) must make its complete corresponding source available under AGPL-3.0.
+- **Commercial license** — if you cannot comply with AGPL's open-source obligations (proprietary modifications, internal deployment, closed-source SaaS), contact `<your-email@example.com>` (replace with your contact address).
 
-- 依赖兼容性：服务器端依赖（FastAPI / SQLAlchemy / cryptography / argon2 等）均为 MIT / Apache 等宽松协议，与 AGPL 组合无冲突。
-- 选择了「仅 AGPL-3.0 本版本」（而非 or-later），以便商业许可线保持可控。
-- ⚠️ 未来若将 iOS/macOS 客户端上架 Apple App Store，AGPL 与 Apple 分发条款存在已知的兼容性争议（VLC 下架先例）——届时以商业许可自有 App 形式分发是最干净的路径。
+Notes:
+
+- Dependency compatibility: server dependencies (FastAPI / SQLAlchemy / cryptography / argon2, etc.) are MIT / Apache licensed — no conflict with AGPL.
+- "AGPL-3.0 only" (not or-later) was chosen to keep the commercial line manageable.
+- ⚠️ Distributing the iOS/macOS client through Apple's App Store under AGPL has a known compatibility dispute (the VLC precedent) — publishing your own app under the commercial license is the cleanest path.
