@@ -56,7 +56,7 @@ python3 scripts/seed_demo.py
 
 ## 记录定位
 
-本应用用于存储运维凭据：`redis`、`s3`、`database`、`kafka`、`custom` 等。
+本应用管理各类凭据——下列运维模板与日常账号皆可：
 
 ## 自由格式样本库
 

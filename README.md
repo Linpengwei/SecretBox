@@ -2,11 +2,22 @@
 
 # SecretBox
 
-**English** · [简体中文](README.zh-CN.md)
+**The AI-native password manager — for teams and individuals.** Store credentials once; humans *and* AI agents use them without plaintext ever entering a conversation, a terminal, or a model's context. Think "1Password, reimagined for the age of AI agents".
 
-A password vault for ops credentials: paste a connection string, get an organized item with built-in two-step verification codes and permission-gated AI access — plaintext secrets never leave your device.
+## The problem we solve
 
-Three components: a SwiftUI client (macOS menu bar + main window / iPhone), a FastAPI server, and a zero-dependency MCP server.
+AI coding agents and chat assistants constantly need credentials — database URLs, API keys, service passwords. Today that means pasting plaintext into chats, terminals, and config files, where it leaks into logs, session transcripts, and vendor pipelines. Letting an AI agent anywhere near production secrets has been a non-starter — until now.
+
+## How SecretBox fixes it
+
+- **Agents see metadata, not secrets.** The built-in MCP server lets Claude Code / OpenCode / Codex search your vault and read redacted details (name, type, host, the shape of the secret). Plaintext is structurally impossible in any response.
+- **Secrets travel by clipboard.** When an agent genuinely needs the password or the current two-step code, `copy_password` / `copy_totp` place it on the clipboard for the human to paste — it never passes through the conversation.
+- **Paste a reference, not the secret.** The "复制 AI 引用" button copies a `<secretbox-credential id=…>` snippet that is safe to paste into any chat; the agent resolves it through the MCP server in one call.
+- **Every record carries an AI permission level** — denied (default) / metadata / metadata + tools. Denied records are indistinguishable from missing ones: no metadata, no existence leak.
+
+## A complete password manager underneath
+
+Paste a connection string or an account snippet, get an organized item with live two-step verification codes, granular permissions, and local-first encryption — ops-native templates for redis / s3 / database / kafka / aksk, plus everyday accounts. Everything runs on your device: a SwiftUI client (macOS menu bar + main window / iPhone), an optional FastAPI server, and a zero-dependency MCP server.
 
 ## Screenshots & Usage
 

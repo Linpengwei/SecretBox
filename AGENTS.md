@@ -2,7 +2,7 @@
 
 # SecretBox
 
-Password vault for ops credentials (redis, s3, database, kafka, custom). Two components:
+AI-native password manager for teams and individuals — the vault between humans/AI agents and secrets (plaintext never enters agent context). Ops-native templates (redis, s3, database, kafka, custom) plus everyday accounts. Two components:
 
 - `SecretBox/` — SwiftUI app (SwiftUI AppKit menu-bar + windows, macOS destination), Xcode project at `SecretBox/SecretBox.xcodeproj`. App sources in `SecretBox/SecretBox/`, UI theme in `SecretBox/SecretBox/Docs/AppTheme.swift`.
 - `server/` — FastAPI + SQLAlchemy + SQLite backend (`server/app/`), tests in `server/tests/`.

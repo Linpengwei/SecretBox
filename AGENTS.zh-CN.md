@@ -2,7 +2,7 @@
 
 # SecretBox（代理工作约定）
 
-运维凭据密码保险箱（redis、s3、database、kafka、custom）。两个组件：
+AI 原生密码管理器，面向企业与个人——人与 AI agent 之间的密钥保险箱（明文绝不进入 agent 上下文）。内置运维模板（redis、s3、database、kafka、custom），同样覆盖日常账号。两个组件：
 
 - `SecretBox/` — SwiftUI 应用（macOS 菜单栏 + 窗口 / iPhone），Xcode 工程位于 `SecretBox/SecretBox.xcodeproj`，源码在 `SecretBox/SecretBox/`，主题在 `SecretBox/SecretBox/Docs/AppTheme.swift`。
 - `server/` — FastAPI + SQLAlchemy + SQLite 后端（`server/app/`），测试在 `server/tests/`。

@@ -60,7 +60,7 @@ This creates demo records for:
 
 ## Record intent
 
-The app is for storing ops credentials such as:
+The app manages credentials of all kinds — ops templates such as those below, plus everyday accounts:
 
 - `redis`
 - `s3`
