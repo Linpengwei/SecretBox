@@ -105,7 +105,7 @@ struct VaultItemEditorView: View {
     }
 
     private var editBody: some View {
-        VStack(spacing: 0) {
+        ScrollViewReader { scrollProxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -131,14 +131,22 @@ struct VaultItemEditorView: View {
                         .accessibilityIdentifier("entry.note")
 
                     totpSection
+                        .id("totp")
 
                     permissionSection
+                        .id("permissions")
                 }
                 .padding(24)
                 .frame(maxWidth: .infinity, alignment: .topLeading)
             }
             .accessibilityIdentifier("editor.scroll")
             .scrollDismissesKeyboard(.immediately)
+            .task {
+                if let anchor = model.uiTestEditorScrollAnchor {
+                    try? await Task.sleep(nanoseconds: 400_000_000)
+                    withAnimation { scrollProxy.scrollTo(anchor, anchor: .center) }
+                }
+            }
 
             HStack {
                 if model.isEditingRecord, let editingID = model.editingRecordID {

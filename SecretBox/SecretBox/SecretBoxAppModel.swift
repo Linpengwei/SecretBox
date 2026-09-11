@@ -213,11 +213,13 @@ final class SecretBoxAppModel: ObservableObject {
             }
             await performUITestAutoSaveIfNeeded()
             await performUITestSearchIfNeeded()
+            performUITestPresentationHooksIfNeeded()
             return
         }
         await loadProviderSettings()
         await performUITestAutoSaveIfNeeded()
         await performUITestSearchIfNeeded()
+        performUITestPresentationHooksIfNeeded()
     }
 
     func signIn(_ username: String, _ password: String) {
@@ -1044,6 +1046,36 @@ final class SecretBoxAppModel: ObservableObject {
         didPerformUITestSearch = true
         searchQuery = query
         await searchPasswords()
+    }
+
+    /// Presentation hooks so documentation screenshots (and future UI tests)
+    /// can reach specific surfaces purely via launch environment:
+    /// `SECRETBOX_UI_TEST_CAPTURE_SHEET` / `_EDIT_SHEET` / `_SETTINGS_SHEET`.
+    private func performUITestPresentationHooksIfNeeded() {
+        guard isUITesting else { return }
+        if environment["SECRETBOX_UI_TEST_CAPTURE_SHEET"] == "1" {
+            beginCreate()
+            if let preset = environment["SECRETBOX_UI_TEST_PASTED_TEXT"], !preset.isEmpty {
+                pastedText = preset
+            }
+            return
+        }
+        if environment["SECRETBOX_UI_TEST_EDIT_SHEET"] == "1" {
+            let target = localRecords.first(where: { $0.totp != nil }) ?? localRecords.first
+            if let target { beginEditing(target) }
+            return
+        }
+        if environment["SECRETBOX_UI_TEST_SETTINGS_SHEET"] == "1" {
+            serverEnabled = true
+            settingsPresented = true
+        }
+    }
+
+    /// Editor scroll anchor for docs screenshots (e.g. "permissions"); nil
+    /// outside UI-test mode.
+    var uiTestEditorScrollAnchor: String? {
+        guard isUITesting else { return nil }
+        return environment["SECRETBOX_UI_TEST_EDITOR_SCROLL_TO"]
     }
 
     private func resetEditorDraft() {
