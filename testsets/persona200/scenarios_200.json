@@ -1,0 +1,5293 @@
+{
+  "version": 1,
+  "generated_at": "2026-09-06T16:12:05.670928+00:00",
+  "generators": {
+    "claude": 70,
+    "codex": 65,
+    "opencode": 65
+  },
+  "total": 200,
+  "scenarios": [
+    {
+      "id": "SRE-001",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "order-cache Redis 连接串",
+      "story": "order-cache 用的 redis 连接串，我把带密码的 uri 存下来方便直接复制。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "redis://:OrderCache2024@order-cache.redis.internal:6379/0",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "order-cache",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "OrderCache2024",
+        "template_type": "redis",
+        "semantic_query": "order-cache redis",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-002",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "session 缓存 redis uri",
+      "story": "session 缓存的连接串，带认证密码，存一份防止再找平台要。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "redis://:SessionCache2024@session-01.cache.example.org:6380/2",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "session",
+          "staging"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "SessionCache2024",
+        "template_type": "redis",
+        "semantic_query": "session cache redis",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-003",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "metrics redis 转义密码",
+      "story": "metrics redis 的密码里带 @，uri 里被 URL 编码了，我存的是解码后的原密码。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "redis://:Metrics%40Cache2024@metrics-redis.redis.internal:6379/1",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "metrics",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Metrics@Cache2024",
+        "template_type": "redis",
+        "semantic_query": "metrics redis",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-004",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "billing redis 密码",
+      "story": "billing 支付网关缓存的 redis 密码，从配置中心抄出来粘一下。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "REDIS_PASSWORD=BillingRedis2024\n\n# billing 支付网关缓存",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "billing",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "BillingRedis2024",
+        "template_type": "redis",
+        "semantic_query": "billing redis 密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-005",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "推荐服务 redis kv 片段",
+      "story": "推荐服务 .env 里的 redis 密码段，带注释直接粘过来了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "REDIS_HOST=rec-cache.redis.internal\nREDIS_PASSWORD=RecommendCache2024\nREDIS_PORT=6379\n# 推荐召回链路",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "recommend",
+          "staging"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "RecommendCache2024",
+        "template_type": "redis",
+        "semantic_query": "rec redis 密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-006",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "库存 redis 多 kv 同行",
+      "story": "从配置中心抄的库存缓存连接，几个 kv 挤在一行里了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "REDIS_HOST=stock-cache.redis.internal REDIS_PASSWORD=StockCache2024 REDIS_PORT=6379",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "stock",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "StockCache2024",
+        "template_type": "redis",
+        "semantic_query": "stock-cache redis",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-007",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "prod redis 命令行认证",
+      "story": "用 REDISCLI_AUTH 登 prod redis 的命令，整条命令直接存下来。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "REDISCLI_AUTH=ProdRedisAuth2024 redis-cli -h prod-redis-01.redis.internal -p 6379",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "prod",
+          "redis-cli"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ProdRedisAuth2024",
+        "template_type": "redis",
+        "semantic_query": "prod redis redis-cli",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-008",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "ops redis 认证命令",
+      "story": "排查热 key 时用 ops 环境 redis 的认证命令，带了个尾部注释。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "REDISCLI_AUTH=OpsRedis2024 redis-cli -h ops-redis-01.redis.internal -p 6381 --raw\n# 查看热 key",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "OpsRedis2024",
+        "template_type": "redis",
+        "semantic_query": "ops redis",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-009",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "购物车 redis prod 库",
+      "story": "购物车 prod 和 staging 共用一台 redis 主机，只差 db 号和密码，我存的时候特意标了 prod。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "redis://:CartProd2024@cart-redis.internal:6379/0  # prod 购物车",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "cart",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "CartProd2024",
+        "template_type": "redis",
+        "semantic_query": "cart redis prod",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-010",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "购物车 redis staging 库",
+      "story": "staging 购物车和 prod 同主机不同 db，密码也不一样，最容易抄错的一条。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "redis://:CartStage2024@cart-redis.internal:6379/1\n# staging 购物车，别连成 prod 的 db0",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "cart",
+          "staging"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "CartStage2024",
+        "template_type": "redis",
+        "semantic_query": "cart staging redis",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-011",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "订单库 postgres 连接串",
+      "story": "订单库的 postgres uri，密码在连接串里，复制粘贴直接存。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "postgres://order_sre:OrderDb2024@pg-order-01.db.internal:5432/order_db",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "postgres",
+          "order",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "OrderDb2024",
+        "template_type": "database",
+        "semantic_query": "order 库 postgres",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-012",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "用户库 postgres 只读账号",
+      "story": "用户库的只读账号连接串，导出数据时用。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "postgresql://report_ro:ReportUser2024@pg-user-01.db.internal:5432/user_db?sslmode=require",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "postgres",
+          "user-db",
+          "staging"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ReportUser2024",
+        "template_type": "database",
+        "semantic_query": "user_db postgres 只读",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-013",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "支付库 mysql 连接串",
+      "story": "支付库的 mysql uri，应用账号的密码。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "mysql://pay_app:PayDb2024@mysql-pay-01.db.internal:3306/pay_db",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "mysql",
+          "pay",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "PayDb2024",
+        "template_type": "database",
+        "semantic_query": "pay mysql 密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-014",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "风控库 mysql 连接串",
+      "story": "风控分析库的 mysql 只读账号连接串。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "mysql://risk_ro:RiskRead2024@mysql-risk-01.db.internal:3306/risk_db?charset=utf8mb4",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "mysql",
+          "risk",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "RiskRead2024",
+        "template_type": "database",
+        "semantic_query": "risk_db mysql 只读",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-015",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "埋点库 clickhouse 密码",
+      "story": "埋点分析的 clickhouse 账号密码，kv 格式。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "CLICKHOUSE_HOST=clickhouse-01.db.internal\nCLICKHOUSE_USER=analyst\nCLICKHOUSE_PASSWORD=Analytics2024",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "clickhouse",
+          "analytics",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Analytics2024",
+        "template_type": "database",
+        "semantic_query": "clickhouse 埋点",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-016",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "日志中心 clickhouse 账号",
+      "story": "日志中心的 clickhouse 写入账号，密码里有 # 号。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "CLICKHOUSE_HOST=ck-log.db.internal\nCLICKHOUSE_USER=logwriter\nCLICKHOUSE_PASSWORD=Log#Write2024",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "clickhouse",
+          "log",
+          "staging"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Log#Write2024",
+        "template_type": "database",
+        "semantic_query": "ck-log clickhouse",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-017",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "用户画像 mongodb 连接串",
+      "story": "用户画像 mongodb 连接串，密码里的 @ 被编码成 %40。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "mongodb://profile_user:Profile%40Mongo2024@mongo-profile-01.db.internal:27017/profile_db?authSource=admin",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "mongodb",
+          "profile",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Profile@Mongo2024",
+        "template_type": "database",
+        "semantic_query": "mongo profile 连接串",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-018",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "订单 JDBC 连接串",
+      "story": "Java 服务连订单库的 jdbc url，密码在 query 参数里带 URL 转义。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "jdbc:postgresql://pg-order-01.db.internal:5432/order_db?user=order_app&password=Jdbc%40Order2024&ssl=true",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "jdbc",
+          "postgres",
+          "order"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Jdbc@Order2024",
+        "template_type": "database",
+        "semantic_query": "order jdbc 连接串",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-019",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "备份桶 aws 密钥",
+      "story": "备份任务用的 aws access key，kv 格式直接粘。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nAWS_SECRET_ACCESS_KEY=BackupS3Secret2024\nAWS_REGION=ap-east-1",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "aws",
+          "backup"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "BackupS3Secret2024",
+        "template_type": "s3",
+        "semantic_query": "备份 s3 密钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-020",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "数据仓库 s3 访问密钥",
+      "story": "数仓的 s3 访问密钥，和 endpoint 一起存。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nAWS_SECRET_ACCESS_KEY=WarehouseS3Key2024\nS3_ENDPOINT=https://s3-warehouse.internal",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "warehouse",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "WarehouseS3Key2024",
+        "template_type": "s3",
+        "semantic_query": "数仓 s3 endpoint",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-021",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "日志归档 s3 凭据",
+      "story": "日志归档任务的 s3 凭据，bashrc 风格的 export。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nexport AWS_SECRET_ACCESS_KEY=LogArchiveS3Key2024\nexport AWS_DEFAULT_REGION=cn-north-1",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "log",
+          "aws"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LogArchiveS3Key2024",
+        "template_type": "s3",
+        "semantic_query": "日志归档 s3 密钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-022",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "对象存储 rclone 配置",
+      "story": "内网对象存储的 rclone 配置段，secret 在 secret_access_key 字段。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "[minio-ops]\ntype = s3\nprovider = Minio\nendpoint = https://minio-ops.internal\naccess_key_id = AKIAIOSFODNN7EXAMPLE\nsecret_access_key = MinioOpsRclone2024",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "minio",
+          "rclone"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "MinioOpsRclone2024",
+        "template_type": "s3",
+        "semantic_query": "minio rclone 配置",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-023",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "测试环境对象存储 rclone",
+      "story": "staging 用的对象存储 rclone 配置，测试桶。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "[staging-s3]\ntype = s3\nendpoint = http://s3.staging.test\naccess_key_id = AKIAIOSFODNN7EXAMPLE\nsecret_access_key = StageS3Token2024",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "staging",
+          "rclone"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "StageS3Token2024",
+        "template_type": "s3",
+        "semantic_query": "staging s3 rclone",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-024",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "图片存储桶内联配置",
+      "story": "图片服务的 bucket 配置写成一行，密钥混在 query 参数里。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "s3://images-prod?aws_access_key_id=AKIAIOSFODNN7EXAMPLE&aws_secret_access_key=ImagesS3Inline2024&region=us-east-1",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "images",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ImagesS3Inline2024",
+        "template_type": "s3",
+        "semantic_query": "images bucket 内联",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-025",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "prod kafka SASL 密码",
+      "story": "prod kafka 的 SASL/PLAIN 认证，brokers 和密码整段粘过来。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "security.protocol=SASL_PLAINTEXT\nsasl.mechanism=PLAIN\nsasl.username=prod_sre\nsasl.password=ProdKafkaSasl2024\nbootstrap.servers=kafka-01.prod.internal:9092,kafka-02.prod.internal:9092",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "sasl",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ProdKafkaSasl2024",
+        "template_type": "kafka",
+        "semantic_query": "prod kafka sasl 密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-026",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "订单事件 kafka 认证",
+      "story": "订单事件流的 kafka 认证配置，密码带 # 号。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "bootstrap.servers=event-kafka.internal:9093\nsecurity.protocol=SASL_SSL\nsasl.mechanism=SCRAM-SHA-256\nsasl.username=order-events\nsasl.password=Order#Events2024",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "order-events",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Order#Events2024",
+        "template_type": "kafka",
+        "semantic_query": "order-events kafka sasl",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-027",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "staging kafka 明文密码",
+      "story": "staging kafka 的 SASL 密码，明文粘贴。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "sasl.password=StageKafka2024\nbootstrap.servers=kafka.staging.test:9092\nsasl.username=stage_sre\nsasl.mechanism=PLAIN",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "staging"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "StageKafka2024",
+        "template_type": "kafka",
+        "semantic_query": "staging kafka",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-028",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "埋点 kafka 生产端认证",
+      "story": "埋点上报链路的 kafka 认证，brokers 是域名形式。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "bootstrap.servers=tracking-kafka.example.net:9092\nsecurity.protocol=SASL_PLAINTEXT\nsasl.username=tracking\nsasl.password=TrackingKafka2024",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "tracking",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "TrackingKafka2024",
+        "template_type": "kafka",
+        "semantic_query": "tracking kafka 认证",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-029",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "支付回调 topic 配置",
+      "story": "支付回调 topic 和对应环境的 kafka 密码写在一起。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "TOPIC=payment-callback\nENV=prod\nKAFKA_BROKER=kafka-pay.internal:9092\nPASSWORD=PayCallback2024",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "payment",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "PayCallback2024",
+        "template_type": "kafka",
+        "semantic_query": "payment-callback topic",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-030",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "风控 topic 消费配置",
+      "story": "风控规则变更 topic 的消费配置，密码单独一行。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "env=staging\ntopic=risk-rule-change\nbootstrap.servers=kafka-risk.internal:9092\nsasl.password=RiskRuleTopic2024",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "risk",
+          "staging"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "RiskRuleTopic2024",
+        "template_type": "kafka",
+        "semantic_query": "risk-rule-change topic",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-031",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "kafka connect worker SASL",
+      "story": "kafka connect 集群的 worker 配置，SASL 密码带 # 号。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "worker.properties:\nbootstrap.servers=connect-kafka.internal:9092\nsasl.mechanism=PLAIN\nsasl.username=connect-worker\nsasl.password=Connect#Worker2024",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "connect"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Connect#Worker2024",
+        "template_type": "kafka",
+        "semantic_query": "connect worker kafka",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-032",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "sink 连接器配置带转义密码",
+      "story": "kafka connect 的 sink 配置，密码里含 @ 和 %，properties 原样抄。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "connector.class=ElasticsearchSinkConnector\ntasks.max=4\nbootstrap.servers=sink-kafka.internal:9092\nsasl.password=Sink%Connector@2024\nsasl.username=sink_app",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "connect",
+          "sink"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Sink%Connector@2024",
+        "template_type": "kafka",
+        "semantic_query": "sink kafka 密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-033",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "推送服务 AK/SK",
+      "story": "推送服务在云上的 AK/SK，ak= / sk= 格式直接粘。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "ak=LTAIEXAMPLE2024\nsk=PushServiceSecret2024\nendpoint=push.example.com",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "aksk",
+          "push",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "PushServiceSecret2024",
+        "template_type": "aksk",
+        "semantic_query": "push ak sk 密钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-034",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "对象存储 AK/SK",
+      "story": "内网对象存储的 AK/SK 对，直接 ak/sk 格式。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "ak=AKIAIOSFODNN7EXAMPLE\nsk=ObjectStorageSk2024\nOSS_ENDPOINT=oss.internal",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "aksk",
+          "oss",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ObjectStorageSk2024",
+        "template_type": "aksk",
+        "semantic_query": "oss ak sk",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-035",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "CDN 刷新 AK/SK",
+      "story": "CDN 刷新接口的 AK/SK，备注了轮换时间。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "AK=AKIAIOSFODNN7EXAMPLE\nSK=CdnRefreshSecret2024\n# 2024-09 轮换过，别用旧的",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "aksk",
+          "cdn",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "CdnRefreshSecret2024",
+        "template_type": "aksk",
+        "semantic_query": "cdn ak sk",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-036",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "短信服务 AK/SK",
+      "story": "短信服务商下发的 AK/SK，粘在便签里。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "短信服务\nak=AKIAIOSFODNN7EXAMPLE\nsk=SmsSendSecret2024\n# 2024-10 轮换过",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "aksk",
+          "sms",
+          "prod"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "SmsSendSecret2024",
+        "template_type": "aksk",
+        "semantic_query": "短信 ak sk 密钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-037",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "Grafana 内部账号",
+      "story": "Grafana 的登录账号，Viewer 权限，存给同事共用。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "grafana.internal\nlogin: sre_ops\npassword: GrafanaSre2024\nrole: Viewer",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "grafana",
+          "account",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "GrafanaSre2024",
+        "template_type": "account",
+        "semantic_query": "grafana 账号密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-038",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "内部工单系统账号",
+      "story": "工单系统的登录凭据，注册邮箱也一起存了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "iticket.internal\nowner: sre@example.com\npassword: ITicketOps2024",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "iticket",
+          "account",
+          "staging"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ITicketOps2024",
+        "template_type": "account",
+        "semantic_query": "iticket 账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-039",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "消息队列 rabbitmq 连接串",
+      "story": "rabbitmq 的 amqp 连接串，密码里带 @ 被编码了。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "amqp://report_sre:Rabbit%40Ops2024@rabbitmq-01.internal:5672/report_vhost",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "rabbitmq",
+          "amqp",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Rabbit@Ops2024",
+        "template_type": "custom",
+        "semantic_query": "rabbitmq amqp 连接串",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "SRE-040",
+      "generator": "claude",
+      "persona": "sre",
+      "persona_label": "专业 SRE",
+      "title": "跳板机口令",
+      "story": "内网跳板机的登录口令，就一行，随手记一下。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "jump 口令: Jump#Host2024 （bastion-01.internal）",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "jump",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Jump#Host2024",
+        "template_type": "custom",
+        "semantic_query": "bastion 跳板机 口令",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-001",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "GitHub 构建镜像的 token",
+      "story": "我每次推内部镜像都要这条 docker run 里的 GITHUB_TOKEN，直接复制整条命令来找。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "docker run -e GITHUB_TOKEN=ghp_52sJ8dK4wQ3rT7yU2iP9oL6vB5nM1 registry.example.com/builds:dev-2026",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "github",
+          "token",
+          "docker"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ghp_52sJ8dK4wQ3rT7yU2iP9oL6vB5nM1",
+        "template_type": "account",
+        "semantic_query": "github 构建镜像的 token",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-002",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "GitHub 细粒度访问 token",
+      "story": "从 settings 里拷出来没存好，就剩这一行裸 token 了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "github_pat_dev2026_a1b2c3d4e5f6",
+        "primary_secret": "github_pat_dev2026_a1b2c3d4e5f6",
+        "name": null,
+        "notes": null,
+        "tags": [
+          "github",
+          "token"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "github_pat_dev2026_a1b2c3d4e5f6",
+        "template_type": "account",
+        "semantic_query": "github 细粒度 token",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-003",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "自建 gitlab 的 runner 注册 token",
+      "story": "给 staging 机器配新 gitlab runner 时要用，带 export 的一段 shell 配置。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "# self-hosted gitlab runner\nexport GITLAB_HOST=https://gitlab.internal\nexport GITLAB_TOKEN=glpat-dev2026xR9mK4cT7w\nexport GITLAB_RUNNER_NAME=staging-node-01",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "gitlab",
+          "ci",
+          "env"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "glpat-dev2026xR9mK4cT7w",
+        "template_type": "account",
+        "semantic_query": "gitlab runner 的注册 token",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-004",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "dependabot 用的 github token",
+      "story": "仓库 .env 里那行 GITHUB_TOKEN，dependabot 自动升依赖的时候会用到。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "# Used by dependabot to open PRs\nGITHUB_TOKEN=ghp_dep2026qa9vR2sK5wE8xT4uY",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "github",
+          "token",
+          "env"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ghp_dep2026qa9vR2sK5wE8xT4uY",
+        "template_type": "account",
+        "semantic_query": "dependabot 用的 github token",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-005",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "gitlab 组级的 deploy token",
+      "story": "部署流水线要从私有仓库拉镜像，这一串 deploy token 配置存在运维的 env 文件里。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "# deploy token props\nGITLAB_DEPLOY_USERNAME=gitlab+deploy-token-42\nGITLAB_DEPLOY_TOKEN=glptt-dev-2026-k8j4Hm2Lp9\nGITLAB_DEPLOY_PROJECT=core/api-gateway\nGITLAB_DEPLOY_ROLE=read_registry\nGITLAB_DEPLOY_EXPIRES=2026-12-31",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "gitlab",
+          "deploy"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "glptt-dev-2026-k8j4Hm2Lp9",
+        "template_type": "account",
+        "semantic_query": "gitlab 组级 deploy token",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-006",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "ci.internal 的部署机器人账号",
+      "story": "很久以前配的 .netrc，现在还靠它往 ci 推构建产物，密码我早忘了。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "machine ci.internal\nlogin deploy-bot\npassword ciPass2026omega",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "ci",
+          "netrc"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ciPass2026omega",
+        "template_type": "account",
+        "semantic_query": "ci.internal 部署机器人密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-007",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "jenkins 借来的查看账号",
+      "story": "隔壁组给的 jenkins 只读账号，放在我的 .netrc 里，偶尔上去看下构建日志。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "machine jenkins.internal\nlogin ci-viewer\npassword viewPass2026beta",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "ci",
+          "netrc",
+          "jenkins"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "viewPass2026beta",
+        "template_type": "account",
+        "semantic_query": "jenkins 查看账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-008",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "Docker registry 的推送账号",
+      "story": "本地构建后要 docker push，就是这个 registry.example.com 的登录账号。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "docker login registry.example.com -u buildship -p shipPass2026alpha",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "docker",
+          "registry"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "shipPass2026alpha",
+        "template_type": "account",
+        "semantic_query": "registry.example.com 的 docker 登录密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-009",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "ghcr 内部镜像仓库的账号",
+      "story": "容器镜像推到 ghcr.internal 用的 ops 机器人账号，换机器时想不起来密码。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "# push to our ghcr mirror on k8s\ndocker login ghcr.internal -u ops-bot -p ghcrTok2026xZ7q",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "docker",
+          "registry",
+          "ops"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ghcrTok2026xZ7q",
+        "template_type": "account",
+        "semantic_query": "ghcr.internal 推送镜像的账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-010",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "npm 私有仓库的 token",
+      "story": "@acme scope 的包都要从 npm.example.com 拉，这个 npmrc 里的 token 丢了就得重新让管理员发。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "# npm account for private scope @acme\n//npm.example.com/:_authToken=npm_2026dev_private_7xKq\n@acme:registry=https://npm.example.com/\nalways-auth=true",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "npm",
+          "registry"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "npm_2026dev_private_7xKq",
+        "template_type": "account",
+        "semantic_query": "npm 私有仓库的 token",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-011",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "appdb 的 postgres 连接串",
+      "story": "服务启动依赖 appdb，这段 DATABASE_URL 是从另一位同事的笔记里翻出来的。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "DATABASE_URL=postgres://app:pgSecret2026gamma@db.internal:5432/appdb",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "postgres",
+          "database"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "pgSecret2026gamma",
+        "template_type": "database",
+        "semantic_query": "appdb 的 postgres 连接串",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-012",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "本地开发 postgres 的连接串",
+      "story": "本机起服务的 DATABASE_URL，ssl 特意关掉的那条旧配置。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "# local postgres with ssl off\nDATABASE_URL=postgresql://app:pgDev2026zeta@localhost:5432/appdb?sslmode=disable",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "postgres",
+          "local",
+          "env"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "pgDev2026zeta",
+        "template_type": "database",
+        "semantic_query": "本地 postgres ssl 关掉那条",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-013",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "orders 库的 mysql 连接串",
+      "story": "订单库分片后的连接串，从那会儿的迁移文档里抄来的。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "DATABASE_URL=mysql://sharduser:mysql2026theta@db-shard.internal:3306/orders?charset=utf8mb4",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "mysql",
+          "database"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "mysql2026theta",
+        "template_type": "database",
+        "semantic_query": "orders 库的 mysql 连接串",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-014",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "analytics 的 postgres 账号",
+      "story": "跑数据分析脚本要用这个 postgres 账号，密码在配置里按行排着。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "POSTGRES_HOST=postgres.internal\nPOSTGRES_DB=analytics\nPOSTGRES_USER=analyst\nPOSTGRES_PASSWORD=PgAdmin2026chi",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "postgres",
+          "analytics"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "PgAdmin2026chi",
+        "template_type": "database",
+        "semantic_query": "analytics 的 postgres 密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-015",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "shop 库的 mysql 账号",
+      "story": "查线上店铺数据用的只读 mysql 账号，配置放在共享 env 里。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "MYSQL_HOST=mysql.internal\nMYSQL_USER=shopkeeper\nMYSQL_PASSWORD=mysqlShop2026rho\nMYSQL_DATABASE=shop",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "mysql",
+          "database"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "mysqlShop2026rho",
+        "template_type": "database",
+        "semantic_query": "shop 库 mysql 密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-016",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "clickhouse 的导入账号",
+      "story": "日志入仓脚本用的 clickhouse 账号，配置行数比较多，从 docker-compose 里拷贝的。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "CLICKHOUSE_HOST=clickhouse.internal\nCLICKHOUSE_PORT=8123\nCLICKHOUSE_USER=ingest\nCLICKHOUSE_PASSWORD=chIngest2026sigma\nCLICKHOUSE_DATABASE=logs\nCLICKHOUSE_CLUSTER=default",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "clickhouse",
+          "database"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "chIngest2026sigma",
+        "template_type": "database",
+        "semantic_query": "clickhouse 导入账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-017",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "oracle 老库的 spring 配置",
+      "story": "财务对接那个 oracle 连接池的配置贴了一大段，密码在里面一行 spring.datasource.password 里。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "# legacy oracle pool, do not touch\nspring.datasource.platform=oracle\nspring.datasource.url=jdbc:oracle:thin:@oracle.internal:1521:FINDB\nspring.datasource.username=legacyapp\nspring.datasource.password=Ora#2026psi4x\nspring.datasource.hikari.maximum-pool-size=12\nspring.jpa.database-platform=org.hibernate.dialect.OracleDialect",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "oracle",
+          "jdbc",
+          "database"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Ora#2026psi4x",
+        "template_type": "database",
+        "semantic_query": "oracle 老库的密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-018",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "mongo 的 root 账号",
+      "story": "本地起 mongodb 容器时设的 root 密码，mongo URI 直接贴进来了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "MONGODB_URI=mongodb://root:mongoDev2026mu@mongo.internal:27017/admin?authSource=admin",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "mongodb",
+          "database"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "mongoDev2026mu",
+        "template_type": "database",
+        "semantic_query": "mongo root 密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-019",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "redis 内网实例的密码",
+      "story": "部门共用的 redis.internal 实例密码，写在一个普通的 kv 配置里。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "REDIS_HOST=redis.internal\nREDIS_PORT=6379\nREDIS_PASSWORD=kvRedis2026tau",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "config"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "kvRedis2026tau",
+        "template_type": "redis",
+        "semantic_query": "redis.internal 的密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-020",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "本地 redis 的连接 url",
+      "story": "本地缓存就这一条 redis:// 地址，起服务前总要翻出来。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "redis://:localDev2026xi@localhost:6379/0",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "local"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "localDev2026xi",
+        "template_type": "redis",
+        "semantic_query": "本地 redis",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-021",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "staging 的 redis cache 地址",
+      "story": "staging 预发环境的缓存 redis，和 infra 仓库里要保持一致那条。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "# staging cache, keep in sync with infra repo\nREDIS_URL=redis://:stageRedis2026om@srediscache.internal:6379/2",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "staging"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "stageRedis2026om",
+        "template_type": "redis",
+        "semantic_query": "staging 的 redis",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-022",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "redis sentinel 那套的密码",
+      "story": "高可用 redis 走 sentinel，配置里 export 出来一堆环境变量，密码混在里面。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "# sentinel + one shared cache cluster\nexport REDIS_SENTINEL_HOSTS=redis-sentinel.internal:26379,redis-sentinel-2.internal:26379\nexport REDIS_MASTER_NAME=mymaster\nexport REDIS_PASSWORD=sentinel2026pi9\nexport REDIS_DB=2",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "sentinel"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "sentinel2026pi9",
+        "template_type": "redis",
+        "semantic_query": "redis sentinel 的密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-023",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "本地 redis 的 dev 密码",
+      "story": "本机跑测试要连 redis，密码记在这个 kv 配置里了。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "redis_host=localhost\nredis_port=6379\nredis_auth=localRedis2026nu",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "local",
+          "dev"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "localRedis2026nu",
+        "template_type": "redis",
+        "semantic_query": "本地 redis kv",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-024",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "minio 对象存储的密钥",
+      "story": "本地起 minio 当 s3 用，配置里 aws 风格的环境变量，取密钥要一起复制。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "S3_ENDPOINT=http://minio.internal:9000\nAWS_ACCESS_KEY_ID=s3devaccesskey2026\nAWS_SECRET_ACCESS_KEY=s3devSecret2026upsilon",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "minio",
+          "s3"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "s3devSecret2026upsilon",
+        "template_type": "s3",
+        "semantic_query": "minio 对象存储的密钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-025",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "media-uploads 桶的访问密钥",
+      "story": "图片上传走媒体桶，密钥写在测试环境的 minio 配置里，还带 bucket 名。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "# local minio bucket for uploads\nS3_ENDPOINT=http://minio.test:9000\nbucket=media-uploads\naws_access_key_id=s3minioKey2026phi\naws_secret_access_key=s3minioSecret2026",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "minio",
+          "s3",
+          "bucket"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "s3minioSecret2026",
+        "template_type": "s3",
+        "semantic_query": "minio 那个 media-uploads 桶",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-026",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "备份桶的 aws 密钥",
+      "story": "每天晚上跑备份脚本要往 assets-backup 桶写，aws 密钥写在一个通用 env 里。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "AWS_REGION=us-east-1\nAWS_BUCKET=assets-backup\nAWS_ACCESS_KEY_ID=AKIA2026DEVXAMPLE\nAWS_SECRET_ACCESS_KEY=awsBucketSecret2026psi",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "aws",
+          "s3",
+          "backup"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "awsBucketSecret2026psi",
+        "template_type": "s3",
+        "semantic_query": "assets-backup 桶的 aws 密钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-027",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "本地 kafka 测试的认证",
+      "story": "集成测试连本机 kafka，brokers 和 sasl 密码都在这个配置文件里。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "# local kafka for integration tests\nbrokers=kafka1.test:9092,kafka2.test:9092,kafka3.test:9092\nsasl_username=kafka-dev-user\nsasl_password=kafkaDev2026chi2\nsecurity_protocol=SASL_PLAINTEXT",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "local"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "kafkaDev2026chi2",
+        "template_type": "kafka",
+        "semantic_query": "本地 kafka 测试的账号密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-028",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "order-events 的 kafka 密码",
+      "story": "订单事件改了 topic 分区数，顺手把 kafka 那组环境变量整段复制来了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "# topic for order events\nKAFKA_BROKERS=kafka.internal:9092\nKAFKA_TOPIC=order-events\nKAFKA_SASL_PASSWORD=orderTopic2026omega2",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "topic"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "orderTopic2026omega2",
+        "template_type": "kafka",
+        "semantic_query": "order-events 的 kafka 密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-029",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "内部 npm registry 的认证 token",
+      "story": "组里自建的 registry.example.com，_authToken 就这一种方式认证，整段 .npmrc 贴过来了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "# private registry auth\n//registry.example.com/:_authToken=regToken2026devdelta\nregistry=https://registry.example.com/\nalways-auth=true",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "npm",
+          "registry",
+          "auth"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "regToken2026devdelta",
+        "template_type": "custom",
+        "semantic_query": "registry.example.com 的 authToken",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DEVE-030",
+      "generator": "claude",
+      "persona": "developer",
+      "persona_label": "软件开发工程师",
+      "title": "部署脚本的 passphrase",
+      "story": "发布脚本要求一段含特殊字符的 passphrase，当时是 export 进环境的，这段带引号的配置就是原始样张。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "# rotate on calendar change, stored here for dev\nexport SCRIPT_PASSPHRASE='Dev$2026epsilon`p9'\nexport SCRIPT_MODE=deploy",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "deploy",
+          "script"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Dev$2026epsilon`p9",
+        "template_type": "custom",
+        "semantic_query": "部署脚本 SCRIPT_PASSPHRASE",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-001",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "增长后台账号",
+      "story": "我是产品经理，我把增长后台的登录信息先存起来，免得临时找人要。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "https://growth-admin.example.com/login\n账号：pm_growth\n密码：GrowthPM2026#Go",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "backend",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "GrowthPM2026#Go",
+        "template_type": "account",
+        "semantic_query": "增长后台的登录密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-002",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "权限后台密码",
+      "story": "我是产品经理，我给权限后台单独记一条，名字和密码都直接手动填。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "名称：权限后台\n账号：pm_rbac\n密码：PermPM2026#Alpha",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "backend",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "PermPM2026#Alpha",
+        "template_type": "account",
+        "semantic_query": "权限后台那个密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-003",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "运营后台登录",
+      "story": "我是产品经理，邮件里那段运营后台账号密码我直接粘进来保存。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "https://ops-demo.internal/login\n账号：ops_pm\n密码：OpsPM2026_77",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "backend",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "OpsPM2026_77",
+        "template_type": "account",
+        "semantic_query": "运营后台账号密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-004",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "活动后台账号",
+      "story": "我是产品经理，这个活动后台我习惯用名称加密码的方式手动录入。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "名称：活动后台登录\n账号：pm.activity\n密码：ActPM2026!Run",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "backend",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ActPM2026!Run",
+        "template_type": "account",
+        "semantic_query": "活动后台那个账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-005",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "飞鲸后台双条",
+      "story": "我是产品经理，两套很像的后台账号我经常一起收到，只能靠名字分。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "飞鲸数据后台 https://feijing.internal\n账号：pm_a\n密码：FeiJing2026，北极星！\n飞鲸实验后台 https://feijing-lab.internal\n账号：pm_b\n密码：FeiJing2026，北极星？",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "backend",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "FeiJing2026，北极星！",
+        "template_type": "account",
+        "semantic_query": "飞鲸数据后台登录那个密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-006",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "审计后台登录",
+      "story": "我是产品经理，审计后台这类账号我会按邮件里的格式直接存。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "名称：审计后台\nurl：https://audit.example.org\n邮箱：pm.audit@example.org\n密码：AuditPM2026$1",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "backend",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "AuditPM2026$1",
+        "template_type": "account",
+        "semantic_query": "审计后台登录密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-007",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "内容中台双账号",
+      "story": "我是产品经理，内容中台和内容后台名字太像了，我得一起记下来。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "内容中台 https://content.example.net\n账号：pm_content\n密码：Content2026，先上！\n内容后台 https://content-admin.example.net\n账号：pm_content2\n密码：Content2026，先上？",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "backend",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Content2026，先上！",
+        "template_type": "account",
+        "semantic_query": "内容中台那个登录密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-008",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "增长管理台账号",
+      "story": "我是产品经理，我从聊天里复制增长管理台的登录信息，先放进来。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "https://growth-admin.example.org\nlogin: pm-growth\npassword: Growth2026@PM",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "backend",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Growth2026@PM",
+        "template_type": "account",
+        "semantic_query": "增长管理台那个账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-009",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "看板只读账号",
+      "story": "我是产品经理，看板工具的只读账号我通常按名称单独存一条。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "名称：Looker 只读\n账号：pm_looker\n密码：LookerPM2026#Read",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "bi",
+          "tool"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LookerPM2026#Read",
+        "template_type": "account",
+        "semantic_query": "看板工具只读账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-010",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "Tableau 只读密码",
+      "story": "我是产品经理，Tableau 的只读密码是同事发来的，我直接粘进去。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "https://tableau.example.net/signin\nuser: pm_tableau\npass: Tableau2026!read",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "bi",
+          "tool"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Tableau2026!read",
+        "template_type": "account",
+        "semantic_query": "Tableau看板只读密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-011",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "BI 工具双条",
+      "story": "我是产品经理，两套很像的 BI 工具权限我总是一起收到。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "数据工具A：https://bi-pro.example.com\n账号：pm_bi\n密码：BItool2026，北向！\n数据工具B：https://bi-lite.example.com\n账号：pm_bi2\n密码：BItool2026，北向？",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "bi",
+          "tool"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "BItool2026，北向！",
+        "template_type": "account",
+        "semantic_query": "BI工具里那个只读账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-012",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "Metabase 查看码",
+      "story": "我是产品经理，报表查看工具我会按名字和密码直接记下来。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "名称：Metabase 报表查看\n账号：pm_meta\n密码：Meta2026_View",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "bi",
+          "tool"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Meta2026_View",
+        "template_type": "account",
+        "semantic_query": "报表工具的查看密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-013",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "办公室 VPN",
+      "story": "我是产品经理，办公室 VPN 这种东西我只记得它的名字和密码。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "名称：办公室 VPN\n账号：pm_vpn\n密码：VPN2026#West",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "vpn"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "VPN2026#West",
+        "template_type": "account",
+        "semantic_query": "办公室VPN密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-014",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "跳板机账号",
+      "story": "我是产品经理，跳板机密码是同事发在群里的，我就顺手存了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "vpn://corp.example.com\n用户名：pm.shanghai\n密码：Jump2026!East",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "vpn"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Jump2026!East",
+        "template_type": "account",
+        "semantic_query": "跳板机登录那个密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-015",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "项目邮箱密码",
+      "story": "我是产品经理，项目邮箱的登录信息我一般直接从邮件里复制。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "https://mail.example.com\n邮箱：pm.team@example.com\n密码：MailPM2026%Q",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "mail"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "MailPM2026%Q",
+        "template_type": "account",
+        "semantic_query": "项目邮箱登录密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-016",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "运营邮箱账号",
+      "story": "我是产品经理，运营邮箱我会按账号名单独留一条。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "名称：运营邮箱\n账号：pm.ops@example.org\n密码：Inbox2026@ops",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "mail"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Inbox2026@ops",
+        "template_type": "account",
+        "semantic_query": "运营邮箱那个登录密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-017",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "API 文档密钥",
+      "story": "我是产品经理，接口文档的密钥我通常手动贴进去。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "名称：API 文档密钥\n密钥：doc_2026_api_A1B2C3",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "api",
+          "docs"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "doc_2026_api_A1B2C3",
+        "template_type": "custom",
+        "semantic_query": "API文档那个密钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-018",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "接口文档调用密钥",
+      "story": "我是产品经理，接口文档里的调用密钥我会从说明里整段复制。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "接口文档\nhttps://docs.example.com\napi_key: DOCPM2026-9X7Q",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "api",
+          "docs"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "DOCPM2026-9X7Q",
+        "template_type": "custom",
+        "semantic_query": "接口文档里的调用密钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-019",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "会议室 WiFi",
+      "story": "我是产品经理，会议室 WiFi 密码我一般直接写成一条备忘。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "名称：会议室 WiFi\n密码：Meet2026#Guest",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "wifi"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Meet2026#Guest",
+        "template_type": "custom",
+        "semantic_query": "会议室wifi密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-020",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "前台无线密码",
+      "story": "我是产品经理，前台无线网和备用网名字太接近，我经常一起记。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "前台 WiFi：FrontDesk2026，欢迎来访！\n备用 WiFi：FrontDesk2026，欢迎来访？",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "wifi"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "FrontDesk2026，欢迎来访！",
+        "template_type": "custom",
+        "semantic_query": "前台那个无线密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-021",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "试用授权码",
+      "story": "我是产品经理，设计工具的试用授权码我会按名称单独存。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "名称：Figma 试用授权\n序列号：FIG-PM26-8K2H-1A9Q",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "license"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "FIG-PM26-8K2H-1A9Q",
+        "template_type": "custom",
+        "semantic_query": "设计工具授权码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-022",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "演示软件许可",
+      "story": "我是产品经理，演示软件的 license 我通常从聊天记录里整段复制。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "软件许可\nhttps://license.example.net\ncode=SlidePM2026-77ZX",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "license"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "SlidePM2026-77ZX",
+        "template_type": "custom",
+        "semantic_query": "演示软件的license",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-023",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "BI 只读库连接串",
+      "story": "我是产品经理，BI 只读库的连接串我会一起保存，方便以后找。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "连接串：postgres://bi_reader:BIpm2026!ro@bi-ro.example.internal:5432/reporting",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "database",
+          "readonly"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "BIpm2026!ro",
+        "template_type": "database",
+        "semantic_query": "BI只读库密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-024",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "财务 BI 只读库",
+      "story": "我是产品经理，财务 BI 的只读库我更喜欢直接手动填名字和密码。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "名称：财务 BI 只读库\n账号：finance_ro\n密码：FinBI2026#Read",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "database",
+          "readonly"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "FinBI2026#Read",
+        "template_type": "database",
+        "semantic_query": "财务BI只读库那个密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-025",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "销售 BI 双库",
+      "story": "我是产品经理，销售 BI 的测试库和只读库太像了，我常常一起收到。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "postgres://sales_ro:SalesBI2026，北斗！@bi-sales.example.internal:5432/sales\npostgres://sales_dev:SalesBI2026，北斗？@bi-sales-dev.example.internal:5432/sales",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "database",
+          "readonly"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "SalesBI2026，北斗！",
+        "template_type": "database",
+        "semantic_query": "销售BI只读库那个密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-026",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "周报导出接口密钥",
+      "story": "我是产品经理，周报导出接口那组 access key 我会手工写进来。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "名称：周报导出接口\naccess_key_id：AKPM2026Q9\nsecret_access_key：SKPM2026zeta77",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "aksk",
+          "api"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "SKPM2026zeta77",
+        "template_type": "aksk",
+        "semantic_query": "周报导出接口那组 access key",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-027",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "样例桶访问密码",
+      "story": "我是产品经理，数据样例桶的访问串我会从群里复制下来保存。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "bucket：s3://sample-bucket-test\naccess_key=sample_view\nsecret=Sample2026$Bucket",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "bucket"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Sample2026$Bucket",
+        "template_type": "s3",
+        "semantic_query": "样例桶访问密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-028",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "报告存档桶密钥",
+      "story": "我是产品经理，季度报告的存档桶我会按名称直接录进去。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "名称：季度报告存档桶\n密钥：Archive2026@Q3",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "bucket"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Archive2026@Q3",
+        "template_type": "s3",
+        "semantic_query": "季度报告存档桶密钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-029",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "topic 看板权限",
+      "story": "我是产品经理，数据组给的 topic 看板权限我通常复制整段配置。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "kafka://topic=pm-metrics-view\nusername=pm_kafka\npassword=KafkaPM2026#View",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "topic"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "KafkaPM2026#View",
+        "template_type": "kafka",
+        "semantic_query": "数据组给的topic看板权限",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "PROD-030",
+      "generator": "codex",
+      "persona": "product_manager",
+      "persona_label": "产品经理",
+      "title": "订单流 topic 密码",
+      "story": "我是产品经理，订单流 topic 的权限和参考说明经常一起贴过来。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "topic=order-stream-qa\n账号：pm_topic\n密码：Kafka2026，订单看板！\n参考：order-stream-prod 只读同组",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "topic"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Kafka2026，订单看板！",
+        "template_type": "kafka",
+        "semantic_query": "订单流 topic 看板权限",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-001",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "画格登录",
+      "story": "我把画格工具台的开通邮件顺手存进来，后面改稿时不用再翻邮箱。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "画格工具台开通邮件\n站点 https://grid.example.com/login\n账号：mila\n密码：GrdBox-2026A1\n请用这个先登录。",
+        "primary_secret": null,
+        "name": "画格工具台",
+        "notes": null,
+        "tags": [
+          "design",
+          "tool",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "GrdBox-2026A1",
+        "template_type": "account",
+        "semantic_query": "画格工具台那个登录",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-002",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "栅格双条",
+      "story": "我收到一封把两条设计工具账号挨着写的邮件，只想先把栅格工坊那条存好。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "主题：栅格工坊 / 线框云 同批开通\n1) 栅格工坊\n账号：iris\n密码：Gri★d-77©\n2) 线框云\n账号：nova\n密码：N0va®2026\n先开栅格工坊这条。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "design",
+          "tool",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Gri★d-77©",
+        "template_type": "account",
+        "semantic_query": "栅格工坊那封开通邮件",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-003",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "配色云",
+      "story": "我把配色云的登录信息留着，临时找灵感素材时省得重新找人要。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "配色云邀请邮件\nURL: https://color.example.com\n登录名: hana\n临时密码: ColorFlow_26\n我晚点再改。",
+        "primary_secret": null,
+        "name": "配色云",
+        "notes": null,
+        "tags": [
+          "design",
+          "tool",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ColorFlow_26",
+        "template_type": "account",
+        "semantic_query": "配色云的账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-004",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "线框台",
+      "story": "我把线框台的密码贴进库里，想起改版时就不用再去翻聊天记录。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "线框台账号\n站点 https://frame.example.net\n账号：yoji\n密码：LineKit-8842\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "design",
+          "login",
+          "tool"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LineKit-8842",
+        "template_type": "account",
+        "semantic_query": "线框台登录",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-005",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "动效室",
+      "story": "我先把动效室的开通短信抄进去，做动效预览时少一件分心的事。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "动效室开通\n地址：https://motion.example.org\n用户名：zara\n密码：Motion@2026\n请尽快改密。",
+        "primary_secret": null,
+        "name": "动效室",
+        "notes": null,
+        "tags": [
+          "design",
+          "tool",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Motion@2026",
+        "template_type": "account",
+        "semantic_query": "动效室那个码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-006",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "稿件台",
+      "story": "我把稿件台后台密码录下来，交付前查资料时能直接登录。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "稿件台登录信息\nhttps://draft.example.org/admin\n用户：nori\n密码：FrameDeck-19\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "design",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "FrameDeck-19",
+        "template_type": "account",
+        "semantic_query": "稿件台后台",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-007",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "画库会员",
+      "story": "我把画库站会员邮件收进来，找图的时候不用再问同事。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "画库站会员邮件\n站点：https://huaku.example.com\n账号：muse01\n密码：HuaKu#2026\n",
+        "primary_secret": null,
+        "name": "画库站",
+        "notes": null,
+        "tags": [
+          "assets",
+          "stock",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "HuaKu#2026",
+        "template_type": "account",
+        "semantic_query": "画库站会员 🎨",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-008",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "纹理集",
+      "story": "我随手把纹理集市的登录卡片存了，做贴图时就能直接进。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "纹理集市开通\nhttps://texture.example.com\n登录：reno\n密码：TextuRe-54\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "assets",
+          "download",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "TextuRe-54",
+        "template_type": "account",
+        "semantic_query": "纹理集市那个素材站",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-009",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "素材双发",
+      "story": "我碰到一封把两个素材站账号排在一起的邮件，先把纹理集市这条记住。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "素材站批量开通\n1) 纹理集市\n账号：ivy\n密码：Mozaic®2026\n2) 贴纸星球\n账号：leo\n密码：Sticker_88!\n先用纹理集市。",
+        "primary_secret": null,
+        "name": "纹理集市",
+        "notes": null,
+        "tags": [
+          "assets",
+          "stock",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Mozaic®2026",
+        "template_type": "account",
+        "semantic_query": "素材站双开那封邮件",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-010",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "灵感铺",
+      "story": "我把灵感素材铺的账号存着，临时补版时不用再翻群消息。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "灵感素材铺登录\nURL https://inspire.example.net\n账号：wen\n密码：Insp!re_63\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "assets",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Insp!re_63",
+        "template_type": "account",
+        "semantic_query": "灵感素材铺登录",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-011",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "作品集站",
+      "story": "我把作品集后台单独记下来，更新案例时能直接进去改。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "作品集后台邮件\n站点 https://folio.example.com/admin\n账号: kai\n密码: Portfolio-001\n",
+        "primary_secret": null,
+        "name": "作品集后台",
+        "notes": null,
+        "tags": [
+          "portfolio",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Portfolio-001",
+        "template_type": "account",
+        "semantic_query": "作品集后台",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-012",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "个人站",
+      "story": "我把个人站管理台的密码收好，改首页文案时能随时上去。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "个人站管理台\n登录页 https://site.example.org\n用户名：nori\n密码：Showcase@7\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "portfolio",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Showcase@7",
+        "template_type": "account",
+        "semantic_query": "个人站管理台",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-013",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "站点双条",
+      "story": "我收到一封把两个站点后台连在一起的邮件，先把作品集后台那条存进去。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "主题：站点后台和作品集后台一起发的\n1) 作品集后台\n账号：sue\n密码：Site后台★42\n2) 个人站管理台\n账号：tom\n密码：T0m©2026\n先存作品集后台。",
+        "primary_secret": null,
+        "name": "个人站后台",
+        "notes": null,
+        "tags": [
+          "portfolio",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Site后台★42",
+        "template_type": "account",
+        "semantic_query": "站点后台那封",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-014",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "协作板",
+      "story": "我把协作板的登录信息放进去，和团队对稿时就不用来回问。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "协作板邀请\nhttps://collab.example.com\n账号：mina\n密码：Collab-2026\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "team",
+          "tool",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Collab-2026",
+        "template_type": "account",
+        "semantic_query": "协作板账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-015",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "项目群",
+      "story": "我把项目群工具的口令存好，交付周盯进度时能直接进去看。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "项目群工具开通\n站点: https://team.example.net\n登录名: ryo\n密码: TeamUp#64\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "team",
+          "tool",
+          "login"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "TeamUp#64",
+        "template_type": "account",
+        "semantic_query": "项目群工具那个",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-016",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "字库码",
+      "story": "我把字库授权码放进来，出图时就不用临时找设计总监要。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "字库授权邮件\n字体：清风宋体 Pro\n授权码：Huaban😊2026\n工号：dz-17\n",
+        "primary_secret": null,
+        "name": "字库授权",
+        "notes": null,
+        "tags": [
+          "fonts",
+          "license"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Huaban😊2026",
+        "template_type": "custom",
+        "semantic_query": "字库授权码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-017",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "字体序列",
+      "story": "我把字体包的序列号存着，换电脑装字库的时候更省事。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "字体授权单\n字体包：棱镜黑体\n序列号：FontKey-33\n备注：内网设备可用\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "fonts",
+          "license"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "FontKey-33",
+        "template_type": "custom",
+        "semantic_query": "字体包序列号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-018",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "字形双码",
+      "story": "我收到了两条字形授权挨着写的邮件，先把第一条码记住。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "邮件：字形库授权\n1) 字体A：墨点黑\n授权码：紫罗兰★2024\n2) 字体B：砂岩宋\n授权码：Shtype®18\n先记第一条。",
+        "primary_secret": null,
+        "name": "字形授权",
+        "notes": null,
+        "tags": [
+          "fonts",
+          "license"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "紫罗兰★2024",
+        "template_type": "custom",
+        "semantic_query": "字形授权那封邮件",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-019",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "提取码一",
+      "story": "我把素材站下载提取码顺手存了，赶稿时找包更快。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "素材站下载说明\n文件：杂志贴纸包\n提取码：Extract-7A9\n链接：https://clip.example.com\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "assets",
+          "code"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Extract-7A9",
+        "template_type": "custom",
+        "semantic_query": "素材提取码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-020",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "提取码二",
+      "story": "我把下载页里的提取码贴进来，回头找图包时不用再翻邮件。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "图包分享\n站点：https://drop.example.org\n提取码：ClipCode_58\n来自：小组分享邮件\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "assets",
+          "code"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "ClipCode_58",
+        "template_type": "custom",
+        "semantic_query": "下载提取码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-021",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "办公室网",
+      "story": "我把办公室 wifi 记下来，带笔记本来工位就能直接连。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "办公室 WiFi 备忘\n名称：StudioNet\n密码：WiFi-Blue88\n位置：二楼西侧\n",
+        "primary_secret": null,
+        "name": "办公wifi",
+        "notes": null,
+        "tags": [
+          "wifi",
+          "office"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "WiFi-Blue88",
+        "template_type": "custom",
+        "semantic_query": "办公室 wifi 📶",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-022",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "茶水间网",
+      "story": "我把茶水间那张无线卡片存好，临时接样机时很方便。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "茶水间路由器卡片\nSSID：StudioGuest\n密码：CafeWiFi#27\n别贴给外包看\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "wifi",
+          "office"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "CafeWiFi#27",
+        "template_type": "custom",
+        "semantic_query": "茶水间无线",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-023",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "农场口令",
+      "story": "我收到云渲染工坊的双条口令邮件，先把渲染农场那条锁进去。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "云渲染工坊邮件\n1) 渲染农场\n账号：node07\n口令：Render©2026\n2) 备用渲染农场\n账号：node08\n口令：NodeBack_09\n先用 node07。",
+        "primary_secret": null,
+        "name": "渲染农场",
+        "notes": null,
+        "tags": [
+          "render",
+          "farm"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Render©2026",
+        "template_type": "custom",
+        "semantic_query": "渲染农场口令",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-024",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "算力码",
+      "story": "我把云算工坊的口令存起来，晚上跑预览图时能直接拿来用。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "云算工坊开通\n入口：https://render.example.net\n口令：FarmPass-41\n账号：pix\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "render",
+          "farm"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "FarmPass-41",
+        "template_type": "custom",
+        "semantic_query": "云算工坊口令",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-025",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "许可单",
+      "story": "我把排版软件的 license 记好，换机装软件时不用再找邮件。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "排版软件许可单\n软件：PageMaker X\nLicense：LicenSe_9X\n机器数：2\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "license",
+          "tool"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LicenSe_9X",
+        "template_type": "custom",
+        "semantic_query": "软件 license 码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-026",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "云渲染钥",
+      "story": "我把云渲染工坊的密钥对存好，自动上传预览时能直接配上。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "云渲染工坊 API 开通\naccess_key_id: AKR-2026-01\nsecret_key: CloudAKSK_01\nregion: cn-test-1\n",
+        "primary_secret": null,
+        "name": "云渲染工坊",
+        "notes": null,
+        "tags": [
+          "cloud",
+          "keys"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "CloudAKSK_01",
+        "template_type": "aksk",
+        "semantic_query": "云渲染工坊 access key",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-027",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "CDN密钥",
+      "story": "我把 CDN 分发的 key 记下来，素材上线时省得临时找运维。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "CDN 分发账号\naccess_key_id=CDN-77-AX\nsecret_key=EdgeKey_77\n备注=素材分发\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "cloud",
+          "keys"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "EdgeKey_77",
+        "template_type": "aksk",
+        "semantic_query": "CDN 分发的 key",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-028",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "边缘双钥",
+      "story": "我收到一封把两组 access key 挨着写的邮件，先存边缘云那组。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "邮件：边缘云和云渲染一起开\n1) 边缘云\naccess_key_id: EDGE-11-A\nsecret_key: Sky©Key★11\n2) 云渲染\naccess_key_id: REND-11-B\nsecret_key: Cloud®Key12\n先录边缘云。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "cloud",
+          "keys"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Sky©Key★11",
+        "template_type": "aksk",
+        "semantic_query": "边缘云 key 那封",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-029",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "分发钥",
+      "story": "我把素材分发云的密钥存进来，发大图包时就不用再翻工单。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "素材分发云\naccess_key_id: DIST-204\nsecret_key: MixKey_204\n使用说明见内网\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "cloud",
+          "keys"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "MixKey_204",
+        "template_type": "aksk",
+        "semantic_query": "素材分发云的秘钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-030",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "素材桶",
+      "story": "我把素材云桶的密码收好，传原始图的时候直接接上。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "素材云桶 开通\nbucket: palette-assets-test\nendpoint: s3.example.com\nsecret_key: BucketSecret-11\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "bucket",
+          "storage"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "BucketSecret-11",
+        "template_type": "s3",
+        "semantic_query": "素材云桶那个 bucket",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-031",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "贴纸桶",
+      "story": "我把贴纸素材桶的密钥存起来，导出贴纸包时更省事。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "贴纸素材桶\nbucket=sticker-packs-dev\nsecret_key=S3Key@22\nacl=private\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "bucket",
+          "storage"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "S3Key@22",
+        "template_type": "s3",
+        "semantic_query": "贴纸桶 secret",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-032",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "纹理桶",
+      "story": "我把纹理桶的密钥存好，做大图预览时同步更顺。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "纹理云桶\nbucket: texture-assets-test\nendpoint: s3.example.com\nsecret_key: TexBox-93\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "bucket",
+          "storage"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "TexBox-93",
+        "template_type": "s3",
+        "semantic_query": "纹理桶那个素材桶",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-033",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "备份桶",
+      "story": "我把作品备份桶存起来，交付完回头找历史版本更快。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "作品备份桶说明\nbucket: portfolio-backup\nsecret_key: Backup#Store6\n用于隔夜同步\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "bucket",
+          "storage"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Backup#Store6",
+        "template_type": "s3",
+        "semantic_query": "作品备份桶",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-034",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "官网库",
+      "story": "我把官网内容库的只读密码收着，临时查文案表时能直接进。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "官网内容库只读账号\npostgres://cms_reader@example.internal\npassword: DBro-ReadOnly8\nschema: public\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "database",
+          "readonly"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "DBro-ReadOnly8",
+        "template_type": "database",
+        "semantic_query": "官网内容库只读",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "DESI-035",
+      "generator": "codex",
+      "persona": "designer",
+      "persona_label": "设计师",
+      "title": "资产通知",
+      "story": "我把设计资产更新通知的 Kafka 口令留着，自动同步素材时不用再找运维。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "设计资产更新通知\nbootstrap_servers: kafka.internal:9092\ntopic: design-assets\nsasl_password: Kafka_Asset-57\n",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "notify"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Kafka_Asset-57",
+        "template_type": "kafka",
+        "semantic_query": "设计资产更新通知 kafka",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-001",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "实惠购商城账号",
+      "story": "我在实惠购商城买米买油，把登录密码记下免得老忘。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "实惠购商城账号是我手机号，登录密码是 Qc9x!Pz2&m4，你帮我盯紧点",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "shopping",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Qc9x!Pz2&m4",
+        "template_type": "account",
+        "semantic_query": "实惠购商城登录密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-002",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "省钱小铺账号",
+      "story": "省钱小铺东西便宜，媳妇让我把她的账号密码也记上。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "省钱小铺：媳妇让我记，账号写的老王媳妇，密码19900101abc",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "shopping",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "19900101abc",
+        "template_type": "account",
+        "semantic_query": "省钱小铺媳妇的账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-003",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "天天特惠购账号",
+      "story": "天天特惠购天天签到领鸡蛋，密码存你这就不会丢了。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "天天特惠购 账号我手机号 密码 Sj3Ka7$Lp8",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "shopping",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Sj3Ka7$Lp8",
+        "template_type": "account",
+        "semantic_query": "天天特惠购签到账号",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-004",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "居家好物网登录",
+      "story": "居家好物网上买了个拖把，客服让报密码，我干脆整句粘给你。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "你在居家好物网的登录密码就是家和万事兴123你到时候直接输这个就能进去",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "shopping",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "家和万事兴123",
+        "template_type": "account",
+        "semantic_query": "居家好物网那个密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-005",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "乐邻社区通账号",
+      "story": "社区通知都发在乐邻社区通上，得常上去看着。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "乐邻社区通 账号是老王 密码 Tu8!Mm4&Ko7",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "social",
+          "community",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Tu8!Mm4&Ko7",
+        "template_type": "account",
+        "semantic_query": "社区通知那个网站",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-006",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "老友圈账号",
+      "story": "老友圈上全是以前老同学，登录密码记一下。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "老友圈密码：Bn5@Vb9#Qw2 账号就是老王本名",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "social",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Bn5@Vb9#Qw2",
+        "template_type": "account",
+        "semantic_query": "老同学那个网站密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-007",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "邻里唠嗑网账号",
+      "story": "邻里唠嗑网上都在聊小区里的事，把密码存你这。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "邻里唠嗑网 登录账号手机号 密码 邻里一家亲2025",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "social",
+          "community",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "邻里一家亲2025",
+        "template_type": "account",
+        "semantic_query": "小区唠嗑那个网站",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-008",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "喜乐聚视频会员",
+      "story": "喜乐聚视频上追剧，会员密码记一下免得老忘。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "喜乐聚视频 我的账号是老王 密码 Hu6^Kp3&Ng1",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "video",
+          "member",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Hu6^Kp3&Ng1",
+        "template_type": "account",
+        "semantic_query": "喜乐聚视频会员密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-009",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "闪耀点播会员",
+      "story": "闪耀点播是闺女给我开的会员，她微信发我一串我自己看不大懂。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "妈你把这条存好了\n我在闪耀点播给你开了会员\n账号就是你手机号\n密码是 🎂🎉🎈520\n别再问我了",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "video",
+          "member",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "🎂🎉🎈520",
+        "template_type": "account",
+        "semantic_query": "闪耀点播那个会员密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-010",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "嗨剧屋账号",
+      "story": "嗨剧屋能看戏曲，密码存着你我就不会再忘。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "嗨剧屋账号老王 密码 幸福快乐每一天",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "video",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "幸福快乐每一天",
+        "template_type": "account",
+        "semantic_query": "看戏曲那个会员",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-011",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "小蜜蜂邮箱登录",
+      "story": "小蜜蜂邮箱收水电费单子，别的功能我也不会用。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "小蜜蜂邮箱 账号 laowang@xiaomifeng.example 密码 Yn8!Zm4@Kt2",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "email",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Yn8!Zm4@Kt2",
+        "template_type": "account",
+        "semantic_query": "收水电单那个邮箱",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-012",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "云鸽邮邮箱",
+      "story": "云鸽邮是孩子帮忙注册的，说专门收积分短信用。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "云鸽邮的登录密码是团团圆圆一家人这次说的是邮箱别记差成上次那个了",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "email",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "团团圆圆一家人",
+        "template_type": "account",
+        "semantic_query": "收积分那个邮箱",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-013",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "市政办事大厅账号",
+      "story": "街道办说能在网上大厅办事，让我把密码记好。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "市政办事大厅 账号就写老王 密码20010515",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "gov",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "20010515",
+        "template_type": "account",
+        "semantic_query": "市政办事大厅密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-014",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "便民一站办账号",
+      "story": "便民一站办上能查医保，密码记一下。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "便民一站办 账号 老王 密码 123123",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "gov",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "123123",
+        "template_type": "account",
+        "semantic_query": "医保那个办事网站",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-015",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "家里wifi密码",
+      "story": "楼上邻居总问我要wifi密码，我干脆记你这里。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "家里wifi的密码 是 123456",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "wifi",
+          "home"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "123456",
+        "template_type": "custom",
+        "semantic_query": "家里wifi密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-016",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "客厅wifi密码",
+      "story": "路由器背面那串看不清，让儿子重新整个好记的。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "你看这个我们家客厅路由器改的wifi密码她是 888888 你记一下吧",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "wifi",
+          "router"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "888888",
+        "template_type": "custom",
+        "semantic_query": "客厅路由器wifi密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-017",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "客房wifi密码",
+      "story": "客房wifi是给亲戚来住用的，密码存一下。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "客房那个wifi：密码是 Kt3#Wq7&Vb5",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "wifi",
+          "guest"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Kt3#Wq7&Vb5",
+        "template_type": "custom",
+        "semantic_query": "客房wifi密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-018",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "家里宽带初始密码",
+      "story": "装宽带客服发我短信，我把整条短信都粘来了。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "【云速宽带】您的宽带账号为链接开通，初始密码 Xf4@Pk8#Rs2 请及时修改，退订回T",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "broadband",
+          "isp"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Xf4@Pk8#Rs2",
+        "template_type": "custom",
+        "semantic_query": "家里宽带初始密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-019",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "老王家宽带缴费",
+      "story": "老王家的宽带老欠费，缴费密码也放你这。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "老王家的宽带缴费密码是 Gw5#Mn8@Ya2",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "broadband",
+          "bill"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Gw5#Mn8@Ya2",
+        "template_type": "custom",
+        "semantic_query": "老王家宽带缴费",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-020",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "家里宽带密码",
+      "story": "上次师傅上门改的宽带密码，我怕忘就手输了一个。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "Qw2$Df4#Gk7",
+        "primary_secret": null,
+        "name": "家里宽带",
+        "notes": null,
+        "tags": [
+          "broadband",
+          "router"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Qw2$Df4#Gk7",
+        "template_type": "custom",
+        "semantic_query": "宽带登录密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-021",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "家里智能门锁密码",
+      "story": "智能门锁管理密码，装锁师傅让存好。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "智能门锁管理员密码是 3456@9001Kp",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "lock",
+          "smarthome"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "3456@9001Kp",
+        "template_type": "custom",
+        "semantic_query": "门锁管理密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-022",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "门口摄像头App密码",
+      "story": "门口摄像头App让我设个密码，我手输的那个就存这。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "Tv9$Mj2@Hk6",
+        "primary_secret": null,
+        "name": "门口摄像头App",
+        "notes": null,
+        "tags": [
+          "camera",
+          "smarthome"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Tv9$Mj2@Hk6",
+        "template_type": "custom",
+        "semantic_query": "门口摄像头App密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-023",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "老家院子监控密码",
+      "story": "老家院子里那个监控探头，密码存你这。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "老家院子的监控 密码 Abc@5678Xy",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "camera",
+          "smarthome"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Abc@5678Xy",
+        "template_type": "custom",
+        "semantic_query": "老家院子监控密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-024",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "电视机顶盒密码",
+      "story": "机顶盒设置密码，老一重启就要重新输。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "机顶盒设置密码 Ch4$Rr6#Wn8",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "settop",
+          "tv"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Ch4$Rr6#Wn8",
+        "template_type": "custom",
+        "semantic_query": "电视机顶盒密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-025",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "顺风打车会员",
+      "story": "顺风打车有会员优惠，密码给我哥用也放这。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "顺风打车会员 密码是 Iw6@Xk9#Qd4",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "taxi",
+          "member"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Iw6@Xk9#Qd4",
+        "template_type": "custom",
+        "semantic_query": "打车那个会员",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-026",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "馋嘴外卖会员",
+      "story": "馋嘴外卖有会员券，密码存一下。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "馋嘴外卖会员号密码 Hn2$Qs7@Mb3",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "delivery",
+          "member"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Hn2$Qs7@Mb3",
+        "template_type": "custom",
+        "semantic_query": "点外卖那个会员",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-027",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "彩虹健身App密码",
+      "story": "彩虹健身办的年卡，App登录码记一下。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "彩虹健身App登录码 Jk8$Yu3@Wv6",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "gym",
+          "member"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Jk8$Yu3@Wv6",
+        "template_type": "custom",
+        "semantic_query": "健身房那个App",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-028",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "游泳馆会员码",
+      "story": "游泳馆年卡会员码，进门就刷这个。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "Sw6$Tr4@Zv1",
+        "primary_secret": null,
+        "name": "游泳馆会员码",
+        "notes": null,
+        "tags": [
+          "gym",
+          "member"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Sw6$Tr4@Zv1",
+        "template_type": "custom",
+        "semantic_query": "游泳馆会员码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-029",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "广场舞队服购买码",
+      "story": "一起跳舞的大姐让我把队服购买码发群里，我先记你这。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "舞队的购买码你们看好是这个 → 🐍🐯🐰123456 到时候买队服用",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "dance",
+          "member"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "🐍🐯🐰123456",
+        "template_type": "custom",
+        "semantic_query": "舞队买队服的码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-030",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "家庭账本数据库密码",
+      "story": "儿子给我整的家用账本数据库，说记流水账用。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "家庭账本数据库建好了账号admin密码 Db2$Vf8@Mx5",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "database",
+          "family",
+          "ledger"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Db2$Vf8@Mx5",
+        "template_type": "database",
+        "semantic_query": "儿子弄的记账数据库",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-031",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "买菜花销数据库",
+      "story": "记买菜花销的数据库，闺女远程帮我连好的。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "买菜账数据库 账号laowang 密码 菜篮子记个账",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "database",
+          "family"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "菜篮子记个账",
+        "template_type": "database",
+        "semantic_query": "买菜花钱那个数据库",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-032",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "孙子学费记录数据库",
+      "story": "孙子学费那笔账都在那个数据库，密码我照儿子短信念的。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "数据库的root密码你们自己连 是 Kx9@Tr2$Vn4 别外传",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "database",
+          "family"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Kx9@Tr2$Vn4",
+        "template_type": "database",
+        "semantic_query": "孙子学费那个数据库",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-033",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "redis密码（儿子托管）",
+      "story": "儿子说他们公司redis的密码要我帮忙保管，说很要紧。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "爸\n这是公司redis的密码\nCk4$Mj8@Wq2\n你帮我存到密码本里别给外人",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "cache"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Ck4$Mj8@Wq2",
+        "template_type": "redis",
+        "semantic_query": "儿子公司redis密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-034",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "redis哨兵密码",
+      "story": "儿子同事又发来一个什么哨兵的密码，一串英文我也分不清。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "redis哨兵密码更新了新的是 Sb7!Lm3@Yt9 俺老板让赶紧记下来别弄错",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "cache"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Sb7!Lm3@Yt9",
+        "template_type": "redis",
+        "semantic_query": "哨兵那个密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-035",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "redis集群密码",
+      "story": "老大让帮忙保管的redis集群密码，微信直接转给我了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "redis集群密码给你 收好 别弄丢\nRr3@Kd6!Zs7",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "redis",
+          "cluster"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Rr3@Kd6!Zs7",
+        "template_type": "redis",
+        "semantic_query": "redis集群密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-036",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "家庭照片s3备份",
+      "story": "儿子把家里照片都放s3上了，说怕手机丢了找不回来。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "照片全家福都在s3上\n账号照片备份专用\n密码是 Ph0t0@Fam#88\n你记好这个就行",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "photos",
+          "backup"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Ph0t0@Fam#88",
+        "template_type": "s3",
+        "semantic_query": "全家福照片备份密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-037",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "老照片备份账号",
+      "story": "老照片备份那串账号密钥我不懂，整段全复制回来了。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "老照片备份的访问账号：photo-archive老照片备份的访问秘钥：Bk2@Vp9#Tm6 其它不用管",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "photos",
+          "backup"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Bk2@Vp9#Tm6",
+        "template_type": "s3",
+        "semantic_query": "老照片备份那个密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-038",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "kafka死信队列密码",
+      "story": "儿子工作上kafka的什么死信队列密码，让我帮忙管着。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "爸这是kafka死信队列的密码 您代管一下\nXy6!Kk2@Qz4",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "queue"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Xy6!Kk2@Qz4",
+        "template_type": "kafka",
+        "semantic_query": "儿子工作那个kafka",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-039",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "云服务器aksk",
+      "story": "儿子公司云服务器的AK和SK让我保管，一串一串的全发给我了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "爸我把云服务器的ak和sk发你了\nAccess Key 是 FAM-2024-7K9Q\nSecret Key 是 La8$We3@Kj6\n你给收好",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "aksk",
+          "cloud"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "La8$We3@Kj6",
+        "template_type": "aksk",
+        "semantic_query": "云服务器那个ak和sk",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "NOVI-040",
+      "generator": "opencode",
+      "persona": "novice",
+      "persona_label": "电脑小白",
+      "title": "对象存储SK",
+      "story": "对象存储那个Secret Key，闺女发我的，不会拼就整段拿了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "对象存储的Secret Key你帮我记一下 是这个 Zo5$Rv2@Mb7",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "aksk",
+          "cloud"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "Zo5$Rv2@Mb7",
+        "template_type": "aksk",
+        "semantic_query": "闺女那个存储的秘钥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-001",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "云章OA",
+      "story": "我按照IT发来的开通通知，把云章OA的登录账号和初始密码存进了保险柜。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "云章OA 账户开通通知\n\n系统地址：https://oawz.example.com/login\n登录账号：admin_yunzhang\n初始密码：LQ2026-OA-yz16\n\n请妥善保管，首次登录后IT会另行通知修改。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "oa",
+          "account",
+          "internal"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-OA-yz16",
+        "template_type": "account",
+        "semantic_query": "云章OA管理员的登录密码是多少",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-002",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "蓝桥协同OA",
+      "story": "我在OA开通邮件里复制了协同平台的账号密码录入系统。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "蓝桥协同办公平台 开通通知\n\n访问地址：http://xtoa.internal\n用户名：financial01\n初始密码：LQ2026-XT-zb78\n备用说明：仅限内网访问。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "oa",
+          "account",
+          "internal"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-XT-zb78",
+        "template_type": "account",
+        "semantic_query": "协同办公平台那个账号的密码你还找得到吗",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-003",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "行政后勤OA",
+      "story": "IT发来的开通通知里把初始密码和首次登录必须改密的提示混在一起，我核对了好久才把密码摘出来。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "行政后勤OA 账号开通通知\n\n地址：https://xz.hr.example.com\n账号：xzadmin\n初始密码：LQ2026-XZ-gov41，首次登录后必须立即修改为新密码，否则账号会被锁定。\n通知下发后24小时内请联系IT核对权限范围。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "oa",
+          "hr",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-XZ-gov41",
+        "template_type": "account",
+        "semantic_query": "行政后勤OA的超级管理员密码存在哪里了",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-004",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "票易报",
+      "story": "我把票易报销系统的财务审批账号和初始密码存了下来。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "票易报 报销系统 账户开通通知\n\n系统地址：https://piaoyibao.example.net\n登录账号：piaowu_caiwu\n初始密码：LQ2026-BX-pw02\n\n恭喜开通，请勿把账号外借。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "baoxiao",
+          "financial",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-BX-pw02",
+        "template_type": "account",
+        "semantic_query": "票易报报销系统的财务账号密码帮我查一下",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-005",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "快报云",
+      "story": "邮件里把快报云报销和发票库的开通通知挨在一起贴了出来，录入时费了点劲才分清楚。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "快报云 报销系统开通通知\n\n网址：https://kuaibaoyun.example.org\n账号：kjb01\n初始密码：LQ2026-BX-kb19\n\n另附：发票库只读账号 im-001，口令 LQ2026-FP-cw33，仅供查验红字发票，勿改动数据。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "baoxiao",
+          "account",
+          "invoice"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-BX-kb19",
+        "template_type": "account",
+        "semantic_query": "快报云报销系统开通时给的财务登录密码是多少",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-006",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "考勤精灵",
+      "story": "考勤精灵的人事专员账号开通了，我把初始密码记进保险柜。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "考勤精灵 开通通知\n\n访问地址：https://kqjl.example.com\n登录账号：kq_hr_zhang\n初始密码：LQ2026-KQ-jl05\n\n仅供人事核对考勤数据使用。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kaoqin",
+          "hr",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-KQ-jl05",
+        "template_type": "account",
+        "semantic_query": "考勤精灵的登录账号密码是多少",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-007",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "考勤系统-公共",
+      "story": "这个考勤系统是公共账号，我手动起了个名字存进去，备注了不要外传。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "考勤统计系统 公共账号开通通知\n\n地址：http://kqtj.internal\n账号：kq_gonggong\n初始密码：LQ2026-KQ-gg12\n\n该账号为公共账号，全部门共用，请勿外传，首次登录后建议在页面上自行修改。",
+        "primary_secret": null,
+        "name": "考勤系统-公共",
+        "notes": "公共账号，勿外传，全部门共用",
+        "tags": [
+          "kaoqin",
+          "public",
+          "internal"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-KQ-gg12",
+        "template_type": "account",
+        "semantic_query": "那个考勤系统的公共账号密码存在哪了",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-008",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "税易通",
+      "story": "税易通税务申报系统开通后，我把报税账号的初始密码存好了。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "税易通 电子申报系统 开通通知\n\n申报地址：https://sytsb.example.com\n纳税人账号：sw_agent_03\n初始密码：LQ2026-SW-ty27\n\n请于申报期前完成首次登录设置密保，密保问题答案请自行记录。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "shuiwu",
+          "tax",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-SW-ty27",
+        "template_type": "account",
+        "semantic_query": "税易通报税系统的账号密码在不在里面",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-009",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "社保申报系统",
+      "story": "社保申报系统的初始密码里既有字母又有特殊符号，粘贴时我特别留心了首尾空格。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "社保申报平台 开通通知\n\n网址：https://sbb.internal/pc\n单位编号：unit803\n申报账号：sbjh_daiban\n初始密码：LQ2026-SB-jh9!\n\n重要：账号仅限本单位申报员使用，离职需交还。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "shebao",
+          "account",
+          "internal"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-SB-jh9!",
+        "template_type": "account",
+        "semantic_query": "社保申报平台的登录密码你那边存了吗",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-010",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "个税汇算申报",
+      "story": "每年汇算期用的个税申报公共账号，我录入时加了公共账号备注。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "个人所得税汇算申报账号 开通通知\n\n入口地址：https://geshui.example.org/login\n登录账号：gssb_admin\n初始密码：LQ2026-GS-hs64\n\n该账号为办税公共账号，密码修改需经财务负责人审批。",
+        "primary_secret": null,
+        "name": null,
+        "notes": "办税公共账号，勿外传",
+        "tags": [
+          "geshui",
+          "tax",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-GS-hs64",
+        "template_type": "account",
+        "semantic_query": "个税汇算申报用的公共账号密码是多少",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-011",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "蓝桥企业邮箱",
+      "story": "邮箱开通通知把初始密码和首次登录强制改密写在同一行括注里，我誊抄时反复核对了好几遍。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "蓝桥企业邮箱 账号开通通知\n\n邮箱地址：gwy01@lanqiao.example.com\n网页登录：https://mailqt.example.com\n初始密码：LQ2026-ML-gw25（首次登录将强制要求修改，请在修改前先记好此密码）\n\n如需申请新邮箱请提交OA流程。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "email",
+          "mail",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-ML-gw25",
+        "template_type": "account",
+        "semantic_query": "新开通的企业邮箱密码是多少来着",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-012",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "财务共享邮箱-公共",
+      "story": "财务部共享邮箱开通，我把初始密码和公共账号说明一起存了。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "财务共享邮箱 开通通知\n\n邮箱：cwgx@lanqiao.example.net\n登录地址：https://mailcw.example.net\n初始密码：LQ2026-ML-cw31\n\n本邮箱为部门公共邮箱，勿外传密码。",
+        "primary_secret": null,
+        "name": "财务共享邮箱-公共",
+        "notes": "公共账号，勿外传",
+        "tags": [
+          "email",
+          "public",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-ML-cw31",
+        "template_type": "account",
+        "semantic_query": "财务共享邮箱的密码存在哪里了",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-013",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "行政共享网盘-公共",
+      "story": "行政部的共享网盘账号开通了，我把初始密码录进保险柜供大家共用。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "行政共享网盘 开通通知\n\n访问地址：https://panxz.example.com\n共享账号：xzb_gonggong\n初始密码：LQ2026-PAN-xz08\n\n上传下载都走此账号，公共账号，勿外传。",
+        "primary_secret": null,
+        "name": "行政共享网盘-公共",
+        "notes": "公共账号，勿外传",
+        "tags": [
+          "wangpan",
+          "public",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-PAN-xz08",
+        "template_type": "account",
+        "semantic_query": "行政部的共享网盘密码是多少",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-014",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "财务共享网盘-公共",
+      "story": "财务部共享网盘开通，我按通知存好了账号密码。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "财务共享网盘 开通通知\n\n网址：https://pancw.example.com/share\n账号：cwkj_pub\n初始密码：LQ2026-PAN-cw29\n\n仅限财务部人员使用。",
+        "primary_secret": null,
+        "name": "财务共享网盘-公共",
+        "notes": "公共账号，勿外传，仅限财务部",
+        "tags": [
+          "wangpan",
+          "public",
+          "account"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-PAN-cw29",
+        "template_type": "account",
+        "semantic_query": "财务共享网盘的账号密码帮我找一下",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-015",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "打印机管理后台-公共",
+      "story": "行政部打印机的管理后台密码是IT直接贴给我的，我抄进保险柜并备注了公共账号。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "打印机管理后台 信息\n\n网址：http://printer-admin.test\n管理账号：admin\n管理密码：LQ2026-PRT-adm16\n\n该后台为行政部公共账号，勿外传。",
+        "primary_secret": null,
+        "name": "打印机管理后台-公共",
+        "notes": "公共账号，勿外传",
+        "tags": [
+          "printer",
+          "admin",
+          "public"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-PRT-adm16",
+        "template_type": "custom",
+        "semantic_query": "打印机管理页面的那个密码是多少",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-016",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "二楼打印机管理",
+      "story": "楼层打印机的管理密码和行政网盘的开通说明贴在同一张便签上，我分开存了。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "二楼打印机管理页密码：LQ2026-PRT-2f77\n（页面地址 http://prt2.internal/web 账号 admin）\n\n另：三楼同型号打印机走同一个后台，未单独开账号。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "printer",
+          "internal",
+          "password"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-PRT-2f77",
+        "template_type": "custom",
+        "semantic_query": "二楼打印机管理后台的密码是啥",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-017",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "会议室预约系统",
+      "story": "会议室预约系统的管理员密码我存下来了，方便帮各业务部门订会议室。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "会议室预约系统 管理端信息\n\n后台网址：https://hys.internal/console\n管理员账号：meeting_mgr\n后台密码：LQ2026-MTG-10ky\n\n管理端仅供行政人员使用。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "meeting",
+          "internal",
+          "admin"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-MTG-10ky",
+        "template_type": "custom",
+        "semantic_query": "会议室预约系统管理后台的密码在哪里",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-018",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "会议室预约-公共",
+      "story": "前台共用的大会议室预约账号开通，我把公共密码备注清楚。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "大会议室预约 公共账号开通通知\n\n入口：https://room.example.com\n账号：room_public\n密码：LQ2026-MTG-gg40\n\n公共账号，勿外传，仅用于前台代约大会议室。",
+        "primary_secret": null,
+        "name": "会议室预约-公共",
+        "notes": "公共账号，勿外传",
+        "tags": [
+          "meeting",
+          "public",
+          "frontdesk"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-MTG-gg40",
+        "template_type": "custom",
+        "semantic_query": "预约大会议室用的公共账号密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-019",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "门禁后台",
+      "story": "写字楼门禁系统后台密码由物业指定，我在保险柜里存了一份交接说明。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "门禁管理后台 交接说明\n\n门禁后台地址：http://mj.internal/admin\n超级管理员：mj_admin\n登录密码：LQ2026-MJ-bk31\n\n首次登录后请修改并同步给物业方留档。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "menjin",
+          "access",
+          "internal"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-MJ-bk31",
+        "template_type": "custom",
+        "semantic_query": "门禁后台的登录密码是啥来着",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-020",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "访客WiFi-公共",
+      "story": "办公室访客WiFi的公共密码我存了下来，方便随时报给来访的人。",
+      "difficulty": "easy",
+      "create": {
+        "pasted_text": "办公室访客WiFi\n\n网络名：LQ-Guest\n密码：LQ2026-WIFI-ph64\n\n行政部工位旁张贴的也是这个密码。",
+        "primary_secret": null,
+        "name": "访客WiFi-公共",
+        "notes": "公共账号，勿外传",
+        "tags": [
+          "wifi",
+          "public",
+          "guest"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-WIFI-ph64",
+        "template_type": "custom",
+        "semantic_query": "访客wifi密码是多少",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-021",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "工资核算库-只读",
+      "story": "工资核算数据库的只读账号开通，我记下了连接信息和密码。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "工资核算数据库 只读账号开通通知\n\n数据库类型：MySQL\n主机：gwdb.internal:3306\n数据库：wage2026\n只读账号：ro_wage\n初始密码：LQ2026-DB-wg21\n\n仅限工资核算使用，只读。",
+        "primary_secret": null,
+        "name": "工资核算库-只读",
+        "notes": null,
+        "tags": [
+          "database",
+          "mysql",
+          "ro"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-DB-wg21",
+        "template_type": "database",
+        "semantic_query": "工资核算数据库那个只读账号的密码是多少",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-022",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "发票库",
+      "story": "发票查验库的只读连接信息存进了保险柜。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "发票数据库 只读连接信息\n\n数据库类型：PostgreSQL\n主机：fpdb.internal:5432\n数据库名：invoice2026\n只读账号：fp_ro_02\n密码：LQ2026-DB-fp06\n\n只读权限，请勿开启写入通道。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "database",
+          "postgres",
+          "invoice"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-DB-fp06",
+        "template_type": "database",
+        "semantic_query": "发票数据库的只读账号密码存在哪里了",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-023",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "凭证扫描件归档桶",
+      "story": "凭证扫描件的归档桶开通了，我把访问信息和桶名存了下来。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "财务凭证扫描件归档桶 开通通知\n\n存储类型：S3 兼容\nEndpoint：https://oss.archive.example.net\nBucket：voucher-archive-2026\n只读账号：voucher_ro\n桶访问密码：LQ2026-S3-vz13\n\n仅归档财务凭证扫描件。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "s3",
+          "bucket",
+          "archive"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-S3-vz13",
+        "template_type": "s3",
+        "semantic_query": "凭证扫描件归档桶的访问密码是多少",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-024",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "财务消息推送",
+      "story": "财务系统往消息队列推数据用的账号开通了，我把kafka的连接密码存好。",
+      "difficulty": "medium",
+      "create": {
+        "pasted_text": "财务消息推送服务 账号开通通知\n\n服务类型：Kafka\nBootstrap 地址：kfk.internal:9092\nTopic：fin-notify-2026\n生产账号：fin_publisher\n密码：LQ2026-KFK-fn18\n\n仅限财务对账消息生产使用。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "kafka",
+          "fin",
+          "internal"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ2026-KFK-fn18",
+        "template_type": "kafka",
+        "semantic_query": "财务系统消息推送用的kafka账号密码",
+        "semantic_top_n": 5
+      }
+    },
+    {
+      "id": "ADMI-025",
+      "generator": "opencode",
+      "persona": "admin",
+      "persona_label": "行政/财务人员",
+      "title": "电子签章服务",
+      "story": "电子签章的AccessKey和SecretKey同时出现在通知里还夹着改密提示，我仔细区分后存储。",
+      "difficulty": "hard",
+      "create": {
+        "pasted_text": "电子签章平台 AccessKey 开通通知\n\n访问地址：https://esign.example.com/console\n专属 AccessKey：LQ-AK-2026-0815\n对应 SecretKey：LQ-SK-2026-0b3f9ae2bb11，请勿泄露，如泄露请立即作废并重新下发，作废同时原密钥即告失效。\n\n密钥用于调用签章接口，公钥证书由CA另行邮件发送。",
+        "primary_secret": null,
+        "name": null,
+        "notes": null,
+        "tags": [
+          "aksk",
+          "esign",
+          "key"
+        ],
+        "fields": []
+      },
+      "expect": {
+        "primary_secret": "LQ-SK-2026-0b3f9ae2bb11",
+        "template_type": "aksk",
+        "semantic_query": "电子签章平台的SecretKey你那边能取到吗",
+        "semantic_top_n": 5
+      }
+    }
+  ]
+}

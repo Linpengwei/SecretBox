@@ -1,0 +1,762 @@
+[
+  {
+    "title": "实惠购商城账号",
+    "story": "我在实惠购商城买米买油，把登录密码记下免得老忘。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "实惠购商城账号是我手机号，登录密码是 Qc9x!Pz2&m4，你帮我盯紧点",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["shopping", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Qc9x!Pz2&m4",
+      "template_type": "account",
+      "semantic_query": "实惠购商城登录密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "省钱小铺账号",
+    "story": "省钱小铺东西便宜，媳妇让我把她的账号密码也记上。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "省钱小铺：媳妇让我记，账号写的老王媳妇，密码19900101abc",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["shopping", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "19900101abc",
+      "template_type": "account",
+      "semantic_query": "省钱小铺媳妇的账号",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "天天特惠购账号",
+    "story": "天天特惠购天天签到领鸡蛋，密码存你这就不会丢了。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "天天特惠购 账号我手机号 密码 Sj3Ka7$Lp8",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["shopping", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Sj3Ka7$Lp8",
+      "template_type": "account",
+      "semantic_query": "天天特惠购签到账号",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "居家好物网登录",
+    "story": "居家好物网上买了个拖把，客服让报密码，我干脆整句粘给你。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "你在居家好物网的登录密码就是家和万事兴123你到时候直接输这个就能进去",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["shopping", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "家和万事兴123",
+      "template_type": "account",
+      "semantic_query": "居家好物网那个密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "乐邻社区通账号",
+    "story": "社区通知都发在乐邻社区通上，得常上去看着。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "乐邻社区通 账号是老王 密码 Tu8!Mm4&Ko7",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["social", "community", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Tu8!Mm4&Ko7",
+      "template_type": "account",
+      "semantic_query": "社区通知那个网站",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "老友圈账号",
+    "story": "老友圈上全是以前老同学，登录密码记一下。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "老友圈密码：Bn5@Vb9#Qw2 账号就是老王本名",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["social", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Bn5@Vb9#Qw2",
+      "template_type": "account",
+      "semantic_query": "老同学那个网站密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "邻里唠嗑网账号",
+    "story": "邻里唠嗑网上都在聊小区里的事，把密码存你这。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "邻里唠嗑网 登录账号手机号 密码 邻里一家亲2025",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["social", "community", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "邻里一家亲2025",
+      "template_type": "account",
+      "semantic_query": "小区唠嗑那个网站",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "喜乐聚视频会员",
+    "story": "喜乐聚视频上追剧，会员密码记一下免得老忘。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "喜乐聚视频 我的账号是老王 密码 Hu6^Kp3&Ng1",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["video", "member", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Hu6^Kp3&Ng1",
+      "template_type": "account",
+      "semantic_query": "喜乐聚视频会员密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "闪耀点播会员",
+    "story": "闪耀点播是闺女给我开的会员，她微信发我一串我自己看不大懂。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "妈你把这条存好了\n我在闪耀点播给你开了会员\n账号就是你手机号\n密码是 🎂🎉🎈520\n别再问我了",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["video", "member", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "🎂🎉🎈520",
+      "template_type": "account",
+      "semantic_query": "闪耀点播那个会员密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "嗨剧屋账号",
+    "story": "嗨剧屋能看戏曲，密码存着你我就不会再忘。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "嗨剧屋账号老王 密码 幸福快乐每一天",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["video", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "幸福快乐每一天",
+      "template_type": "account",
+      "semantic_query": "看戏曲那个会员",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "小蜜蜂邮箱登录",
+    "story": "小蜜蜂邮箱收水电费单子，别的功能我也不会用。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "小蜜蜂邮箱 账号 laowang@xiaomifeng.example 密码 Yn8!Zm4@Kt2",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["email", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Yn8!Zm4@Kt2",
+      "template_type": "account",
+      "semantic_query": "收水电单那个邮箱",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "云鸽邮邮箱",
+    "story": "云鸽邮是孩子帮忙注册的，说专门收积分短信用。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "云鸽邮的登录密码是团团圆圆一家人这次说的是邮箱别记差成上次那个了",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["email", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "团团圆圆一家人",
+      "template_type": "account",
+      "semantic_query": "收积分那个邮箱",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "市政办事大厅账号",
+    "story": "街道办说能在网上大厅办事，让我把密码记好。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "市政办事大厅 账号就写老王 密码20010515",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["gov", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "20010515",
+      "template_type": "account",
+      "semantic_query": "市政办事大厅密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "便民一站办账号",
+    "story": "便民一站办上能查医保，密码记一下。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "便民一站办 账号 老王 密码 123123",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["gov", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "123123",
+      "template_type": "account",
+      "semantic_query": "医保那个办事网站",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "家里wifi密码",
+    "story": "楼上邻居总问我要wifi密码，我干脆记你这里。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "家里wifi的密码 是 123456",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["wifi", "home"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "123456",
+      "template_type": "custom",
+      "semantic_query": "家里wifi密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "客厅wifi密码",
+    "story": "路由器背面那串看不清，让儿子重新整个好记的。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "你看这个我们家客厅路由器改的wifi密码她是 888888 你记一下吧",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["wifi", "router"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "888888",
+      "template_type": "custom",
+      "semantic_query": "客厅路由器wifi密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "客房wifi密码",
+    "story": "客房wifi是给亲戚来住用的，密码存一下。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "客房那个wifi：密码是 Kt3#Wq7&Vb5",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["wifi", "guest"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Kt3#Wq7&Vb5",
+      "template_type": "custom",
+      "semantic_query": "客房wifi密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "家里宽带初始密码",
+    "story": "装宽带客服发我短信，我把整条短信都粘来了。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "【云速宽带】您的宽带账号为链接开通，初始密码 Xf4@Pk8#Rs2 请及时修改，退订回T",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["broadband", "isp"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Xf4@Pk8#Rs2",
+      "template_type": "custom",
+      "semantic_query": "家里宽带初始密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "老王家宽带缴费",
+    "story": "老王家的宽带老欠费，缴费密码也放你这。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "老王家的宽带缴费密码是 Gw5#Mn8@Ya2",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["broadband", "bill"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Gw5#Mn8@Ya2",
+      "template_type": "custom",
+      "semantic_query": "老王家宽带缴费",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "家里宽带密码",
+    "story": "上次师傅上门改的宽带密码，我怕忘就手输了一个。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "Qw2$Df4#Gk7",
+      "primary_secret": null,
+      "name": "家里宽带",
+      "notes": null,
+      "tags": ["broadband", "router"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Qw2$Df4#Gk7",
+      "template_type": "custom",
+      "semantic_query": "宽带登录密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "家里智能门锁密码",
+    "story": "智能门锁管理密码，装锁师傅让存好。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "智能门锁管理员密码是 3456@9001Kp",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["lock", "smarthome"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "3456@9001Kp",
+      "template_type": "custom",
+      "semantic_query": "门锁管理密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "门口摄像头App密码",
+    "story": "门口摄像头App让我设个密码，我手输的那个就存这。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "Tv9$Mj2@Hk6",
+      "primary_secret": null,
+      "name": "门口摄像头App",
+      "notes": null,
+      "tags": ["camera", "smarthome"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Tv9$Mj2@Hk6",
+      "template_type": "custom",
+      "semantic_query": "门口摄像头App密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "老家院子监控密码",
+    "story": "老家院子里那个监控探头，密码存你这。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "老家院子的监控 密码 Abc@5678Xy",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["camera", "smarthome"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Abc@5678Xy",
+      "template_type": "custom",
+      "semantic_query": "老家院子监控密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "电视机顶盒密码",
+    "story": "机顶盒设置密码，老一重启就要重新输。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "机顶盒设置密码 Ch4$Rr6#Wn8",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["settop", "tv"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Ch4$Rr6#Wn8",
+      "template_type": "custom",
+      "semantic_query": "电视机顶盒密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "顺风打车会员",
+    "story": "顺风打车有会员优惠，密码给我哥用也放这。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "顺风打车会员 密码是 Iw6@Xk9#Qd4",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["taxi", "member"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Iw6@Xk9#Qd4",
+      "template_type": "custom",
+      "semantic_query": "打车那个会员",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "馋嘴外卖会员",
+    "story": "馋嘴外卖有会员券，密码存一下。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "馋嘴外卖会员号密码 Hn2$Qs7@Mb3",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["delivery", "member"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Hn2$Qs7@Mb3",
+      "template_type": "custom",
+      "semantic_query": "点外卖那个会员",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "彩虹健身App密码",
+    "story": "彩虹健身办的年卡，App登录码记一下。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "彩虹健身App登录码 Jk8$Yu3@Wv6",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["gym", "member"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Jk8$Yu3@Wv6",
+      "template_type": "custom",
+      "semantic_query": "健身房那个App",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "游泳馆会员码",
+    "story": "游泳馆年卡会员码，进门就刷这个。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "Sw6$Tr4@Zv1",
+      "primary_secret": null,
+      "name": "游泳馆会员码",
+      "notes": null,
+      "tags": ["gym", "member"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Sw6$Tr4@Zv1",
+      "template_type": "custom",
+      "semantic_query": "游泳馆会员码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "广场舞队服购买码",
+    "story": "一起跳舞的大姐让我把队服购买码发群里，我先记你这。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "舞队的购买码你们看好是这个 → 🐍🐯🐰123456 到时候买队服用",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["dance", "member"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "🐍🐯🐰123456",
+      "template_type": "custom",
+      "semantic_query": "舞队买队服的码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "家庭账本数据库密码",
+    "story": "儿子给我整的家用账本数据库，说记流水账用。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "家庭账本数据库建好了账号admin密码 Db2$Vf8@Mx5",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["database", "family", "ledger"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Db2$Vf8@Mx5",
+      "template_type": "database",
+      "semantic_query": "儿子弄的记账数据库",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "买菜花销数据库",
+    "story": "记买菜花销的数据库，闺女远程帮我连好的。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "买菜账数据库 账号laowang 密码 菜篮子记个账",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["database", "family"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "菜篮子记个账",
+      "template_type": "database",
+      "semantic_query": "买菜花钱那个数据库",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "孙子学费记录数据库",
+    "story": "孙子学费那笔账都在那个数据库，密码我照儿子短信念的。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "数据库的root密码你们自己连 是 Kx9@Tr2$Vn4 别外传",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["database", "family"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Kx9@Tr2$Vn4",
+      "template_type": "database",
+      "semantic_query": "孙子学费那个数据库",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "redis密码（儿子托管）",
+    "story": "儿子说他们公司redis的密码要我帮忙保管，说很要紧。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "爸\n这是公司redis的密码\nCk4$Mj8@Wq2\n你帮我存到密码本里别给外人",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["redis", "cache"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Ck4$Mj8@Wq2",
+      "template_type": "redis",
+      "semantic_query": "儿子公司redis密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "redis哨兵密码",
+    "story": "儿子同事又发来一个什么哨兵的密码，一串英文我也分不清。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "redis哨兵密码更新了新的是 Sb7!Lm3@Yt9 俺老板让赶紧记下来别弄错",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["redis", "cache"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Sb7!Lm3@Yt9",
+      "template_type": "redis",
+      "semantic_query": "哨兵那个密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "redis集群密码",
+    "story": "老大让帮忙保管的redis集群密码，微信直接转给我了。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "redis集群密码给你 收好 别弄丢\nRr3@Kd6!Zs7",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["redis", "cluster"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Rr3@Kd6!Zs7",
+      "template_type": "redis",
+      "semantic_query": "redis集群密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "家庭照片s3备份",
+    "story": "儿子把家里照片都放s3上了，说怕手机丢了找不回来。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "照片全家福都在s3上\n账号照片备份专用\n密码是 Ph0t0@Fam#88\n你记好这个就行",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["s3", "photos", "backup"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Ph0t0@Fam#88",
+      "template_type": "s3",
+      "semantic_query": "全家福照片备份密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "老照片备份账号",
+    "story": "老照片备份那串账号密钥我不懂，整段全复制回来了。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "老照片备份的访问账号：photo-archive老照片备份的访问秘钥：Bk2@Vp9#Tm6 其它不用管",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["s3", "photos", "backup"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Bk2@Vp9#Tm6",
+      "template_type": "s3",
+      "semantic_query": "老照片备份那个密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "kafka死信队列密码",
+    "story": "儿子工作上kafka的什么死信队列密码，让我帮忙管着。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "爸这是kafka死信队列的密码 您代管一下\nXy6!Kk2@Qz4",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["kafka", "queue"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Xy6!Kk2@Qz4",
+      "template_type": "kafka",
+      "semantic_query": "儿子工作那个kafka",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "云服务器aksk",
+    "story": "儿子公司云服务器的AK和SK让我保管，一串一串的全发给我了。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "爸我把云服务器的ak和sk发你了\nAccess Key 是 FAM-2024-7K9Q\nSecret Key 是 La8$We3@Kj6\n你给收好",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["aksk", "cloud"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "La8$We3@Kj6",
+      "template_type": "aksk",
+      "semantic_query": "云服务器那个ak和sk",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "对象存储SK",
+    "story": "对象存储那个Secret Key，闺女发我的，不会拼就整段拿了。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "对象存储的Secret Key你帮我记一下 是这个 Zo5$Rv2@Mb7",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["aksk", "cloud"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Zo5$Rv2@Mb7",
+      "template_type": "aksk",
+      "semantic_query": "闺女那个存储的秘钥",
+      "semantic_top_n": 5
+    }
+  }
+]

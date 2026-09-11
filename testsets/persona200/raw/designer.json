@@ -1,0 +1,667 @@
+[
+  {
+    "title": "画格登录",
+    "story": "我把画格工具台的开通邮件顺手存进来，后面改稿时不用再翻邮箱。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "画格工具台开通邮件\n站点 https://grid.example.com/login\n账号：mila\n密码：GrdBox-2026A1\n请用这个先登录。",
+      "primary_secret": null,
+      "name": "画格工具台",
+      "notes": null,
+      "tags": ["design", "tool", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "GrdBox-2026A1",
+      "template_type": "account",
+      "semantic_query": "画格工具台那个登录",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "栅格双条",
+    "story": "我收到一封把两条设计工具账号挨着写的邮件，只想先把栅格工坊那条存好。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "主题：栅格工坊 / 线框云 同批开通\n1) 栅格工坊\n账号：iris\n密码：Gri★d-77©\n2) 线框云\n账号：nova\n密码：N0va®2026\n先开栅格工坊这条。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["design", "tool", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Gri★d-77©",
+      "template_type": "account",
+      "semantic_query": "栅格工坊那封开通邮件",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "配色云",
+    "story": "我把配色云的登录信息留着，临时找灵感素材时省得重新找人要。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "配色云邀请邮件\nURL: https://color.example.com\n登录名: hana\n临时密码: ColorFlow_26\n我晚点再改。",
+      "primary_secret": null,
+      "name": "配色云",
+      "notes": null,
+      "tags": ["design", "tool", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "ColorFlow_26",
+      "template_type": "account",
+      "semantic_query": "配色云的账号",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "线框台",
+    "story": "我把线框台的密码贴进库里，想起改版时就不用再去翻聊天记录。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "线框台账号\n站点 https://frame.example.net\n账号：yoji\n密码：LineKit-8842\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["design", "login", "tool"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LineKit-8842",
+      "template_type": "account",
+      "semantic_query": "线框台登录",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "动效室",
+    "story": "我先把动效室的开通短信抄进去，做动效预览时少一件分心的事。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "动效室开通\n地址：https://motion.example.org\n用户名：zara\n密码：Motion@2026\n请尽快改密。",
+      "primary_secret": null,
+      "name": "动效室",
+      "notes": null,
+      "tags": ["design", "tool", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Motion@2026",
+      "template_type": "account",
+      "semantic_query": "动效室那个码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "稿件台",
+    "story": "我把稿件台后台密码录下来，交付前查资料时能直接登录。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "稿件台登录信息\nhttps://draft.example.org/admin\n用户：nori\n密码：FrameDeck-19\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["design", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "FrameDeck-19",
+      "template_type": "account",
+      "semantic_query": "稿件台后台",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "画库会员",
+    "story": "我把画库站会员邮件收进来，找图的时候不用再问同事。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "画库站会员邮件\n站点：https://huaku.example.com\n账号：muse01\n密码：HuaKu#2026\n",
+      "primary_secret": null,
+      "name": "画库站",
+      "notes": null,
+      "tags": ["assets", "stock", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "HuaKu#2026",
+      "template_type": "account",
+      "semantic_query": "画库站会员 🎨",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "纹理集",
+    "story": "我随手把纹理集市的登录卡片存了，做贴图时就能直接进。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "纹理集市开通\nhttps://texture.example.com\n登录：reno\n密码：TextuRe-54\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["assets", "download", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "TextuRe-54",
+      "template_type": "account",
+      "semantic_query": "纹理集市那个素材站",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "素材双发",
+    "story": "我碰到一封把两个素材站账号排在一起的邮件，先把纹理集市这条记住。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "素材站批量开通\n1) 纹理集市\n账号：ivy\n密码：Mozaic®2026\n2) 贴纸星球\n账号：leo\n密码：Sticker_88!\n先用纹理集市。",
+      "primary_secret": null,
+      "name": "纹理集市",
+      "notes": null,
+      "tags": ["assets", "stock", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Mozaic®2026",
+      "template_type": "account",
+      "semantic_query": "素材站双开那封邮件",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "灵感铺",
+    "story": "我把灵感素材铺的账号存着，临时补版时不用再翻群消息。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "灵感素材铺登录\nURL https://inspire.example.net\n账号：wen\n密码：Insp!re_63\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["assets", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Insp!re_63",
+      "template_type": "account",
+      "semantic_query": "灵感素材铺登录",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "作品集站",
+    "story": "我把作品集后台单独记下来，更新案例时能直接进去改。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "作品集后台邮件\n站点 https://folio.example.com/admin\n账号: kai\n密码: Portfolio-001\n",
+      "primary_secret": null,
+      "name": "作品集后台",
+      "notes": null,
+      "tags": ["portfolio", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Portfolio-001",
+      "template_type": "account",
+      "semantic_query": "作品集后台",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "个人站",
+    "story": "我把个人站管理台的密码收好，改首页文案时能随时上去。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "个人站管理台\n登录页 https://site.example.org\n用户名：nori\n密码：Showcase@7\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["portfolio", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Showcase@7",
+      "template_type": "account",
+      "semantic_query": "个人站管理台",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "站点双条",
+    "story": "我收到一封把两个站点后台连在一起的邮件，先把作品集后台那条存进去。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "主题：站点后台和作品集后台一起发的\n1) 作品集后台\n账号：sue\n密码：Site后台★42\n2) 个人站管理台\n账号：tom\n密码：T0m©2026\n先存作品集后台。",
+      "primary_secret": null,
+      "name": "个人站后台",
+      "notes": null,
+      "tags": ["portfolio", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Site后台★42",
+      "template_type": "account",
+      "semantic_query": "站点后台那封",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "协作板",
+    "story": "我把协作板的登录信息放进去，和团队对稿时就不用来回问。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "协作板邀请\nhttps://collab.example.com\n账号：mina\n密码：Collab-2026\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["team", "tool", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Collab-2026",
+      "template_type": "account",
+      "semantic_query": "协作板账号",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "项目群",
+    "story": "我把项目群工具的口令存好，交付周盯进度时能直接进去看。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "项目群工具开通\n站点: https://team.example.net\n登录名: ryo\n密码: TeamUp#64\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["team", "tool", "login"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "TeamUp#64",
+      "template_type": "account",
+      "semantic_query": "项目群工具那个",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "字库码",
+    "story": "我把字库授权码放进来，出图时就不用临时找设计总监要。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "字库授权邮件\n字体：清风宋体 Pro\n授权码：Huaban😊2026\n工号：dz-17\n",
+      "primary_secret": null,
+      "name": "字库授权",
+      "notes": null,
+      "tags": ["fonts", "license"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Huaban😊2026",
+      "template_type": "custom",
+      "semantic_query": "字库授权码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "字体序列",
+    "story": "我把字体包的序列号存着，换电脑装字库的时候更省事。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "字体授权单\n字体包：棱镜黑体\n序列号：FontKey-33\n备注：内网设备可用\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["fonts", "license"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "FontKey-33",
+      "template_type": "custom",
+      "semantic_query": "字体包序列号",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "字形双码",
+    "story": "我收到了两条字形授权挨着写的邮件，先把第一条码记住。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "邮件：字形库授权\n1) 字体A：墨点黑\n授权码：紫罗兰★2024\n2) 字体B：砂岩宋\n授权码：Shtype®18\n先记第一条。",
+      "primary_secret": null,
+      "name": "字形授权",
+      "notes": null,
+      "tags": ["fonts", "license"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "紫罗兰★2024",
+      "template_type": "custom",
+      "semantic_query": "字形授权那封邮件",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "提取码一",
+    "story": "我把素材站下载提取码顺手存了，赶稿时找包更快。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "素材站下载说明\n文件：杂志贴纸包\n提取码：Extract-7A9\n链接：https://clip.example.com\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["assets", "code"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Extract-7A9",
+      "template_type": "custom",
+      "semantic_query": "素材提取码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "提取码二",
+    "story": "我把下载页里的提取码贴进来，回头找图包时不用再翻邮件。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "图包分享\n站点：https://drop.example.org\n提取码：ClipCode_58\n来自：小组分享邮件\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["assets", "code"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "ClipCode_58",
+      "template_type": "custom",
+      "semantic_query": "下载提取码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "办公室网",
+    "story": "我把办公室 wifi 记下来，带笔记本来工位就能直接连。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "办公室 WiFi 备忘\n名称：StudioNet\n密码：WiFi-Blue88\n位置：二楼西侧\n",
+      "primary_secret": null,
+      "name": "办公wifi",
+      "notes": null,
+      "tags": ["wifi", "office"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "WiFi-Blue88",
+      "template_type": "custom",
+      "semantic_query": "办公室 wifi 📶",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "茶水间网",
+    "story": "我把茶水间那张无线卡片存好，临时接样机时很方便。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "茶水间路由器卡片\nSSID：StudioGuest\n密码：CafeWiFi#27\n别贴给外包看\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["wifi", "office"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "CafeWiFi#27",
+      "template_type": "custom",
+      "semantic_query": "茶水间无线",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "农场口令",
+    "story": "我收到云渲染工坊的双条口令邮件，先把渲染农场那条锁进去。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "云渲染工坊邮件\n1) 渲染农场\n账号：node07\n口令：Render©2026\n2) 备用渲染农场\n账号：node08\n口令：NodeBack_09\n先用 node07。",
+      "primary_secret": null,
+      "name": "渲染农场",
+      "notes": null,
+      "tags": ["render", "farm"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Render©2026",
+      "template_type": "custom",
+      "semantic_query": "渲染农场口令",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "算力码",
+    "story": "我把云算工坊的口令存起来，晚上跑预览图时能直接拿来用。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "云算工坊开通\n入口：https://render.example.net\n口令：FarmPass-41\n账号：pix\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["render", "farm"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "FarmPass-41",
+      "template_type": "custom",
+      "semantic_query": "云算工坊口令",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "许可单",
+    "story": "我把排版软件的 license 记好，换机装软件时不用再找邮件。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "排版软件许可单\n软件：PageMaker X\nLicense：LicenSe_9X\n机器数：2\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["license", "tool"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LicenSe_9X",
+      "template_type": "custom",
+      "semantic_query": "软件 license 码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "云渲染钥",
+    "story": "我把云渲染工坊的密钥对存好，自动上传预览时能直接配上。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "云渲染工坊 API 开通\naccess_key_id: AKR-2026-01\nsecret_key: CloudAKSK_01\nregion: cn-test-1\n",
+      "primary_secret": null,
+      "name": "云渲染工坊",
+      "notes": null,
+      "tags": ["cloud", "keys"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "CloudAKSK_01",
+      "template_type": "aksk",
+      "semantic_query": "云渲染工坊 access key",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "CDN密钥",
+    "story": "我把 CDN 分发的 key 记下来，素材上线时省得临时找运维。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "CDN 分发账号\naccess_key_id=CDN-77-AX\nsecret_key=EdgeKey_77\n备注=素材分发\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["cloud", "keys"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "EdgeKey_77",
+      "template_type": "aksk",
+      "semantic_query": "CDN 分发的 key",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "边缘双钥",
+    "story": "我收到一封把两组 access key 挨着写的邮件，先存边缘云那组。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "邮件：边缘云和云渲染一起开\n1) 边缘云\naccess_key_id: EDGE-11-A\nsecret_key: Sky©Key★11\n2) 云渲染\naccess_key_id: REND-11-B\nsecret_key: Cloud®Key12\n先录边缘云。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["cloud", "keys"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Sky©Key★11",
+      "template_type": "aksk",
+      "semantic_query": "边缘云 key 那封",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "分发钥",
+    "story": "我把素材分发云的密钥存进来，发大图包时就不用再翻工单。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "素材分发云\naccess_key_id: DIST-204\nsecret_key: MixKey_204\n使用说明见内网\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["cloud", "keys"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "MixKey_204",
+      "template_type": "aksk",
+      "semantic_query": "素材分发云的秘钥",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "素材桶",
+    "story": "我把素材云桶的密码收好，传原始图的时候直接接上。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "素材云桶 开通\nbucket: palette-assets-test\nendpoint: s3.example.com\nsecret_key: BucketSecret-11\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["bucket", "storage"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "BucketSecret-11",
+      "template_type": "s3",
+      "semantic_query": "素材云桶那个 bucket",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "贴纸桶",
+    "story": "我把贴纸素材桶的密钥存起来，导出贴纸包时更省事。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "贴纸素材桶\nbucket=sticker-packs-dev\nsecret_key=S3Key@22\nacl=private\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["bucket", "storage"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "S3Key@22",
+      "template_type": "s3",
+      "semantic_query": "贴纸桶 secret",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "纹理桶",
+    "story": "我把纹理桶的密钥存好，做大图预览时同步更顺。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "纹理云桶\nbucket: texture-assets-test\nendpoint: s3.example.com\nsecret_key: TexBox-93\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["bucket", "storage"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "TexBox-93",
+      "template_type": "s3",
+      "semantic_query": "纹理桶那个素材桶",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "备份桶",
+    "story": "我把作品备份桶存起来，交付完回头找历史版本更快。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "作品备份桶说明\nbucket: portfolio-backup\nsecret_key: Backup#Store6\n用于隔夜同步\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["bucket", "storage"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Backup#Store6",
+      "template_type": "s3",
+      "semantic_query": "作品备份桶",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "官网库",
+    "story": "我把官网内容库的只读密码收着，临时查文案表时能直接进。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "官网内容库只读账号\npostgres://cms_reader@example.internal\npassword: DBro-ReadOnly8\nschema: public\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["database", "readonly"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "DBro-ReadOnly8",
+      "template_type": "database",
+      "semantic_query": "官网内容库只读",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "资产通知",
+    "story": "我把设计资产更新通知的 Kafka 口令留着，自动同步素材时不用再找运维。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "设计资产更新通知\nbootstrap_servers: kafka.internal:9092\ntopic: design-assets\nsasl_password: Kafka_Asset-57\n",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["kafka", "notify"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "Kafka_Asset-57",
+      "template_type": "kafka",
+      "semantic_query": "设计资产更新通知 kafka",
+      "semantic_top_n": 5
+    }
+  }
+]

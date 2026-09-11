@@ -1,0 +1,12 @@
+services:
+  api:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:////app/data/secretbox.db
+      ENCRYPTION_KEY: 8KOOjt0dP7xEx0_o5oIxUOGx2IkG4j9vV8u3suP2h5Q=
+      FINGERPRINT_KEY: local-dev-fingerprint-key
+    volumes:
+      - ./data:/app/data

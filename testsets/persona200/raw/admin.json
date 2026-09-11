@@ -1,0 +1,477 @@
+[
+  {
+    "title": "云章OA",
+    "story": "我按照IT发来的开通通知，把云章OA的登录账号和初始密码存进了保险柜。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "云章OA 账户开通通知\n\n系统地址：https://oawz.example.com/login\n登录账号：admin_yunzhang\n初始密码：LQ2026-OA-yz16\n\n请妥善保管，首次登录后IT会另行通知修改。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["oa", "account", "internal"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-OA-yz16",
+      "template_type": "account",
+      "semantic_query": "云章OA管理员的登录密码是多少",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "蓝桥协同OA",
+    "story": "我在OA开通邮件里复制了协同平台的账号密码录入系统。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "蓝桥协同办公平台 开通通知\n\n访问地址：http://xtoa.internal\n用户名：financial01\n初始密码：LQ2026-XT-zb78\n备用说明：仅限内网访问。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["oa", "account", "internal"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-XT-zb78",
+      "template_type": "account",
+      "semantic_query": "协同办公平台那个账号的密码你还找得到吗",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "行政后勤OA",
+    "story": "IT发来的开通通知里把初始密码和首次登录必须改密的提示混在一起，我核对了好久才把密码摘出来。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "行政后勤OA 账号开通通知\n\n地址：https://xz.hr.example.com\n账号：xzadmin\n初始密码：LQ2026-XZ-gov41，首次登录后必须立即修改为新密码，否则账号会被锁定。\n通知下发后24小时内请联系IT核对权限范围。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["oa", "hr", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-XZ-gov41",
+      "template_type": "account",
+      "semantic_query": "行政后勤OA的超级管理员密码存在哪里了",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "票易报",
+    "story": "我把票易报销系统的财务审批账号和初始密码存了下来。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "票易报 报销系统 账户开通通知\n\n系统地址：https://piaoyibao.example.net\n登录账号：piaowu_caiwu\n初始密码：LQ2026-BX-pw02\n\n恭喜开通，请勿把账号外借。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["baoxiao", "financial", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-BX-pw02",
+      "template_type": "account",
+      "semantic_query": "票易报报销系统的财务账号密码帮我查一下",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "快报云",
+    "story": "邮件里把快报云报销和发票库的开通通知挨在一起贴了出来，录入时费了点劲才分清楚。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "快报云 报销系统开通通知\n\n网址：https://kuaibaoyun.example.org\n账号：kjb01\n初始密码：LQ2026-BX-kb19\n\n另附：发票库只读账号 im-001，口令 LQ2026-FP-cw33，仅供查验红字发票，勿改动数据。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["baoxiao", "account", "invoice"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-BX-kb19",
+      "template_type": "account",
+      "semantic_query": "快报云报销系统开通时给的财务登录密码是多少",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "考勤精灵",
+    "story": "考勤精灵的人事专员账号开通了，我把初始密码记进保险柜。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "考勤精灵 开通通知\n\n访问地址：https://kqjl.example.com\n登录账号：kq_hr_zhang\n初始密码：LQ2026-KQ-jl05\n\n仅供人事核对考勤数据使用。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["kaoqin", "hr", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-KQ-jl05",
+      "template_type": "account",
+      "semantic_query": "考勤精灵的登录账号密码是多少",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "考勤系统-公共",
+    "story": "这个考勤系统是公共账号，我手动起了个名字存进去，备注了不要外传。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "考勤统计系统 公共账号开通通知\n\n地址：http://kqtj.internal\n账号：kq_gonggong\n初始密码：LQ2026-KQ-gg12\n\n该账号为公共账号，全部门共用，请勿外传，首次登录后建议在页面上自行修改。",
+      "primary_secret": null,
+      "name": "考勤系统-公共",
+      "notes": "公共账号，勿外传，全部门共用",
+      "tags": ["kaoqin", "public", "internal"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-KQ-gg12",
+      "template_type": "account",
+      "semantic_query": "那个考勤系统的公共账号密码存在哪了",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "税易通",
+    "story": "税易通税务申报系统开通后，我把报税账号的初始密码存好了。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "税易通 电子申报系统 开通通知\n\n申报地址：https://sytsb.example.com\n纳税人账号：sw_agent_03\n初始密码：LQ2026-SW-ty27\n\n请于申报期前完成首次登录设置密保，密保问题答案请自行记录。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["shuiwu", "tax", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-SW-ty27",
+      "template_type": "account",
+      "semantic_query": "税易通报税系统的账号密码在不在里面",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "社保申报系统",
+    "story": "社保申报系统的初始密码里既有字母又有特殊符号，粘贴时我特别留心了首尾空格。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "社保申报平台 开通通知\n\n网址：https://sbb.internal/pc\n单位编号：unit803\n申报账号：sbjh_daiban\n初始密码：LQ2026-SB-jh9!\n\n重要：账号仅限本单位申报员使用，离职需交还。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["shebao", "account", "internal"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-SB-jh9!",
+      "template_type": "account",
+      "semantic_query": "社保申报平台的登录密码你那边存了吗",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "个税汇算申报",
+    "story": "每年汇算期用的个税申报公共账号，我录入时加了公共账号备注。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "个人所得税汇算申报账号 开通通知\n\n入口地址：https://geshui.example.org/login\n登录账号：gssb_admin\n初始密码：LQ2026-GS-hs64\n\n该账号为办税公共账号，密码修改需经财务负责人审批。",
+      "primary_secret": null,
+      "name": null,
+      "notes": "办税公共账号，勿外传",
+      "tags": ["geshui", "tax", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-GS-hs64",
+      "template_type": "account",
+      "semantic_query": "个税汇算申报用的公共账号密码是多少",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "蓝桥企业邮箱",
+    "story": "邮箱开通通知把初始密码和首次登录强制改密写在同一行括注里，我誊抄时反复核对了好几遍。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "蓝桥企业邮箱 账号开通通知\n\n邮箱地址：gwy01@lanqiao.example.com\n网页登录：https://mailqt.example.com\n初始密码：LQ2026-ML-gw25（首次登录将强制要求修改，请在修改前先记好此密码）\n\n如需申请新邮箱请提交OA流程。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["email", "mail", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-ML-gw25",
+      "template_type": "account",
+      "semantic_query": "新开通的企业邮箱密码是多少来着",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "财务共享邮箱-公共",
+    "story": "财务部共享邮箱开通，我把初始密码和公共账号说明一起存了。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "财务共享邮箱 开通通知\n\n邮箱：cwgx@lanqiao.example.net\n登录地址：https://mailcw.example.net\n初始密码：LQ2026-ML-cw31\n\n本邮箱为部门公共邮箱，勿外传密码。",
+      "primary_secret": null,
+      "name": "财务共享邮箱-公共",
+      "notes": "公共账号，勿外传",
+      "tags": ["email", "public", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-ML-cw31",
+      "template_type": "account",
+      "semantic_query": "财务共享邮箱的密码存在哪里了",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "行政共享网盘-公共",
+    "story": "行政部的共享网盘账号开通了，我把初始密码录进保险柜供大家共用。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "行政共享网盘 开通通知\n\n访问地址：https://panxz.example.com\n共享账号：xzb_gonggong\n初始密码：LQ2026-PAN-xz08\n\n上传下载都走此账号，公共账号，勿外传。",
+      "primary_secret": null,
+      "name": "行政共享网盘-公共",
+      "notes": "公共账号，勿外传",
+      "tags": ["wangpan", "public", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-PAN-xz08",
+      "template_type": "account",
+      "semantic_query": "行政部的共享网盘密码是多少",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "财务共享网盘-公共",
+    "story": "财务部共享网盘开通，我按通知存好了账号密码。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "财务共享网盘 开通通知\n\n网址：https://pancw.example.com/share\n账号：cwkj_pub\n初始密码：LQ2026-PAN-cw29\n\n仅限财务部人员使用。",
+      "primary_secret": null,
+      "name": "财务共享网盘-公共",
+      "notes": "公共账号，勿外传，仅限财务部",
+      "tags": ["wangpan", "public", "account"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-PAN-cw29",
+      "template_type": "account",
+      "semantic_query": "财务共享网盘的账号密码帮我找一下",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "打印机管理后台-公共",
+    "story": "行政部打印机的管理后台密码是IT直接贴给我的，我抄进保险柜并备注了公共账号。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "打印机管理后台 信息\n\n网址：http://printer-admin.test\n管理账号：admin\n管理密码：LQ2026-PRT-adm16\n\n该后台为行政部公共账号，勿外传。",
+      "primary_secret": null,
+      "name": "打印机管理后台-公共",
+      "notes": "公共账号，勿外传",
+      "tags": ["printer", "admin", "public"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-PRT-adm16",
+      "template_type": "custom",
+      "semantic_query": "打印机管理页面的那个密码是多少",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "二楼打印机管理",
+    "story": "楼层打印机的管理密码和行政网盘的开通说明贴在同一张便签上，我分开存了。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "二楼打印机管理页密码：LQ2026-PRT-2f77\n（页面地址 http://prt2.internal/web 账号 admin）\n\n另：三楼同型号打印机走同一个后台，未单独开账号。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["printer", "internal", "password"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-PRT-2f77",
+      "template_type": "custom",
+      "semantic_query": "二楼打印机管理后台的密码是啥",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "会议室预约系统",
+    "story": "会议室预约系统的管理员密码我存下来了，方便帮各业务部门订会议室。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "会议室预约系统 管理端信息\n\n后台网址：https://hys.internal/console\n管理员账号：meeting_mgr\n后台密码：LQ2026-MTG-10ky\n\n管理端仅供行政人员使用。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["meeting", "internal", "admin"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-MTG-10ky",
+      "template_type": "custom",
+      "semantic_query": "会议室预约系统管理后台的密码在哪里",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "会议室预约-公共",
+    "story": "前台共用的大会议室预约账号开通，我把公共密码备注清楚。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "大会议室预约 公共账号开通通知\n\n入口：https://room.example.com\n账号：room_public\n密码：LQ2026-MTG-gg40\n\n公共账号，勿外传，仅用于前台代约大会议室。",
+      "primary_secret": null,
+      "name": "会议室预约-公共",
+      "notes": "公共账号，勿外传",
+      "tags": ["meeting", "public", "frontdesk"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-MTG-gg40",
+      "template_type": "custom",
+      "semantic_query": "预约大会议室用的公共账号密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "门禁后台",
+    "story": "写字楼门禁系统后台密码由物业指定，我在保险柜里存了一份交接说明。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "门禁管理后台 交接说明\n\n门禁后台地址：http://mj.internal/admin\n超级管理员：mj_admin\n登录密码：LQ2026-MJ-bk31\n\n首次登录后请修改并同步给物业方留档。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["menjin", "access", "internal"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-MJ-bk31",
+      "template_type": "custom",
+      "semantic_query": "门禁后台的登录密码是啥来着",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "访客WiFi-公共",
+    "story": "办公室访客WiFi的公共密码我存了下来，方便随时报给来访的人。",
+    "difficulty": "easy",
+    "create": {
+      "pasted_text": "办公室访客WiFi\n\n网络名：LQ-Guest\n密码：LQ2026-WIFI-ph64\n\n行政部工位旁张贴的也是这个密码。",
+      "primary_secret": null,
+      "name": "访客WiFi-公共",
+      "notes": "公共账号，勿外传",
+      "tags": ["wifi", "public", "guest"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-WIFI-ph64",
+      "template_type": "custom",
+      "semantic_query": "访客wifi密码是多少",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "工资核算库-只读",
+    "story": "工资核算数据库的只读账号开通，我记下了连接信息和密码。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "工资核算数据库 只读账号开通通知\n\n数据库类型：MySQL\n主机：gwdb.internal:3306\n数据库：wage2026\n只读账号：ro_wage\n初始密码：LQ2026-DB-wg21\n\n仅限工资核算使用，只读。",
+      "primary_secret": null,
+      "name": "工资核算库-只读",
+      "notes": null,
+      "tags": ["database", "mysql", "ro"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-DB-wg21",
+      "template_type": "database",
+      "semantic_query": "工资核算数据库那个只读账号的密码是多少",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "发票库",
+    "story": "发票查验库的只读连接信息存进了保险柜。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "发票数据库 只读连接信息\n\n数据库类型：PostgreSQL\n主机：fpdb.internal:5432\n数据库名：invoice2026\n只读账号：fp_ro_02\n密码：LQ2026-DB-fp06\n\n只读权限，请勿开启写入通道。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["database", "postgres", "invoice"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-DB-fp06",
+      "template_type": "database",
+      "semantic_query": "发票数据库的只读账号密码存在哪里了",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "凭证扫描件归档桶",
+    "story": "凭证扫描件的归档桶开通了，我把访问信息和桶名存了下来。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "财务凭证扫描件归档桶 开通通知\n\n存储类型：S3 兼容\nEndpoint：https://oss.archive.example.net\nBucket：voucher-archive-2026\n只读账号：voucher_ro\n桶访问密码：LQ2026-S3-vz13\n\n仅归档财务凭证扫描件。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["s3", "bucket", "archive"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-S3-vz13",
+      "template_type": "s3",
+      "semantic_query": "凭证扫描件归档桶的访问密码是多少",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "财务消息推送",
+    "story": "财务系统往消息队列推数据用的账号开通了，我把kafka的连接密码存好。",
+    "difficulty": "medium",
+    "create": {
+      "pasted_text": "财务消息推送服务 账号开通通知\n\n服务类型：Kafka\nBootstrap 地址：kfk.internal:9092\nTopic：fin-notify-2026\n生产账号：fin_publisher\n密码：LQ2026-KFK-fn18\n\n仅限财务对账消息生产使用。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["kafka", "fin", "internal"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ2026-KFK-fn18",
+      "template_type": "kafka",
+      "semantic_query": "财务系统消息推送用的kafka账号密码",
+      "semantic_top_n": 5
+    }
+  },
+  {
+    "title": "电子签章服务",
+    "story": "电子签章的AccessKey和SecretKey同时出现在通知里还夹着改密提示，我仔细区分后存储。",
+    "difficulty": "hard",
+    "create": {
+      "pasted_text": "电子签章平台 AccessKey 开通通知\n\n访问地址：https://esign.example.com/console\n专属 AccessKey：LQ-AK-2026-0815\n对应 SecretKey：LQ-SK-2026-0b3f9ae2bb11，请勿泄露，如泄露请立即作废并重新下发，作废同时原密钥即告失效。\n\n密钥用于调用签章接口，公钥证书由CA另行邮件发送。",
+      "primary_secret": null,
+      "name": null,
+      "notes": null,
+      "tags": ["aksk", "esign", "key"],
+      "fields": []
+    },
+    "expect": {
+      "primary_secret": "LQ-SK-2026-0b3f9ae2bb11",
+      "template_type": "aksk",
+      "semantic_query": "电子签章平台的SecretKey你那边能取到吗",
+      "semantic_top_n": 5
+    }
+  }
+]

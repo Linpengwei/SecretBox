@@ -1,0 +1,36 @@
+# macOS
+.DS_Store
+.derived/
+.derived-ios/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Environment
+.env
+*.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.claude/
+.zcode/
+
+# Local scan artifacts
+.mimosa/
+default.profraw
+
+# Local databases and beta artifacts — never commit; a fresh DB is created on startup
+server/secretbox.db
+server/data/
+
+# Distribution artifacts
+beta/
+
+# Xcode user state
+xcuserdata/
+*.xcuserstate

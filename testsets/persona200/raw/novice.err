@@ -1,0 +1,43 @@
+[0m
+> build · big-pickle
+[0m
+[0m$ [0mls -la /Users/liuhanze/Projects/SecretBox/testsets/persona200/ 2>/dev/null; echo "---"; ls /Users/liuhanze/Projects/SecretBox/testsets/ 2>/dev/null
+total 40
+drwxr-xr-x@  7 liuhanze  staff   224 Sep  7 00:01 .
+drwxr-xr-x@  3 liuhanze  staff    96 Sep  6 23:54 ..
+-rw-r--r--@  1 liuhanze  staff  3419 Sep  7 00:01 README.md
+-rwxr-xr-x@  1 liuhanze  staff  1397 Sep  7 00:01 generate.sh
+drwxr-xr-x@  8 liuhanze  staff   256 Sep  6 23:56 prompts
+drwxr-xr-x@ 14 liuhanze  staff   448 Sep  6 23:56 raw
+-rw-r--r--@  1 liuhanze  staff  9439 Sep  6 23:57 validate_merge.py
+---
+persona200
+[0m
+[0m→ [0mRead README.md
+[0m→ [0mRead generate.sh
+[0m
+[0m$ [0mls /Users/liuhanze/Projects/SecretBox/testsets/persona200/prompts/ /Users/liuhanze/Projects/SecretBox/testsets/persona200/raw/
+/Users/liuhanze/Projects/SecretBox/testsets/persona200/prompts/:
+admin.md
+designer.md
+developer.md
+novice.md
+product_manager.md
+sre.md
+
+/Users/liuhanze/Projects/SecretBox/testsets/persona200/raw/:
+admin.err
+admin.json
+designer.err
+designer.json
+developer.err
+developer.json
+novice.err
+novice.json
+product_manager.err
+product_manager.json
+sre.err
+sre.json
+[0m
+[0m→ [0mRead prompts/novice.md
+[0m→ [0mRead validate_merge.py
