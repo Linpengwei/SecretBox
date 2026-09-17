@@ -17,7 +17,13 @@ AI coding agents and chat assistants constantly need credentials — database UR
 
 ## A complete password manager underneath
 
-Paste a connection string or an account snippet, get an organized item with live two-step verification codes, granular permissions, and local-first encryption — ops-native templates for redis / s3 / database / kafka / aksk, plus everyday accounts. Everything runs on your device: a SwiftUI client (macOS menu bar + main window / iPhone), an optional FastAPI server, and a zero-dependency MCP server.
+Paste a connection string or an account snippet, get an organized item — ops-native templates for redis / s3 / database / kafka / aksk, plus everyday accounts — with local-first encryption. The password-manager fundamentals are all here:
+
+- **Seamless MFA (built-in authenticator)** — paste a base32 seed or an `otpauth://` link (or scan a QR code on iPhone) and the item grows a **live 30-second verification code**; the countdown ring doubles as the copy button, in the main window and the menu bar alike. Codes are generated entirely on-device (RFC 6238); the server only ever stores the seed as ciphertext.
+- **Granular per-item permission management** — read-only lock, hidden password (usable but never visible), biometric re-prompt before any secret use, and three-level AI access. Every subject — a human *or* an AI agent — is gated per item, and denied records are indistinguishable from missing ones.
+- **Team sharing on the roadmap** — Bitwarden-style collections, groups, and roles (Owner / Admin / Manager / User) with per-collection grants land in phase 2, together with server-side enforcement; the per-record permission structure already reserves the subjects for it.
+
+Everything runs on your device: a SwiftUI client (macOS menu bar + main window / iPhone), an optional FastAPI server, and a zero-dependency MCP server.
 
 ## Screenshots & Usage
 
@@ -35,7 +41,18 @@ The main window has three panes: filters and clusters on the left, the item brow
 
 The detail pane shows the structured record: cluster schema, detected context, identity, fields, the secret, and — for items with two-step verification — the **live verification code** that rotates every 30 seconds. Click the countdown ring to copy the code; **Copy Password** sits right next to it.
 
-### 3. Quick capture
+### 3. Menu bar panel (macOS)
+
+The menu bar popover packs both everyday moves into one compact panel, with a 捕获 / 检索 toggle that remembers your last mode:
+
+- **捕获 (Capture)** — paste loose text, check the Smart Preview, hit **⌘↩** (or ⌘S) to save. 保存 stays disabled until a real secret or `otpauth://` URI is detected, so junk never lands in the vault.
+- **检索 (Quick access)** — type a keyword, move with **↑↓**, press **↩** to copy the password (or the current TOTP code for authenticator-only items), **⌘↩** to reveal the record in the main window. An empty query lists your most recently used items; every copy confirms with a transient capsule.
+
+<img src="docs/screenshots/menubar-panels.png" width="720" alt="macOS menu bar panel: capture mode (left) and quick access mode (right)">
+
+Every quick copy respects the item's permissions — biometric re-prompt items ask first, and items denied to AI never expose the AI-reference action.
+
+### 4. Quick capture
 
 Click **Quick Capture** (the + button) and paste anything loose — a redis URI, an S3 key pair, an account snippet, or text with an embedded `otpauth://` link. The Smart Preview shows what SecretBox detected (type, tags, fields) and lets you correct individual fields before saving.
 
@@ -43,7 +60,7 @@ Click **Quick Capture** (the + button) and paste anything loose — a redis URI,
 
 Pasting an `otpauth://` Key URI alongside the credentials automatically attaches the TOTP seed to the record ("已检测到两步验证" badge); a URI-only paste creates a bare authenticator entry.
 
-### 4. Two-step verification & permissions
+### 5. MFA (two-step verification) & permissions
 
 Open **Edit** on any item and scroll down:
 
@@ -54,7 +71,7 @@ Open **Edit** on any item and scroll down:
 
 Verification codes are generated entirely on-device (RFC 6238); the server only ever stores the seed as ciphertext.
 
-### 5. Settings
+### 6. Settings
 
 Server mode (off by default — the vault lives in the encrypted Keychain locally), OpenAI-compatible provider configuration, and smart-organization cadence.
 
@@ -63,9 +80,10 @@ Server mode (off by default — the vault lives in the encrypted Keychain locall
 ## Feature summary
 
 - **Capture & organize** — freeform parsing with template detection and signal clustering (redis / s3 / database / kafka / account / aksk / custom); threshold, periodic, and manual re-clustering
+- **macOS menu bar panel** — quick capture with a live Smart Preview, plus quick access: keyword search with an ↑↓ / ↩ keyboard flow, one-keystroke copy of passwords and TOTP codes, ⌘↩ to reveal in the main window, and a recent list one glance away
 - **Search** — semantic match over descriptions/tags/fields, plus exact keyed-hash match when the query *is* the password
 - **Seamless MFA** (Bitwarden Integrated Authenticator equivalent) — per-item TOTP seeds, live 30-second codes with a countdown ring, `otpauth://` auto-capture, QR scanning on iOS
-- **Per-item permission matrix** (Bitwarden-style granular access) — read-only, hide-password, biometric re-prompt, three-level AI access
+- **Per-item permission matrix** (Bitwarden-style granular access) — read-only, hide-password, biometric re-prompt, three-level AI access; the reserved per-record subjects grow into team collections/groups/roles in phase 2
 - **AI integration** — LLM enrichment/reranking on redacted metadata only; a stdio MCP server lets Claude Code / OpenCode / Codex query metadata and copy secrets via the clipboard — plaintext never enters the agent context, and unauthorized items are indistinguishable from missing ones
 - **Local-first** — encrypted Keychain storage by default, optional server sync (TOTP seeds stored as Fernet ciphertext)
 
@@ -128,7 +146,7 @@ docs/screenshots/     # regenerated by DocsScreenshotsTests
 
 ## Documentation
 
-- [ROADMAP.md](ROADMAP.md) — phase plan and progress (phases 0 / MP / 1 complete)
+- [ROADMAP.md](ROADMAP.md) — phase plan and progress (phases 0 / MP / 1 / MB complete; phase 2 server integration & sync next)
 - [TESTING.md](TESTING.md) — test matrix and how to run everything
 - [BETA_NOTES.md](BETA_NOTES.md) — beta program notes and change log
 - [AGENTS.md](AGENTS.md) — contribution conventions and security invariants
