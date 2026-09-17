@@ -1244,4 +1244,159 @@ final class SecretBoxAppModelTests: XCTestCase {
         XCTAssertEqual(PlatformClipboard.string, "123456")
         XCTAssertEqual(model.statusMessage, "Verification code copied")
     }
+
+    // MARK: - Menu bar quick access
+
+    func testQuickAccessResultsRankExactTitleFirstAndCapLimit() async {
+        let model = makeOfflineModel()
+        model.pastedTitleOverride = "Billing"
+        model.pastedText = "engine=postgres host=db-00.internal port=5432 database=billing username=admin password=PgMain#2026"
+        await model.saveFromPastedText()
+
+        for index in 1...9 {
+            model.pastedText = "engine=postgres host=db-\(String(format: "%02d", index)).internal port=5432 database=billing-\(index) username=admin password=Pg\(index)#2026"
+            await model.saveFromPastedText()
+        }
+        XCTAssertEqual(model.localRecords.count, 10)
+
+        let results = model.quickAccessResults(for: "billing")
+        XCTAssertEqual(results.count, 8, "quick access caps the panel list at 8")
+        XCTAssertEqual(results.first?.name, "Billing", "exact title match outranks field matches")
+        XCTAssertTrue(results.allSatisfy { record in
+            record.name.localizedCaseInsensitiveContains("billing")
+                || record.fields.contains(where: { $0.value.localizedCaseInsensitiveContains("billing") })
+        })
+
+        XCTAssertEqual(model.quickAccessResults(for: "").count, 0, "empty query returns nothing; the panel shows recents instead")
+        XCTAssertTrue(model.quickAccessResults(for: "no-such-record-anywhere").isEmpty)
+    }
+
+    func testQuickAccessRecentOrderingDedupAndCapacity() async throws {
+        let store = InMemoryRecordStore()
+        let model = makeOfflineModel(store: store)
+        var savedIDs: [String] = []
+        for index in 1...6 {
+            model.pastedText = "service=GitHub username=ops\(index)@example.com password=Gh\(index)#2026 url=https://github\(index).internal"
+            await model.saveFromPastedText()
+            savedIDs.append(try XCTUnwrap(model.latestSavedRecord).id)
+        }
+
+        // Use order 1,2,3,2,4,5,6 — the duplicate must move to the front, not
+        // double up, and the oldest entry falls out at capacity 5.
+        for index in [0, 1, 2, 1, 3, 4, 5] {
+            let record = try XCTUnwrap(model.localRecords.first(where: { $0.id == savedIDs[index] }))
+            await model.quickAccessCopyPassword(for: record)
+        }
+
+        let expectedOrder = [savedIDs[5], savedIDs[4], savedIDs[3], savedIDs[1], savedIDs[2]]
+        XCTAssertEqual(model.recentQuickAccessIDs, expectedOrder)
+        XCTAssertEqual(model.recentQuickAccessRecords.map(\.id), expectedOrder)
+        XCTAssertEqual(model.menuBarFeedback, "Password copied · \(model.localRecords.first(where: { $0.id == savedIDs[5] })!.name)")
+
+        // Recents are plain UserDefaults data: they survive a reload.
+        let reloaded = SecretBoxAppModel(defaults: defaults, recordStore: InMemoryRecordStore(data: store.loadData()))
+        XCTAssertEqual(reloaded.recentQuickAccessIDs, expectedOrder)
+    }
+
+    func testQuickAccessCopyPasswordGatesOnRequireReauth() async throws {
+        let denied = StubReauthGate(nextResult: false)
+        let deniedModel = makeOfflineModel(reauthGate: denied)
+        deniedModel.recordPassword = "gated-secret"
+        deniedModel.recordPermissions.requireReauth = true
+        await deniedModel.saveRecord()
+        let gated = try XCTUnwrap(deniedModel.latestSavedRecord)
+
+        PlatformClipboard.copy("sentinel")
+        await deniedModel.quickAccessCopyPassword(for: gated)
+
+        XCTAssertEqual(denied.challengeCount, 1)
+        XCTAssertEqual(PlatformClipboard.string, "sentinel", "denied re-auth must abort the copy")
+        XCTAssertTrue(deniedModel.recentQuickAccessIDs.isEmpty, "a blocked use must not enter recents")
+        XCTAssertNil(deniedModel.menuBarFeedback)
+
+        let allowed = StubReauthGate(nextResult: true)
+        let allowedModel = makeOfflineModel(reauthGate: allowed)
+        allowedModel.recordPassword = "gated-secret"
+        allowedModel.recordPermissions.requireReauth = true
+        await allowedModel.saveRecord()
+        let record = try XCTUnwrap(allowedModel.latestSavedRecord)
+
+        await allowedModel.quickAccessCopyPassword(for: record)
+        XCTAssertEqual(allowed.challengeCount, 1)
+        XCTAssertEqual(PlatformClipboard.string, "gated-secret")
+        XCTAssertEqual(allowedModel.recentQuickAccessIDs, [record.id])
+        XCTAssertEqual(allowedModel.menuBarFeedback, "Password copied · \(record.name)")
+    }
+
+    func testQuickAccessCopyTOTPCopiesCurrentCode() async throws {
+        let model = makeOfflineModel()
+        model.recordPassword = "totp-holder"
+        model.recordTOTPInput = "JBSWY3DPEHPK3PXP"
+        await model.saveRecord()
+        let record = try XCTUnwrap(model.latestSavedRecord)
+        let secret = try XCTUnwrap(record.totp)
+
+        // The code is generated at call time; accept the before/after values so
+        // a period rollover between the two engine calls can't flake the test.
+        let before = TOTPEngine.code(for: secret, at: Date())
+        await model.quickAccessCopyTOTP(for: record)
+        let after = TOTPEngine.code(for: secret, at: Date())
+
+        let copied = try XCTUnwrap(PlatformClipboard.string)
+        XCTAssertTrue(copied == before || copied == after, "copied code must be the current TOTP value")
+        XCTAssertEqual(copied.count, secret.digits)
+        XCTAssertEqual(model.menuBarFeedback, "Verification code copied · \(record.name)")
+        XCTAssertEqual(model.recentQuickAccessIDs, [record.id])
+    }
+
+    func testQuickAccessAIReferenceOnlyForAgentVisibleRecords() async throws {
+        let model = makeOfflineModel()
+        model.pastedText = "service=Grafana username=ops password=GrafanaOps#2026 url=https://grafana.internal"
+        await model.saveFromPastedText()
+        let record = try XCTUnwrap(model.latestSavedRecord)
+
+        // aiAccess == .none (the default): the call must not touch feedback or
+        // recents. (The capture save itself leaves a transient "Saved · …"
+        // feedback, so assert it survives unchanged.)
+        let feedbackAfterSave = model.menuBarFeedback
+        model.quickAccessCopyAIReference(for: record)
+        XCTAssertEqual(model.menuBarFeedback, feedbackAfterSave)
+        XCTAssertTrue(model.recentQuickAccessIDs.isEmpty)
+        XCTAssertNotEqual(PlatformClipboard.string, record.aiAgentReference)
+
+        model.setAIAccess(id: record.id, level: .metadataAndTools)
+        let visible = try XCTUnwrap(model.localRecords.first)
+        model.quickAccessCopyAIReference(for: visible)
+        XCTAssertEqual(model.menuBarFeedback, "AI reference copied · \(visible.name)")
+        XCTAssertEqual(PlatformClipboard.string, visible.aiAgentReference)
+        XCTAssertEqual(model.recentQuickAccessIDs, [visible.id])
+    }
+
+    func testCanSavePastedCaptureRequiresSecretOrTOTP() async {
+        let model = makeOfflineModel()
+
+        XCTAssertFalse(model.canSavePastedCapture, "empty paste is not savable")
+
+        model.pastedText = "team contact list: ops, dev, pm with no credentials inside"
+        XCTAssertFalse(model.canSavePastedCapture, "plain text without a secret is not savable")
+
+        model.pastedText = "host=redis.internal port=6379 password=RedisSecret#2026"
+        XCTAssertTrue(model.canSavePastedCapture)
+
+        model.pastedText = "otpauth://totp/Example:ops@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example"
+        XCTAssertTrue(model.canSavePastedCapture, "a URI-only paste still creates an authenticator item")
+    }
+
+    func testRevealRecordInDashboardSelectsRecord() async throws {
+        let model = makeOfflineModel()
+        model.pastedText = "service=GitHub username=ops@example.com password=GhOpsBot@2026"
+        await model.saveFromPastedText()
+        let record = try XCTUnwrap(model.latestSavedRecord)
+
+        model.revealRecordInDashboard(record)
+        XCTAssertEqual(model.browserFilterID, "all")
+        XCTAssertNil(model.selectedClusterBrowserID)
+        XCTAssertEqual(model.searchResults.map(\.id), [record.id])
+        XCTAssertEqual(model.selectedSearchRecord?.id, record.id)
+    }
 }

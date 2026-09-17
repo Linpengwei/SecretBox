@@ -4,7 +4,7 @@
 
 **English** · [简体中文](ROADMAP.zh-CN.md)
 
-Current priority: **iOS first**. macOS features and backend capabilities are held at status quo (regression only); new phases focus on making the iOS target buildable, usable, and integration-testable.
+Current priority: **iOS first**. macOS features and backend capabilities are held at status quo (regression only); new phases focus on making the iOS target buildable, usable, and integration-testable. One deliberate exception: phase MB (2026-09-12) was a focused macOS menu-bar usability round, now complete — phase 2 remains the next step.
 
 Baseline (verified 2026-08-29):
 
@@ -62,6 +62,17 @@ Security invariants (all test-covered): seed stored only as ciphertext, never in
 3. Local mode (Keychain persistence) fully usable on iOS without a server.
 
 Acceptance: the "paste capture → Smart Preview → save → search → copy" flow on an iPhone simulator — automated by `testCaptureSaveSearchDetailCopyFlow`.
+
+## Phase MB: macOS menu bar display & interaction (complete)
+
+A focused macOS round (2026-09-12), the one deliberate detour from the iOS-first priority:
+
+1. Panel restructure (`RecordVaultView` compact card): compact header (app identity + record count + icon button opening the Dashboard, replacing the full-width button), a 捕获/检索 segmented mode switch (persisted via AppStorage; UI-test runs pin it through `SECRETBOX_UI_TEST_MENU_BAR_MODE` so the suite stays hermetic), width 290 → 320 with adaptive height.
+2. Quick access (检索) mode: auto-focused search field reusing the local ranked scorer (`quickAccessResults`, capped at 8); ↑/↓ selection with scroll-into-view; ↩ runs the primary action — copy the password, or the TOTP code for authenticator-only items; ⌘↩ reveals the record in the main window (`revealRecordInDashboard`). Row hover actions: copy password / copy TOTP / copy AI reference (offered only for agent-visible records) / open in Dashboard. Empty query shows the recent list (last 5 uses, record ids persisted in UserDefaults); a transient capsule confirms every copy/save.
+3. Capture mode: 保存 stays disabled until a secret or `otpauth://` URI is detected (with an inline hint); ⌘↩ / ⌘S save; "Saved · {title}" feedback; Smart Preview capped at 250 pt with its own scroll.
+4. Security invariants unchanged: every quick copy passes `requestSecretUse` (requireReauth → LAContext); hideSecret records copy but never display; `aiAccess=none` records expose no AI-reference action; recents persist ids only.
+
+Tests: model unit tests (ranking + cap, recent dedupe/eviction/reload, reauth gating, TOTP copy, save enablement, reveal); two new snapshot baselines (`menu-bar-capture`, `menu-bar-search`); three new macOS UI chains (search → ↩ copy with clipboard assertion, search → ⌘↩ reveal, capture → ⌘↩ save) alongside the four existing menu-bar tests.
 
 ## Phase 2: server integration & sync (next)
 

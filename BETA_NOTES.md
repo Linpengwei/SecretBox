@@ -54,6 +54,14 @@
 - **Latent-defect fixes**: keyboard-attached sheet-dismissal race (resign first responder first); the UI-test focus helper's macOS self-recursion.
 - **iOS UI smoke suite**: step 4 added to `test-ios.sh` — 7 chains including the full capture→save→search→detail→copy flow; 4 menu-bar tests skip on iOS. All 11 macOS UI tests pass as well.
 
+## Phase MB changes (2026-09-12, macOS menu bar quick access)
+
+- **Menu bar panel 2.0** (`RecordVaultView`): compact header (record count + Dashboard shortcut) replacing the full-width button; hand-drawn 捕获/检索 toggle (a native `.segmented` picker degrades to a single-value capsule in offscreen renders — plain SwiftUI rows render identically everywhere); panel widened 290 → 320 pt with adaptive height.
+- **Quick access (检索) mode**: vault search from the menu bar reusing the local ranked scorer (capped at 8); ↑/↓ selection, ↩ copies the password (TOTP for authenticator-only items), ⌘↩ reveals the record in the main window; row actions copy password / TOTP / AI reference (agent-visible records only) / open detail; recent list (last 5 uses, ids persisted); transient copy/save feedback capsule.
+- **Capture mode**: 保存 disabled until a secret or `otpauth://` URI is detected; ⌘↩ / ⌘S save; "Saved · …" feedback; Smart Preview capped at 250 pt with its own scroll.
+- **Security unchanged**: quick copies gate through `requestSecretUse` (requireReauth → LAContext); `aiAccess=none` records expose no AI-reference action; recents persist ids only.
+- **Tests**: 8 new model unit tests; snapshot baselines `menu-bar-capture` / `menu-bar-search`; 3 new macOS UI chains (search→↩ copy with clipboard assertion, search→⌘↩ reveal, capture→⌘↩ save); docs promo screenshot `menubar-panels.png` (both modes side by side) via the regenerated `DocsScreenshotsTests` (which now seeds its vault after construction — UI-test init wipes the store).
+
 ## Rollback
 
 `git stash && git clean -fd beta/` returns to the initial state (removes untracked files — use with care).

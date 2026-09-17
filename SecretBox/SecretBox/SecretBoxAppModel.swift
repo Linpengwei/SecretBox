@@ -123,6 +123,11 @@ final class SecretBoxAppModel: ObservableObject {
     @Published private(set) var recordExistingTOTP: TOTPSecret?
     @Published var recordTOTPRemoveRequested = false
     @Published var latestSavedRecord: VaultRecord?
+    // Menu bar quick access: transient copy feedback for the compact panel and
+    // the most-recently-used record ids (ids only — never secret material).
+    @Published private(set) var menuBarFeedback: String?
+    @Published private(set) var recentQuickAccessIDs: [String] = []
+    private var menuBarFeedbackDismissTask: Task<Void, Never>?
 
     @Published var searchQuery = ""
     @Published var searchResults: [VaultRecord] = []
@@ -166,6 +171,9 @@ final class SecretBoxAppModel: ObservableObject {
     private static let organizationThresholdBucketKey = "SecretBox.organization.thresholdBucket"
     private static let organizationSummaryKey = "SecretBox.organization.summary"
     private static let organizationIntervalDaysKey = "SecretBox.organization.intervalDays"
+    private static let recentQuickAccessKey = "SecretBox.quickAccess.recent"
+    private static let quickAccessResultLimit = 8
+    private static let recentQuickAccessCapacity = 5
     private static let organizationThresholdStep = 20
     private let environment: [String: String]
     private let defaults: UserDefaults
@@ -194,6 +202,7 @@ final class SecretBoxAppModel: ObservableObject {
         if let data = defaults.data(forKey: Self.organizationSummaryKey) {
             organizationSummary = try? JSONDecoder().decode(OrganizationRunSummary.self, from: data)
         }
+        recentQuickAccessIDs = defaults.stringArray(forKey: Self.recentQuickAccessKey) ?? []
         syncRecordFieldsWithSelectedType()
         loadLocalRecords()
         configureLaunchState()
@@ -688,6 +697,7 @@ final class SecretBoxAppModel: ObservableObject {
                 upsertLocalRecord(record)
                 runAutomaticOrganizationIfNeeded(trigger: .threshold)
                 statusMessage = "Saved authenticator item"
+                showMenuBarFeedback("Saved · \(record.name)")
                 resetPastedCaptureState()
                 dismissEditor()
                 return
@@ -722,6 +732,7 @@ final class SecretBoxAppModel: ObservableObject {
             upsertLocalRecord(record)
             runAutomaticOrganizationIfNeeded(trigger: .threshold)
             statusMessage = "Saved captured item"
+            showMenuBarFeedback("Saved · \(record.name)")
             resetPastedCaptureState()
             dismissEditor()
             return
@@ -749,6 +760,7 @@ final class SecretBoxAppModel: ObservableObject {
             upsertLocalRecord(record)
             selectedTypeID = record.templateType ?? selectedTypeID
             statusMessage = "Saved \(record.title)"
+            showMenuBarFeedback("Saved · \(record.title)")
             resetPastedCaptureState()
             recordPassword = ""
             dismissEditor()
@@ -912,6 +924,93 @@ final class SecretBoxAppModel: ObservableObject {
         statusMessage = "AI reference copied for \(record.name)"
     }
 
+    // MARK: - Menu bar quick access
+
+    /// Ranked results for the menu bar search field — the same local scorer as
+    /// the main-window search (title/tags/fields/signals), capped for the
+    /// compact panel. An empty query returns nothing; the panel shows the
+    /// recent list instead.
+    func quickAccessResults(for query: String) -> [VaultRecord] {
+        Array(rankedLocalResults(for: query, source: quickAccessSource).prefix(Self.quickAccessResultLimit))
+    }
+
+    /// Recently used records, most recent first. Stale ids (records deleted or
+    /// not yet loaded) drop out silently.
+    var recentQuickAccessRecords: [VaultRecord] {
+        let available = quickAccessSource
+        return recentQuickAccessIDs.compactMap { id in available.first(where: { $0.id == id }) }
+    }
+
+    /// Menu-bar save enablement: a capture is savable when a secret or a Key
+    /// URI was detected (a URI-only paste still creates an authenticator item).
+    var canSavePastedCapture: Bool {
+        guard let preview = pastedSecretPreview else { return false }
+        return preview.hasSecret || preview.hasTOTP
+    }
+
+    /// Same source as the main-window local search: the user's records, with
+    /// the demo seeds only when the vault is completely empty.
+    private var quickAccessSource: [VaultRecord] {
+        localRecords.isEmpty ? seededRecords : localRecords
+    }
+
+    /// Remembers a quick-access use, most recent first and capped. Ids only —
+    /// the same non-secret standing as the other UserDefaults preferences.
+    private func noteQuickAccess(_ id: String) {
+        var ids = recentQuickAccessIDs.filter { $0 != id }
+        ids.insert(id, at: 0)
+        if ids.count > Self.recentQuickAccessCapacity {
+            ids = Array(ids.prefix(Self.recentQuickAccessCapacity))
+        }
+        recentQuickAccessIDs = ids
+        defaults.set(ids, forKey: Self.recentQuickAccessKey)
+    }
+
+    private func showMenuBarFeedback(_ message: String) {
+        menuBarFeedback = message
+        menuBarFeedbackDismissTask?.cancel()
+        menuBarFeedbackDismissTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            guard !Task.isCancelled else { return }
+            self?.menuBarFeedback = nil
+        }
+    }
+
+    func quickAccessCopyPassword(for record: VaultRecord) async {
+        guard let password = record.password, !password.isEmpty else {
+            showMenuBarFeedback("No password stored · \(record.title)")
+            return
+        }
+        guard await requestSecretUse(for: record, action: "copy the password") else { return }
+        copyPassword(password)
+        noteQuickAccess(record.id)
+        showMenuBarFeedback("Password copied · \(record.title)")
+    }
+
+    func quickAccessCopyTOTP(for record: VaultRecord) async {
+        guard let totp = record.totp else {
+            showMenuBarFeedback("No verification code · \(record.title)")
+            return
+        }
+        guard await requestSecretUse(for: record, action: "copy the verification code") else { return }
+        guard let code = TOTPEngine.code(for: totp, at: Date()) else {
+            showMenuBarFeedback("Cannot generate code · \(record.title)")
+            return
+        }
+        copyTOTPCode(code)
+        noteQuickAccess(record.id)
+        showMenuBarFeedback("Verification code copied · \(record.title)")
+    }
+
+    /// The reference is only offered for records the agent can actually see;
+    /// for `aiAccess == .none` it would be unresolvable, so the call is a no-op.
+    func quickAccessCopyAIReference(for record: VaultRecord) {
+        guard record.effectivePermissions.aiAccess != .none else { return }
+        copyAIReference(for: record)
+        noteQuickAccess(record.id)
+        showMenuBarFeedback("AI reference copied · \(record.title)")
+    }
+
     func updateField(_ key: String, value: String) {
         recordFields[key] = value
     }
@@ -937,6 +1036,18 @@ final class SecretBoxAppModel: ObservableObject {
             selectedSearchRecord = firstLocalRecord
             latestSavedRecord = firstLocalRecord
         }
+        searchFocusToken += 1
+    }
+
+    /// Focuses one specific record in the main window (menu bar ⌘↩ / row
+    /// action). Mirrors `openSearchFromMenuBar` but for an explicit target.
+    func revealRecordInDashboard(_ record: VaultRecord) {
+        browserFilterID = "all"
+        selectedClusterBrowserID = nil
+        if localRecords.contains(where: { $0.id == record.id }) {
+            searchResults = localRecords
+        }
+        selectedSearchRecord = record
         searchFocusToken += 1
     }
 
@@ -1076,6 +1187,18 @@ final class SecretBoxAppModel: ObservableObject {
     var uiTestEditorScrollAnchor: String? {
         guard isUITesting else { return nil }
         return environment["SECRETBOX_UI_TEST_EDITOR_SCROLL_TO"]
+    }
+
+    /// Menu-bar panel mode pin for UI tests and snapshot renders ("capture" /
+    /// "search"); nil outside UI-test mode. Snapshot tests inject the
+    /// environment here because the host process env stays unset.
+    var uiTestMenuBarModePin: String? {
+        guard isUITesting else { return nil }
+        return environment["SECRETBOX_UI_TEST_MENU_BAR_MODE"]
+    }
+
+    var isUITestRun: Bool {
+        isUITesting
     }
 
     private func resetEditorDraft() {

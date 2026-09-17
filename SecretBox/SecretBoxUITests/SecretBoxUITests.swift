@@ -254,6 +254,91 @@ final class SecretBoxUITests: XCTestCase {
         XCTAssertTrue(hiddenField.waitForExistence(timeout: 5))
     }
 
+    // MARK: - Menu bar quick access (检索 mode)
+
+    /// Searches from the menu bar and presses ↩: the selected record's
+    /// password must land on the clipboard (through the permission gates).
+    func testMenuBarSearchCopiesSeededPasswordOnReturn() throws {
+        try skipUnlessMacOS()
+        #if canImport(AppKit)
+        let app = launchApp(extraEnvironment: [
+            "SECRETBOX_UI_TEST_MENU_BAR": "1",
+            "SECRETBOX_UI_TEST_MENU_BAR_MODE": "search",
+        ])
+
+        let searchField = app.textFields["menubar.search.field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        activate(searchField)
+        searchField.typeText("billing")
+
+        let row = app.buttons["menubar.search.row.0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "query must surface the matching seeded record")
+
+        searchField.typeText("\n")
+
+        XCTAssertTrue(statusTextContains(app, "Password copied"), "the panel must confirm the copy")
+
+        var copied = false
+        for _ in 0..<20 {
+            if NSPasteboard.general.string(forType: .string) == "seed-secret-db" {
+                copied = true
+                break
+            }
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+        XCTAssertTrue(copied, "↩ in the quick-access field must copy the selected record's password")
+        #endif
+    }
+
+    /// ⌘↩ from the quick-access list reveals the selected record in the main
+    /// window instead of copying.
+    func testMenuBarSearchOpensRecordInDashboardOnCommandReturn() throws {
+        try skipUnlessMacOS()
+        let app = launchApp(extraEnvironment: [
+            "SECRETBOX_UI_TEST_MENU_BAR": "1",
+            "SECRETBOX_UI_TEST_MENU_BAR_MODE": "search",
+        ])
+
+        let searchField = app.textFields["menubar.search.field"]
+        XCTAssertTrue(searchField.waitForExistence(timeout: 5))
+        activate(searchField)
+        searchField.typeText("billing")
+
+        let row = app.buttons["menubar.search.row.0"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5))
+
+        searchField.typeKey(XCUIKeyboardKey.return, modifierFlags: .command)
+
+        let detailTitle = app.staticTexts["detail.title"]
+        XCTAssertTrue(detailTitle.waitForExistence(timeout: 5))
+        let predicate = NSPredicate(format: "value == %@", "Billing Postgres")
+        expectation(for: predicate, evaluatedWith: detailTitle)
+        waitForExpectations(timeout: 5)
+    }
+
+    /// ⌘↩ in capture mode saves the prefilled paste without clicking 保存.
+    func testMenuBarCaptureSavesWithCommandReturn() throws {
+        try skipUnlessMacOS()
+        let app = launchApp(extraEnvironment: [
+            "SECRETBOX_UI_TEST_MENU_BAR": "1",
+            "SECRETBOX_UI_TEST_PASTED_TEXT": "redis://default:RedisProd#2026@redis-prod.internal:6379/0 env=prod service=order-cache",
+        ])
+
+        let saveButton = app.buttons["menubar.save"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(saveButton.isEnabled, "a paste with a detected secret must make 保存 actionable")
+
+        app.typeKey(XCUIKeyboardKey.return, modifierFlags: .command)
+
+        XCTAssertTrue(statusTextContains(app, "Saved"), "⌘↩ must trigger the save")
+
+        // The capture state resets with the save: the preview disappears and
+        // the button falls back to its disabled state.
+        let disabled = expectation(for: NSPredicate(format: "isEnabled == false"), evaluatedWith: saveButton)
+        wait(for: [disabled], timeout: 5)
+        XCTAssertFalse(app.otherElements["menubar.preview"].exists, "the preview must clear after the save")
+    }
+
     func testQuickCaptureSheetCanOpen() throws {
         let app = XCUIApplication()
         app.launchEnvironment["SECRETBOX_UI_TEST"] = "1"

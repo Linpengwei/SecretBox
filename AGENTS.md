@@ -34,7 +34,7 @@ Do not weaken or bypass these boundaries in either the Swift client (`SecretBoxA
 
 ## Current priority
 
-iOS first — see `ROADMAP.md` for phase plan (Phase 0 + phase MP done; next is Phase 1 iOS usability).
+iOS first — see `ROADMAP.md` for phase plan (Phases 0, MP, 1, and the macOS menu-bar round MB done; next is Phase 2: server integration & sync).
 
 ## Conventions
 

@@ -88,6 +88,14 @@ open /Applications/SecretBox.app
 - **存量缺陷修复**：键盘附着时保存关闭 sheet 的竞态（先 `resignFirstResponder`）；UI 测试焦点帮助函数在 macOS 分支的自递归缺陷（历史版本从未在 macOS 执行过所以未暴露）。
 - **iOS UI 冒烟套件**：`test-ios.sh` 新增第 4 步共 7 条链路测试（登录、种子搜索、捕获面板、捕获→保存→搜索→详情→复制密码全链路、otpauth 捕获→实时验证码→复制、只读权限锁定编辑/删除、设置面板）；4 条菜单栏测试在 iOS 自动跳过。macOS 端全部 11 条 UI 测试同步通过。
 
+## 阶段 MB 变更（2026-09-12，macOS 菜单栏快捷访问）
+
+- **菜单栏面板 2.0**（`RecordVaultView`）：紧凑 header（记录数 + 查询界面快捷入口）替代原整宽大按钮；「捕获/检索」切换改为纯 SwiftUI 自绘（原生 `.segmented` picker 在离屏渲染中退化为单值胶囊——自绘在快照/文档渲染与真实窗口表现一致）；面板加宽 290 → 320pt、高度自适应。
+- **检索模式（新增）**：菜单栏内直接检索密码库（复用本地打分器，上限 8 条）；↑/↓ 选择、↩ 复制密码（纯验证器条目复制 TOTP）、⌘↩ 主窗口定位；行内操作复制密码/验证码/AI 引用（仅 agent 可见条目）/打开详情；最近使用（最近 5 次，仅存 id）；复制/保存瞬时反馈胶囊。
+- **捕获模式**：未检测到密钥或 `otpauth://` 前「保存」保持禁用；⌘↩ / ⌘S 保存；「Saved · …」反馈；Smart Preview 限高 250pt 自滚动。
+- **安全红线不变**：快捷复制先过 `requestSecretUse`（requireReauth → LAContext）；`aiAccess=none` 条目不出现 AI 引用入口；最近使用仅持久化 id。
+- **测试**：新增 8 条模型单元测试；快照基线 `menu-bar-capture` / `menu-bar-search`；3 条 macOS UI 链路（检索→↩ 复制并断言剪贴板、检索→⌘↩ 定位、捕获→⌘↩ 保存）；宣传截图 `menubar-panels.png`（双模式并排）由重构后的 `DocsScreenshotsTests` 生成（改为构造后灌数据——UI 测试模式 init 会清空 store）。
+
 ## 回滚
 
 如需回到初始状态：`git stash && git clean -fd beta/`（注意会移除未跟踪文件，谨慎执行）。
