@@ -117,6 +117,8 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 
 ### 客户端（macOS / iPhone）
 
+**直接下载 macOS beta**——[SecretBox-v1.0-beta6-macos.dmg](https://github.com/Linpengwei/SecretBox/releases/download/v1.0-beta6/SecretBox-v1.0-beta6-macos.dmg)（Apple 芯片，ad-hoc 签名：首次启动请右键 → 打开）。或从源码构建：
+
 ```bash
 open SecretBox/SecretBox.xcodeproj   # Xcode 中选 SecretBox scheme，Cmd+R
 ```

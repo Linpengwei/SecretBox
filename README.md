@@ -91,6 +91,8 @@ Server mode (off by default — the vault lives in the encrypted Keychain locall
 
 ### Client (macOS / iPhone)
 
+**Download the macOS beta** — [SecretBox-v1.0-beta6-macos.dmg](https://github.com/Linpengwei/SecretBox/releases/download/v1.0-beta6/SecretBox-v1.0-beta6-macos.dmg) (Apple silicon, ad-hoc signed: on first launch use right-click → Open). Or build from source:
+
 ```bash
 open SecretBox/SecretBox.xcodeproj   # Xcode: select the SecretBox scheme, Cmd+R
 ```
