@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
+import httpx
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from .ai import ai_service
+from .audit import event_view, list_events, log_event, stats as audit_stats
 from .database import Base, engine, get_db, migrate_sqlite
 from .models import ProviderConfig, VaultRecord
+from .risk import audit_vault, organization_report, password_strength
 from .schemas import (
+    AIGatewayStatusView,
+    AuditEventIngest,
     ProviderSettingsPayload,
     ProviderSettingsView,
     RecordPermissionsPayload,
@@ -31,7 +38,7 @@ from .security import (
 )
 from .storage import storage_catalog
 
-app = FastAPI(title="SecretBox Server", version="0.2.0")
+app = FastAPI(title="SecretBox Server", version="0.3.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -39,6 +46,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+_DASHBOARD_HTML = (Path(__file__).resolve().parent / "static" / "dashboard.html").read_text(encoding="utf-8")
 
 
 @app.on_event("startup")
@@ -51,6 +60,229 @@ def on_startup() -> None:
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/", include_in_schema=False)
+def root() -> RedirectResponse:
+    return RedirectResponse(url="/dashboard")
+
+
+@app.get("/dashboard", response_class=HTMLResponse, include_in_schema=False)
+def dashboard() -> HTMLResponse:
+    return HTMLResponse(_DASHBOARD_HTML)
+
+
+# ---------------------------------------------------------------------------
+# AI gateway: clients (and the macOS/iOS app's "use server AI" option) send
+# OpenAI-compatible chat requests here; the server attaches its own upstream
+# key and forwards. The client never sees the provider key.
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/ai/status", response_model=AIGatewayStatusView)
+def ai_status(db: Session = Depends(get_db)) -> AIGatewayStatusView:
+    provider = db.get(ProviderConfig, 1)
+    if provider is None:
+        return AIGatewayStatusView(enabled=False)
+    return AIGatewayStatusView(enabled=True, model=provider.model, base_url=provider.base_url)
+
+
+@app.post("/ai/v1/chat/completions")
+async def ai_gateway_chat_completions(request: Request, db: Session = Depends(get_db)) -> dict:
+    actor = (request.headers.get("x-secretbox-actor") or "client")[:255]
+    provider = db.get(ProviderConfig, 1)
+    if provider is None:
+        log_event(
+            db, action="ai_chat", actor=actor, actor_type="client", allowed=False,
+            detail={"reason": "gateway not configured"},
+        )
+        raise HTTPException(
+            status_code=503,
+            detail="AI gateway is not configured. Set the provider via PUT /api/provider or the dashboard AI tab.",
+        )
+
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Request body must be JSON.")
+    if not isinstance(body, dict) or not isinstance(body.get("messages"), list):
+        raise HTTPException(status_code=400, detail="OpenAI-compatible body with a `messages` array is required.")
+    if body.get("stream"):
+        raise HTTPException(status_code=400, detail="Streaming is not supported by the gateway; send stream=false.")
+    requested_model = body.get("model")
+    # The server-configured model is enforced for every forwarded call —
+    # clients cannot pick an arbitrary (or costlier) upstream model.
+    forwarded_body = {**body, "model": provider.model}
+
+    try:
+        result = await ai_service.forward_chat_completion(provider=provider, payload=forwarded_body)
+    except httpx.HTTPStatusError as error:
+        log_event(
+            db, action="ai_chat", actor=actor, actor_type="client", allowed=False,
+            detail={"reason": "upstream error", "status": error.response.status_code},
+        )
+        raise HTTPException(status_code=502, detail=f"Upstream AI provider returned {error.response.status_code}.")
+    except httpx.HTTPError as error:
+        log_event(
+            db, action="ai_chat", actor=actor, actor_type="client", allowed=False,
+            detail={"reason": "upstream unreachable", "error_type": type(error).__name__},
+        )
+        raise HTTPException(status_code=504, detail="Upstream AI provider could not be reached.")
+
+    usage = (result.get("usage") or {}) if isinstance(result, dict) else {}
+    log_event(
+        db, action="ai_chat", actor=actor, actor_type="client", allowed=True,
+        detail={
+            "model": provider.model,
+            "requested_model": requested_model if requested_model and requested_model != provider.model else None,
+            "prompt_tokens": usage.get("prompt_tokens"),
+            "completion_tokens": usage.get("completion_tokens"),
+        },
+    )
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Audit trail. `POST /api/audit` is the ingest point for agent-side tools
+# (e.g. the MCP server reporting every tool call); the GETs power the
+# dashboard's Agent Audit tab.
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/audit")
+def list_audit_events(
+    db: Session = Depends(get_db),
+    limit: int = Query(default=50, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    action: str | None = Query(default=None),
+    actor_type: str | None = Query(default=None),
+    allowed: bool | None = Query(default=None),
+) -> dict:
+    events = list_events(db, limit=limit, offset=offset, action=action, actor_type=actor_type, allowed=allowed)
+    return {
+        "events": [event_view(event) for event in events],
+        "limit": limit,
+        "offset": offset,
+    }
+
+
+@app.get("/api/audit/stats")
+def audit_stats_endpoint(db: Session = Depends(get_db)) -> dict:
+    return audit_stats(db)
+
+
+@app.post("/api/audit", status_code=202)
+def ingest_audit_event(payload: AuditEventIngest, db: Session = Depends(get_db)) -> dict:
+    event = log_event(
+        db,
+        action=payload.action,
+        actor=payload.actor,
+        actor_type=payload.actor_type,
+        record_id=payload.record_id,
+        allowed=payload.allowed,
+        detail=payload.detail,
+        occurred_at=payload.occurred_at,
+    )
+    return {"accepted": True, "id": event.id}
+
+
+# ---------------------------------------------------------------------------
+# Dashboard data endpoints (overview / security review / organization).
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/dashboard/overview")
+def dashboard_overview(db: Session = Depends(get_db)) -> dict:
+    records = list(db.scalars(select(VaultRecord)))
+    provider = db.get(ProviderConfig, 1)
+    organization = organization_report(records)
+    return {
+        "records": {
+            "total": len(records),
+            "by_type": organization["by_type"],
+            "by_template": organization["by_template"],
+            "top_tags": organization["top_tags"],
+            "totp_enabled": sum(1 for record in records if record.totp_encrypted),
+            "duplicates": len(organization["duplicate_titles"]),
+        },
+        "ai": {
+            "configured": provider is not None,
+            "model": provider.model if provider else None,
+        },
+        "audit_stats": audit_stats(db),
+    }
+
+
+@app.get("/api/dashboard/security")
+def dashboard_security(db: Session = Depends(get_db)) -> dict:
+    records = list(db.scalars(select(VaultRecord)))
+    report = audit_vault(records)
+    report.pop("records", None)  # the per-record table lives on the records tab
+    return report
+
+
+@app.get("/api/dashboard/organization")
+def dashboard_organization(db: Session = Depends(get_db)) -> dict:
+    records = list(db.scalars(select(VaultRecord)))
+    return organization_report(records)
+
+
+# ---------------------------------------------------------------------------
+# Records inventory + per-record permission matrix management (dashboard).
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/records")
+def list_records(db: Session = Depends(get_db)) -> list[dict]:
+    records = db.scalars(select(VaultRecord).order_by(VaultRecord.created_at.desc())).all()
+    fingerprint_counts: dict[str, int] = {}
+    for record in records:
+        fingerprint_counts[record.password_fingerprint] = fingerprint_counts.get(record.password_fingerprint, 0) + 1
+    items: list[dict] = []
+    for record in records:
+        view = build_item_view(record, include_secret=False)
+        try:
+            strength = password_strength(decrypt_password(record.encrypted_password)).as_dict()
+        except Exception:
+            strength = {"score": None, "label": "unknown", "reasons": ["could not be decrypted with the current key"]}
+        strength["reused"] = fingerprint_counts.get(record.password_fingerprint, 1) > 1
+        items.append(
+            {
+                **view.model_dump(mode="json"),
+                "totp_enabled": bool(record.totp_encrypted),
+                "updated_at": record.updated_at,
+                "strength": strength,
+            }
+        )
+    return items
+
+
+@app.put("/api/records/{record_id}/permissions", response_model=VaultItemView)
+def update_record_permissions(
+    record_id: str,
+    payload: RecordPermissionsPayload,
+    db: Session = Depends(get_db),
+) -> VaultItemView:
+    record = db.get(VaultRecord, record_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Record not found")
+    record.permissions_json = json.dumps(payload.model_dump(mode="json"))
+    db.commit()
+    db.refresh(record)
+    log_event(
+        db,
+        action="permissions_update",
+        actor_type="dashboard",
+        actor="dashboard",
+        record_id=record.id,
+        detail={
+            "ai_access": payload.ai_access,
+            "read_only": payload.read_only,
+            "hide_secret": payload.hide_secret,
+            "require_reauth": payload.require_reauth,
+        },
+    )
+    return build_item_view(record)
 
 
 @app.get("/api/provider", response_model=ProviderSettingsView)
@@ -122,6 +354,10 @@ async def create_record(payload: VaultItemCreateRequest, db: Session = Depends(g
     db.add(record)
     db.commit()
     db.refresh(record)
+    log_event(
+        db, action="record_create", actor="api", record_id=record.id,
+        detail={"item_type": record.record_type, "title": record.title},
+    )
     return build_item_view(record, include_secret=True)
 
 
@@ -179,6 +415,10 @@ async def update_record(record_id: str, payload: VaultItemCreateRequest, db: Ses
         record.permissions_json = json.dumps(payload.permissions.model_dump(mode="json"))
     db.commit()
     db.refresh(record)
+    log_event(
+        db, action="record_update", actor="api", record_id=record.id,
+        detail={"item_type": record.record_type, "title": record.title},
+    )
     return build_item_view(record, include_secret=True)
 
 
@@ -187,6 +427,12 @@ async def search_records(payload: SearchRequest, db: Session = Depends(get_db)) 
     fingerprint = query_fingerprint(payload.query)
     exact_matches = list(db.scalars(select(VaultRecord).where(VaultRecord.password_fingerprint == fingerprint).limit(payload.limit)))
     if exact_matches:
+        # The query text is deliberately absent from the audit detail: in this
+        # branch the query IS the plaintext password.
+        log_event(
+            db, action="search", actor="api",
+            detail={"mode": "exact_fingerprint", "results": len(exact_matches)},
+        )
         return SearchResponse(
             results=[
                 build_item_view(match, include_secret=True, match_reason="exact secret fingerprint match")
@@ -234,6 +480,10 @@ async def search_records(payload: SearchRequest, db: Session = Depends(get_db)) 
         ordered_results.append(build_item_view(candidate, include_secret=True, match_reason=reason))
         if len(ordered_results) >= payload.limit:
             break
+    log_event(
+        db, action="search", actor="api",
+        detail={"mode": "semantic", "results": len(ordered_results)},
+    )
     return SearchResponse(results=ordered_results)
 
 

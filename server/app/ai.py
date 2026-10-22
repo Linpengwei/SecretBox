@@ -376,6 +376,23 @@ class AIService:
             body = response.json()
             return body["choices"][0]["message"]["content"]
 
+    async def forward_chat_completion(self, provider: ProviderConfig, payload: dict) -> dict:
+        """AI gateway passthrough: forward an OpenAI-compatible chat
+        completion body to the configured upstream using the server's stored
+        key. The payload is forwarded as given (the route enforces the
+        server-side model); the caller is responsible for audit logging, and
+        the response body is returned to the client verbatim."""
+        base_url = provider.base_url.rstrip("/")
+        url = f"{base_url}/chat/completions"
+        async with httpx.AsyncClient(timeout=max(settings.ai_timeout_seconds, 60.0)) as client:
+            response = await client.post(
+                url,
+                headers={"Authorization": f"Bearer {provider.api_key}"},
+                json=payload,
+            )
+            response.raise_for_status()
+            return response.json()
+
     def _heuristic_enrichment(
         self,
         item_type: str,

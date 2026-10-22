@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SecretBox Server Dashboard</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b27; --panel2: #1c2333; --border: #2a3348;
+    --text: #e6e9f0; --muted: #8b94a8; --accent: #5b8cff; --accent2: #7c5bff;
+    --good: #3fb96d; --warn: #e2b93b; --bad: #e2574b; --info: #4aa3c7;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.5 -apple-system, "SF Pro Text", "Helvetica Neue", "PingFang SC", sans-serif;
+         display: flex; min-height: 100vh; }
+  .sidebar { width: 224px; flex: none; background: #10141d; border-right: 1px solid var(--border);
+             position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+             padding: 18px 12px 14px; }
+  .brand { display: flex; align-items: center; gap: 11px; padding: 2px 8px 16px;
+           border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .brand h1 { font-size: 15px; margin: 0; font-weight: 650; }
+  .brand .sub { color: var(--muted); font-size: 11.5px; margin-top: 1px; }
+  .logo { width: 32px; height: 32px; border-radius: 9px; flex: none;
+          background: linear-gradient(135deg, var(--accent), var(--accent2));
+          display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  nav { display: flex; flex-direction: column; gap: 3px; }
+  nav button { display: block; width: 100%; text-align: left; background: none;
+               border: 1px solid transparent; color: var(--muted);
+               padding: 9px 12px; border-radius: 9px; cursor: pointer; font-size: 13.5px; }
+  nav button:hover { color: var(--text); background: var(--panel2); }
+  nav button.active { color: var(--text); background: linear-gradient(90deg, rgba(91,140,255,.16), rgba(124,91,255,.10));
+                      border-color: var(--border); font-weight: 600; }
+  .sidebar-footer { margin-top: auto; padding: 10px 8px 0; color: var(--muted);
+                    font-size: 11.5px; border-top: 1px solid var(--border); }
+  main { flex: 1; min-width: 0; padding: 26px 28px; max-width: 1160px; margin: 0 auto; }
+  section.tab { display: none; }
+  section.tab.active { display: block; }
+  @media (max-width: 780px) {
+    body { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; border-right: none;
+               border-bottom: 1px solid var(--border); padding: 12px; }
+    .brand { border-bottom: none; margin-bottom: 8px; padding-bottom: 8px; }
+    nav { flex-direction: row; flex-wrap: wrap; }
+    nav button { width: auto; }
+    .sidebar-footer { display: none; }
+    main { padding: 16px; }
+  }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .card .value { font-size: 26px; font-weight: 700; margin-top: 4px; }
+  .card .hint { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .panel h3 { margin: 0 0 10px; font-size: 13px; color: var(--muted); font-weight: 600;
+              text-transform: uppercase; letter-spacing: .05em; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px;
+       padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 8px 10px; border-bottom: 1px solid #202839; vertical-align: top; }
+  tr:hover td { background: rgba(91,140,255,.04); }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+  .badge.weak { background: rgba(226,87,75,.15); color: var(--bad); }
+  .badge.fair { background: rgba(226,185,59,.15); color: var(--warn); }
+  .badge.strong { background: rgba(63,185,109,.15); color: var(--good); }
+  .badge.unknown { background: rgba(139,148,168,.15); color: var(--muted); }
+  .badge.type { background: rgba(91,140,255,.13); color: var(--accent); margin-right: 4px; }
+  .badge.ok { background: rgba(63,185,109,.15); color: var(--good); }
+  .badge.denied { background: rgba(226,87,75,.15); color: var(--bad); }
+  .chip { display: inline-block; background: var(--panel2); border: 1px solid var(--border);
+          border-radius: 20px; padding: 2px 10px; font-size: 12px; margin: 2px 4px 2px 0; color: var(--text); }
+  .chip .n { color: var(--muted); margin-left: 4px; }
+  input, select, textarea { background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+         border-radius: 8px; padding: 8px 10px; font-size: 13px; width: 100%; }
+  input:focus, select:focus, textarea:focus { outline: 1px solid var(--accent); }
+  label.field { display: block; margin-bottom: 10px; color: var(--muted); font-size: 12px; }
+  label.field input, label.field select { margin-top: 4px; }
+  button.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none;
+         color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; }
+  button.primary:disabled { opacity: .45; cursor: not-allowed; }
+  button.ghost { background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+         padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .findings { display: flex; flex-direction: column; gap: 10px; }
+  .finding { border: 1px solid var(--border); border-left: 3px solid var(--muted); border-radius: 10px;
+             padding: 12px 14px; background: var(--panel2); }
+  .finding.high { border-left-color: var(--bad); }
+  .finding.medium { border-left-color: var(--warn); }
+  .finding.low { border-left-color: var(--info); }
+  .finding.info { border-left-color: var(--muted); }
+  .finding .title { font-weight: 600; }
+  .finding .advice { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+  .records-link { color: var(--accent); cursor: pointer; text-decoration: underline; }
+  .drawer { position: fixed; top: 0; right: -420px; width: 400px; max-width: 92vw; height: 100vh;
+            background: var(--panel); border-left: 1px solid var(--border); padding: 20px;
+            overflow-y: auto; transition: right .18s ease; z-index: 50; }
+  .drawer.open { right: 0; }
+  .perm-toggle { display: flex; justify-content: space-between; align-items: center; padding: 10px 0;
+                 border-bottom: 1px solid #202839; }
+  .switch { position: relative; width: 38px; height: 22px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: var(--panel2); border: 1px solid var(--border);
+                 border-radius: 20px; cursor: pointer; transition: .15s; }
+  .switch span::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%;
+                 background: var(--muted); top: 2px; left: 2px; transition: .15s; }
+  .switch input:checked + span { background: rgba(91,140,255,.35); }
+  .switch input:checked + span::after { left: 17px; background: var(--accent); }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
+  .muted { color: var(--muted); }
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+           background: var(--panel2); border: 1px solid var(--border); border-radius: 10px;
+           padding: 10px 18px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 99; }
+  .toast.show { opacity: 1; }
+  .bar-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
+  .bar-row .name { width: 120px; color: var(--muted); font-size: 12px; text-align: right; flex: none; }
+  .bar-row .bar { height: 14px; border-radius: 4px;
+                  background: linear-gradient(90deg, var(--accent), var(--accent2)); min-width: 2px; }
+  .bar-row .count { font-size: 12px; color: var(--text); }
+  .spark { width: 100%; height: 60px; }
+  .kv { display: grid; grid-template-columns: 170px 1fr; gap: 6px 12px; font-size: 13px; }
+  .kv .k { color: var(--muted); }
+  pre.response { background: #0a0e14; border: 1px solid var(--border); border-radius: 10px;
+                 padding: 12px; overflow: auto; font-size: 12px; white-space: pre-wrap; max-height: 300px; }
+  .toolbar { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .toolbar input, .toolbar select { width: auto; flex: 1; min-width: 140px; }
+  h2 { font-size: 17px; margin: 4px 0 16px; }
+  .empty { color: var(--muted); padding: 18px; text-align: center; }
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo">SB</div>
+    <div>
+      <h1>SecretBox Server</h1>
+      <div class="sub">ops dashboard</div>
+    </div>
+  </div>
+  <nav id="nav">
+    <button data-tab="overview" class="active">Overview</button>
+    <button data-tab="records">Records &amp; Permissions</button>
+    <button data-tab="security">Security Review</button>
+    <button data-tab="audit">Agent Audit</button>
+    <button data-tab="ai">AI Gateway</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div id="serverTime"></div>
+  </div>
+</aside>
+
+<main>
+  <!-- Overview -->
+  <section class="tab active" id="tab-overview">
+    <h2>Overview</h2>
+    <div class="cards" id="overviewCards"></div>
+    <div class="grid2">
+      <div class="panel"><h3>Records by type</h3><div id="chartType"></div></div>
+      <div class="panel"><h3>Records by template</h3><div id="chartTemplate"></div></div>
+      <div class="panel"><h3>Top tags</h3><div id="topTags"></div></div>
+      <div class="panel"><h3>Agent &amp; API activity (24h)</h3><svg class="spark" id="sparkAudit"></svg>
+        <div id="actorChips" style="margin-top:8px"></div></div>
+    </div>
+    <div class="panel"><h3>Recent events</h3><div id="recentEvents"></div></div>
+  </section>
+
+  <!-- Records & permissions -->
+  <section class="tab" id="tab-records">
+    <h2>Records &amp; Permissions</h2>
+    <div class="panel">
+      <div class="toolbar">
+        <input id="recordFilter" placeholder="Filter by name / username / tag…">
+        <select id="recordTypeFilter"><option value="">All types</option></select>
+        <select id="recordStrengthFilter">
+          <option value="">Any strength</option><option value="weak">Weak</option>
+          <option value="fair">Fair</option><option value="strong">Strong</option>
+        </select>
+        <button class="ghost" id="recordsReload">Reload</button>
+      </div>
+      <div style="overflow-x:auto"><table id="recordsTable">
+        <thead><tr><th>Record</th><th>Type</th><th>Username</th><th>Tags</th><th>Strength</th><th>2FA</th><th>Permissions</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="empty" id="recordsEmpty" style="display:none">No records match.</div>
+    </div>
+  </section>
+
+  <!-- Security -->
+  <section class="tab" id="tab-security">
+    <h2>Security Risk Review</h2>
+    <div class="cards" id="securityCards"></div>
+    <div class="panel"><h3>Score distribution</h3><div id="scoreBars"></div></div>
+    <div class="panel"><h3>Findings</h3><div class="findings" id="findings"></div></div>
+  </section>
+
+  <!-- Audit -->
+  <section class="tab" id="tab-audit">
+    <h2>Agent Audit</h2>
+    <div class="cards" id="auditCards"></div>
+    <div class="panel"><h3>Events by action</h3><div id="auditActionBars"></div></div>
+    <div class="panel">
+      <div class="toolbar">
+        <select id="auditAction"><option value="">All actions</option></select>
+        <select id="auditActorType">
+          <option value="">All actor types</option><option value="agent">agent</option>
+          <option value="client">client</option><option value="dashboard">dashboard</option><option value="server">server</option>
+        </select>
+        <select id="auditAllowed"><option value="">Allowed + denied</option><option value="true">Allowed only</option><option value="false">Denied only</option></select>
+        <button class="ghost" id="auditReload">Reload</button>
+        <label class="row" style="gap:6px;color:var(--muted);font-size:12px">
+          <input type="checkbox" id="auditAuto" style="width:auto" checked> auto-refresh 10s</label>
+      </div>
+      <div style="overflow-x:auto"><table id="auditTable">
+        <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Record</th><th>Result</th><th>Detail</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="row" style="margin-top:12px"><button class="ghost" id="auditMore">Load more</button></div>
+    </div>
+  </section>
+
+  <!-- AI -->
+  <section class="tab" id="tab-ai">
+    <h2>AI Gateway</h2>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Server AI access</h3>
+        <div id="aiStatus"></div>
+        <div class="kv" style="margin-top:12px">
+          <div class="k">Gateway endpoint</div><div class="mono">POST /ai/v1/chat/completions</div>
+          <div class="k">Upstream base URL</div><div class="mono" id="aiBaseUrl">—</div>
+          <div class="k">Enforced model</div><div class="mono" id="aiModel">—</div>
+        </div>
+        <p class="muted" style="font-size:12.5px">Clients select "Use server AI" in the app's OpenAI-compatible
+        provider section and send requests here; the server attaches its own upstream key. The key never
+        leaves the server. The configured model is enforced for every forwarded call.</p>
+      </div>
+      <div class="panel">
+        <h3>Provider configuration</h3>
+        <label class="field">Upstream base URL (OpenAI-compatible, includes /v1)
+          <input id="aiConfigBase" placeholder="https://api.openai.com/v1"></label>
+        <label class="field">API key <span class="muted">(stored server-side only)</span>
+          <input id="aiConfigKey" type="password" placeholder="sk-…"></label>
+        <label class="field">Model <input id="aiConfigModel" placeholder="gpt-4o-mini"></label>
+        <div class="row"><button class="primary" id="aiConfigSave">Save provider</button>
+          <span class="muted" id="aiConfigMsg"></span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Gateway test</h3>
+      <div class="row">
+        <input id="aiTestPrompt" style="flex:1" placeholder="Ask the configured model something… (e.g. Reply with OK)">
+        <button class="primary" id="aiTestSend">Send test prompt</button>
+      </div>
+      <pre class="response" id="aiTestOut" style="margin-top:12px">Response will appear here.</pre>
+    </div>
+  </section>
+</main>
+
+<div class="drawer" id="permDrawer">
+  <div class="row" style="justify-content:space-between">
+    <h2 style="margin:0">Permissions</h2>
+    <button class="ghost" id="permClose">Close</button>
+  </div>
+  <p class="muted" id="permRecordName" style="margin:8px 0 14px"></p>
+  <div class="perm-toggle"><div>Read-only<br><span class="muted" style="font-size:12px">Clients block edits</span></div>
+    <label class="switch"><input type="checkbox" id="permReadOnly"><span></span></label></div>
+  <div class="perm-toggle"><div>Hide secret<br><span class="muted" style="font-size:12px">Usable but never displayed</span></div>
+    <label class="switch"><input type="checkbox" id="permHideSecret"><span></span></label></div>
+  <div class="perm-toggle"><div>Require re-auth<br><span class="muted" style="font-size:12px">Biometric before secret use</span></div>
+    <label class="switch"><input type="checkbox" id="permReauth"><span></span></label></div>
+  <label class="field" style="margin-top:14px">AI agent access level
+    <select id="permAiAccess">
+      <option value="none">none — invisible to agents</option>
+      <option value="metadata">metadata — redacted metadata only</option>
+      <option value="metadata_and_tools">metadata + clipboard tools</option>
+    </select></label>
+  <p class="muted" style="font-size:12px">Level <b>none</b> keeps the MCP invariant: the record is
+  indistinguishable from a missing one for AI agents.</p>
+  <div class="row" style="margin-top:16px"><button class="primary" id="permSave">Save permissions</button>
+    <span id="permMsg" class="muted"></span></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+// ---------- small helpers ----------
+const $ = (id) => document.getElementById(id);
+const esc = (value) => String(value ?? "").replace(/[&<>"']/g,
+  (ch) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    headers: { "Content-Type": "application/json", "X-SecretBox-Actor": "dashboard" },
+    ...options,
+  });
+  if (!response.ok) {
+    let detail = `${response.status}`;
+    try { detail += " " + JSON.stringify((await response.json()).detail); } catch (e) {}
+    throw new Error(detail);
+  }
+  return response.status === 202 ? null : response.json();
+}
+let toastTimer;
+function toast(text) {
+  const el = $("toast"); el.textContent = text; el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+}
+function fmtTime(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? esc(value)
+    : date.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+function bars(container, entries, { max } = {}) {
+  const ceiling = max ?? Math.max(1, ...entries.map((e) => e[1]));
+  $(container).innerHTML = entries.length
+    ? entries.map(([name, count]) =>
+      `<div class="bar-row"><div class="name">${esc(name)}</div>
+       <div class="bar" style="width:${Math.round((count / ceiling) * 100) * 0.66}%"></div>
+       <div class="count">${count}</div></div>`).join("")
+    : `<div class="empty">No data yet.</div>`;
+}
+function sparkline(svg, hourly) {
+  const points = hourly || [];
+  const width = 560, height = 60, step = points.length > 1 ? width / (points.length - 1) : width;
+  const max = Math.max(1, ...points.map((p) => p.count));
+  const path = points.map((p, i) =>
+    `${i ? "L" : "M"}${(i * step).toFixed(1)},${(height - 6 - (p.count / max) * (height - 14)).toFixed(1)}`).join(" ");
+  const area = path ? `${path} L${width},${height} L0,${height} Z` : "";
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.innerHTML = `
+    <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5b8cff" stop-opacity=".45"/><stop offset="1" stop-color="#5b8cff" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${area ? `<path d="${area}" fill="url(#sg)"/>` : ""}
+    ${path ? `<path d="${path}" fill="none" stroke="#5b8cff" stroke-width="1.6"/>` : ""}
+    ${points.length ? `<text x="0" y="10" fill="#8b94a8" font-size="10">${points[0].hour.slice(11, 13)}:00</text>
+    <text x="${width}" y="10" text-anchor="end" fill="#8b94a8" font-size="10">now</text>` : ""}`;
+}
+
+// ---------- tabs ----------
+$("nav").addEventListener("click", (event) => {
+  const button = event.target.closest("button"); if (!button) return;
+  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("active", b === button));
+  document.querySelectorAll("section.tab").forEach((s) => s.classList.toggle("active", s.id === `tab-${button.dataset.tab}`));
+  window.dispatchEvent(new Event("tab:" + button.dataset.tab));
+});
+
+// ---------- overview ----------
+async function loadOverview() {
+  const data = await api("/api/dashboard/overview");
+  const s = data.records, a = data.audit_stats;
+  $("overviewCards").innerHTML = `
+    <div class="card"><div class="label">Vault records</div><div class="value">${s.total}</div>
+      <div class="hint">${s.totp_enabled} with 2FA · ${s.duplicates} duplicate titles</div></div>
+    <div class="card"><div class="label">AI provider</div>
+      <div class="value">${data.ai.configured ? "Ready" : "Off"}</div>
+      <div class="hint">${data.ai.configured ? "model " + esc(data.ai.model) : "configure on the AI tab"}</div></div>
+    <div class="card"><div class="label">Events (24h)</div><div class="value">${a.last_24h}</div>
+      <div class="hint">${a.total} total · ${a.denied} denied</div></div>`;
+  bars("chartType", Object.entries(s.by_type).sort((x, y) => y[1] - x[1]));
+  bars("chartTemplate", Object.entries(s.by_template).sort((x, y) => y[1] - x[1]));
+  $("topTags").innerHTML = s.top_tags.length
+    ? s.top_tags.map((t) => `<span class="chip">${esc(t.tag)}<span class="n">${t.count}</span></span>`).join("")
+    : `<div class="empty">No tags yet.</div>`;
+  sparkline($("sparkAudit"), a.hourly);
+  $("actorChips").innerHTML = Object.entries(a.per_actor_recent).sort((x, y) => y[1] - x[1]).slice(0, 8)
+    .map(([actor, count]) => `<span class="chip">${esc(actor)}<span class="n">${count}</span></span>`).join("")
+    || `<span class="muted">No activity in the last 24h.</span>`;
+  const events = (await api("/api/audit?limit=12")).events;
+  $("recentEvents").innerHTML = events.length ? `<table><tbody>${events.map((e) => `
+    <tr><td class="muted" style="white-space:nowrap">${fmtTime(e.ts)}</td>
+    <td><span class="badge type">${esc(e.actor_type)}</span>${esc(e.actor)}</td>
+    <td class="mono">${esc(e.action)}</td>
+    <td>${e.allowed ? '<span class="badge ok">allowed</span>' : '<span class="badge denied">denied</span>'}</td>
+    <td class="muted mono">${esc(JSON.stringify(e.detail).slice(0, 90))}</td></tr>`).join("")}</tbody></table>`
+    : `<div class="empty">No audit events yet. Agent tool calls and API writes appear here.</div>`;
+}
+
+// ---------- records & permissions ----------
+let recordsCache = [];
+function strengthBadge(strength) {
+  if (!strength) return "";
+  return `<span class="badge ${esc(strength.label)}">${esc(strength.label)}${strength.score != null ? " · " + strength.score : ""}</span>`;
+}
+function permSummary(record) {
+  if (!record.permissions) return `<span class="muted">defaults</span>`;
+  const flags = [];
+  if (record.permissions.read_only) flags.push("RO");
+  if (record.permissions.hide_secret) flags.push("hide");
+  if (record.permissions.require_reauth) flags.push("reauth");
+  return `<span class="badge type">ai: ${esc(record.permissions.ai_access)}</span>` +
+         (flags.length ? `<span class="muted mono">${flags.join(" ")}</span>` : "");
+}
+function renderRecords() {
+  const text = $("recordFilter").value.trim().toLowerCase();
+  const type = $("recordTypeFilter").value;
+  const strength = $("recordStrengthFilter").value;
+  const rows = recordsCache.filter((r) => {
+    if (type && r.item_type !== type) return false;
+    if (strength && (r.strength?.label || "unknown") !== strength) return false;
+    if (!text) return true;
+    return [r.name, r.subtitle, r.notes, (r.tags || []).join(" ")].join(" ").toLowerCase().includes(text);
+  });
+  $("recordsEmpty").style.display = rows.length ? "none" : "block";
+  $("recordsTable").querySelector("tbody").innerHTML = rows.map((r) => `
+    <tr><td><b>${esc(r.name)}</b><div class="muted" style="font-size:12px">${esc(r.notes || "").slice(0, 80)}</div></td>
+    <td><span class="badge type">${esc(r.item_type)}</span>${r.template_type ? `<div class="muted" style="font-size:12px;margin-top:3px">${esc(r.template_type)}</div>` : ""}</td>
+    <td>${esc(r.subtitle || "—")}</td>
+    <td>${(r.tags || []).slice(0, 3).map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</td>
+    <td>${strengthBadge(r.strength)}${r.strength?.reused ? '<div class="muted" style="font-size:11px;margin-top:3px">reused</div>' : ""}</td>
+    <td>${r.totp_enabled ? '<span class="badge ok">on</span>' : '<span class="muted">—</span>'}</td>
+    <td>${permSummary(r)}</td>
+    <td><button class="ghost" data-perm="${esc(r.id)}">Edit</button></td></tr>`).join("");
+}
+async function loadRecords() {
+  recordsCache = await api("/api/records");
+  const types = [...new Set(recordsCache.map((r) => r.item_type))].sort();
+  $("recordTypeFilter").innerHTML = `<option value="">All types</option>` +
+    types.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+  renderRecords();
+}
+["recordFilter", "recordTypeFilter", "recordStrengthFilter"].forEach((id) =>
+  $(id).addEventListener("input", renderRecords));
+$("recordsReload").addEventListener("click", () => loadRecords().then(() => toast("Records reloaded")));
+
+let permRecordId = null;
+$("recordsTable").addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-perm]"); if (!button) return;
+  const record = recordsCache.find((r) => r.id === button.dataset.perm); if (!record) return;
+  permRecordId = record.id;
+  $("permRecordName").textContent = `${record.name} · ${record.item_type}` +
+    (record.template_type ? ` (${record.template_type})` : "");
+  const p = record.permissions || {};
+  $("permReadOnly").checked = !!p.read_only;
+  $("permHideSecret").checked = !!p.hide_secret;
+  $("permReauth").checked = !!p.require_reauth;
+  $("permAiAccess").value = p.ai_access || "none";
+  $("permMsg").textContent = "";
+  $("permDrawer").classList.add("open");
+});
+$("permClose").addEventListener("click", () => $("permDrawer").classList.remove("open"));
+$("permSave").addEventListener("click", async () => {
+  try {
+    await api(`/api/records/${encodeURIComponent(permRecordId)}/permissions`, {
+      method: "PUT",
+      body: JSON.stringify({
+        read_only: $("permReadOnly").checked,
+        hide_secret: $("permHideSecret").checked,
+        require_reauth: $("permReauth").checked,
+        ai_access: $("permAiAccess").value,
+      }),
+    });
+    $("permDrawer").classList.remove("open");
+    toast("Permissions saved");
+    await loadRecords();
+  } catch (error) { $("permMsg").textContent = error.message; }
+});
+
+// ---------- security ----------
+async function loadSecurity() {
+  const report = await api("/api/dashboard/security");
+  const s = report.summary;
+  $("securityCards").innerHTML = `
+    <div class="card"><div class="label">Average strength</div>
+      <div class="value">${s.average_score ?? "—"}</div><div class="hint">0–100 heuristic score</div></div>
+    <div class="card"><div class="label">Weak</div><div class="value" style="color:var(--bad)">${s.weak}</div>
+      <div class="hint">rotate these first</div></div>
+    <div class="card"><div class="label">Fair</div><div class="value" style="color:var(--warn)">${s.fair}</div></div>
+    <div class="card"><div class="label">Strong</div><div class="value" style="color:var(--good)">${s.strong}</div></div>
+    <div class="card"><div class="label">Reused</div><div class="value" style="color:var(--bad)">${s.reused}</div>
+      <div class="hint">records sharing a password</div></div>
+    <div class="card"><div class="label">Stale ${report.stale_days}d+</div><div class="value">${s.stale}</div></div>`;
+  bars("scoreBars", [["weak", s.weak], ["fair", s.fair], ["strong", s.strong]]);
+  $("findings").innerHTML = report.findings.length ? report.findings.map((f) => {
+    const chips = f.records.slice(0, 8).map((r) =>
+      `<span class="chip">${esc(r.name)}${r.type ? " · " + esc(r.type) : ""}</span>`).join("");
+    const extra = f.records.length > 8 ? `<span class="muted"> +${f.records.length - 8} more</span>` : "";
+    const recordChips = f.records.length ? `<div style="margin-top:8px">${chips}${extra}</div>` : "";
+    return `
+    <div class="finding ${esc(f.severity)}">
+      <div class="title">${esc(f.title)} <span class="badge unknown" style="margin-left:6px">${esc(f.severity)}</span></div>
+      <div class="advice">${esc(f.advice)}</div>
+      ${recordChips}
+    </div>`;
+  }).join("") : `<div class="empty">No findings — the vault looks clean.</div>`;
+}
+
+// ---------- audit ----------
+let auditOffset = 0;
+async function loadAuditStats() {
+  const stats = await api("/api/audit/stats");
+  $("auditCards").innerHTML = `
+    <div class="card"><div class="label">Total events</div><div class="value">${stats.total}</div></div>
+    <div class="card"><div class="label">Last 24h</div><div class="value">${stats.last_24h}</div></div>
+    <div class="card"><div class="label">Denied</div><div class="value" style="color:var(--bad)">${stats.denied}</div></div>`;
+  bars("auditActionBars", Object.entries(stats.per_action).sort((x, y) => y[1] - x[1]));
+  const select = $("auditAction");
+  const current = select.value;
+  select.innerHTML = `<option value="">All actions</option>` +
+    Object.keys(stats.per_action).sort().map((a) => `<option value="${esc(a)}">${esc(a)}</option>`).join("");
+  select.value = current;
+}
+async function loadAuditEvents(reset = true) {
+  if (reset) auditOffset = 0;
+  const params = new URLSearchParams({ limit: "50", offset: String(auditOffset) });
+  if ($("auditAction").value) params.set("action", $("auditAction").value);
+  if ($("auditActorType").value) params.set("actor_type", $("auditActorType").value);
+  if ($("auditAllowed").value) params.set("allowed", $("auditAllowed").value);
+  const data = await api(`/api/audit?${params}`);
+  const rows = data.events.map((e) => `
+    <tr><td class="muted" style="white-space:nowrap">${fmtTime(e.ts)}</td>
+    <td><span class="badge type">${esc(e.actor_type)}</span><div>${esc(e.actor)}</div></td>
+    <td class="mono">${esc(e.action)}</td>
+    <td class="mono muted">${e.record_id ? esc(e.record_id.slice(0, 8)) + "…" : "—"}</td>
+    <td>${e.allowed ? '<span class="badge ok">allowed</span>' : '<span class="badge denied">denied</span>'}</td>
+    <td class="muted mono">${esc(JSON.stringify(e.detail).slice(0, 120))}</td></tr>`).join("");
+  const body = $("auditTable").querySelector("tbody");
+  if (reset) body.innerHTML = rows || `<tr><td colspan="6" class="empty">No events match.</td></tr>`;
+  else body.insertAdjacentHTML("beforeend", rows);
+  auditOffset += data.events.length;
+}
+["auditAction", "auditActorType", "auditAllowed"].forEach((id) =>
+  $(id).addEventListener("change", () => loadAuditEvents(true)));
+$("auditReload").addEventListener("click", async () => {
+  await Promise.all([loadAuditStats(), loadAuditEvents(true)]); toast("Audit reloaded");
+});
+$("auditMore").addEventListener("click", () => loadAuditEvents(false));
+setInterval(() => {
+  if ($("tab-audit").classList.contains("active") && $("auditAuto").checked) {
+    loadAuditStats(); loadAuditEvents(true);
+  }
+}, 10000);
+
+// ---------- AI gateway ----------
+async function loadAI() {
+  const [status, provider] = await Promise.all([api("/api/ai/status"), api("/api/provider")]);
+  $("aiStatus").innerHTML = status.enabled
+    ? `<span class="badge ok">enabled</span> <span class="muted">clients can select “Use server AI”</span>`
+    : `<span class="badge denied">not configured</span> <span class="muted">save a provider below to enable the gateway</span>`;
+  $("aiBaseUrl").textContent = status.base_url || "—";
+  $("aiModel").textContent = status.model || "—";
+  $("aiConfigBase").value = provider.base_url || "";
+  $("aiConfigModel").value = provider.model || "gpt-4o-mini";
+}
+$("aiConfigSave").addEventListener("click", async () => {
+  const key = $("aiConfigKey").value.trim();
+  const base = $("aiConfigBase").value.trim();
+  if (!base || !key) { $("aiConfigMsg").textContent = "Base URL and API key are required."; return; }
+  try {
+    await api("/api/provider", { method: "PUT", body: JSON.stringify({
+      base_url: base, api_key: key, model: $("aiConfigModel").value.trim() || "gpt-4o-mini" }) });
+    $("aiConfigKey").value = ""; $("aiConfigMsg").textContent = "Saved.";
+    toast("AI provider saved"); await loadAI();
+  } catch (error) { $("aiConfigMsg").textContent = error.message; }
+});
+$("aiTestSend").addEventListener("click", async () => {
+  const prompt = $("aiTestPrompt").value.trim(); if (!prompt) return;
+  $("aiTestOut").textContent = "Waiting for the gateway…";
+  try {
+    const result = await api("/ai/v1/chat/completions", { method: "POST", body: JSON.stringify({
+      messages: [{ role: "user", content: prompt }] }) });
+    $("aiTestOut").textContent = result.choices?.[0]?.message?.content ?? JSON.stringify(result, null, 2);
+    toast("Gateway replied");
+  } catch (error) { $("aiTestOut").textContent = "Gateway error: " + error.message; }
+});
+
+// ---------- boot ----------
+window.addEventListener("tab:overview", loadOverview);
+window.addEventListener("tab:security", loadSecurity);
+window.addEventListener("tab:ai", loadAI);
+(async function boot() {
+  $("serverTime").textContent = new Date().toLocaleString();
+  setInterval(() => { $("serverTime").textContent = new Date().toLocaleString(); }, 30000);
+  await Promise.all([loadOverview(), loadAuditStats(), loadAuditEvents(true), loadRecords(), loadSecurity(), loadAI()]);
+})();
+</script>
+</body>
+</html>

@@ -3,10 +3,32 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
+
+
+class AuditEvent(Base):
+    """Server-side audit trail for vault access and AI usage.
+
+    Actors: MCP/AI agents (`actor_type="agent"`), native clients
+    (`actor_type="client"`), dashboard edits (`actor_type="dashboard"`), and
+    the server itself (`actor_type="server"`). Detail payloads are scrubbed by
+    `app.audit.safe_detail` before storage — search queries (which may BE a
+    password in exact-match mode) and any secret-shaped key never land here.
+    """
+
+    __tablename__ = "audit_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+    actor_type: Mapped[str] = mapped_column(String(32), default="server", index=True)
+    actor: Mapped[str] = mapped_column(String(255), default="server")
+    action: Mapped[str] = mapped_column(String(64), index=True)
+    record_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    allowed: Mapped[bool] = mapped_column(Boolean, default=True)
+    detail_json: Mapped[str] = mapped_column(Text, default="{}")
 
 
 class ProviderConfig(Base):

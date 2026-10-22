@@ -104,3 +104,29 @@ class SearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     results: list[VaultItemView]
+
+
+class AIGatewayStatusView(BaseModel):
+    """What clients probe to decide whether the "use server AI" option is
+    available. `base_url` is the configured upstream (host only carries no
+    secret); the API key itself is never included."""
+
+    enabled: bool
+    model: str | None = None
+    base_url: str | None = None
+    gateway_path: str = "/ai/v1/chat/completions"
+    enforced_model: bool = True
+
+
+class AuditEventIngest(BaseModel):
+    """Agent/client-side audit report pushed to the server (e.g. from the MCP
+    server after each tool call). Detail goes through `safe_detail` before
+    storage — secret-shaped keys are redacted server-side regardless."""
+
+    actor: str = Field(default="unknown-agent", max_length=255)
+    actor_type: str = Field(default="agent", max_length=32)
+    action: str = Field(max_length=64)
+    record_id: str | None = None
+    allowed: bool = True
+    detail: dict[str, object] | None = None
+    occurred_at: datetime | None = None

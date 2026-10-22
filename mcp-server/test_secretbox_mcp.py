@@ -441,3 +441,96 @@ def test_redacted_metadata_never_contains_totp_seed(monkeypatch):
     for record in LEVEL_RECORDS:
         assert TOTP_SEED not in json.dumps(server.scrub(server.redact_record(record)))
         assert TOTP_SEED not in json.dumps(server.ai_access_level(record))
+
+
+# ---------------------------------------------------------------------------
+# Optional server-side audit reporting (off unless SECRETBOX_SERVER_URL set)
+# ---------------------------------------------------------------------------
+
+class _Placeholder:
+    def start(self):
+        pass
+
+
+def _immediate_thread(monkeypatch):
+    """Patch threading.Thread so report_audit runs _post_audit inline."""
+    class ImmediateThread:
+        def __init__(self, target, args=(), **kwargs):
+            target(*args)
+
+        def start(self):
+            pass
+    monkeypatch.setattr(server.threading, "Thread", ImmediateThread)
+
+
+def test_report_audit_disabled_without_env(monkeypatch):
+    monkeypatch.delenv("SECRETBOX_SERVER_URL", raising=False)
+    started = []
+    monkeypatch.setattr(server.threading, "Thread",
+                        lambda *a, **k: started.append(k) or _Placeholder())
+    server.report_audit("copy_password", record_id="rec-1")
+    assert started == [], "no thread may spawn when reporting is off"
+
+
+def test_report_audit_payload_shape(monkeypatch):
+    monkeypatch.setenv("SECRETBOX_SERVER_URL", "http://127.0.0.1:8000/")
+    monkeypatch.setenv("SECRETBOX_AGENT_NAME", "claude-code")
+    _immediate_thread(monkeypatch)
+    captured = {}
+    monkeypatch.setattr(server, "_post_audit",
+                        lambda base_url, payload: captured.update(url=base_url, payload=payload))
+
+    server.report_audit("copy_password", record_id="rec-1", allowed=False,
+                        detail={"reason": "not visible"})
+    assert captured["url"] == "http://127.0.0.1:8000"
+    assert captured["payload"] == {
+        "actor": "claude-code",
+        "actor_type": "agent",
+        "action": "copy_password",
+        "record_id": "rec-1",
+        "allowed": False,
+        "detail": {"reason": "not visible"},
+    }
+
+
+def test_tool_calls_report_audit_when_configured(monkeypatch):
+    monkeypatch.setenv("SECRETBOX_SERVER_URL", "http://127.0.0.1:8000")
+    _immediate_thread(monkeypatch)
+    events = []
+    monkeypatch.setattr(server, "_post_audit",
+                        lambda base_url, payload: events.append(payload["action"]))
+    with_vault(monkeypatch, LEVEL_RECORDS)
+
+    call("tools/call", {"name": "search_credentials", "arguments": {"query": "redis"}})
+    call("tools/call", {"name": "get_credential", "arguments": {"record_id": "legacy-tools"}})
+    call("tools/call", {"name": "get_credential", "arguments": {"record_id": "no-such"}})
+
+    assert events == ["search", "get_record", "get_record"], "every tool call reports exactly one event"
+
+
+def test_agent_name_falls_back_on_invalid_labels(monkeypatch):
+    monkeypatch.setenv("SECRETBOX_AGENT_NAME", "bad agent name!!")
+    assert server.agent_name() == "mcp-agent"
+    monkeypatch.setenv("SECRETBOX_AGENT_NAME", "claude-code")
+    assert server.agent_name() == "claude-code"
+
+
+class _RecordingOpener:
+    def __init__(self, opened):
+        self.opened = opened
+
+    def open(self, *args, **kwargs):
+        self.opened.append((args, kwargs))
+        raise RuntimeError("should not open")
+
+
+def test_post_audit_refuses_link_local_host(monkeypatch):
+    import socket
+
+    monkeypatch.setattr(socket, "getaddrinfo",
+                        lambda host, *a, **k: [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("169.254.169.254", 0))])
+    opened = []
+    monkeypatch.setattr(server.urllib.request, "build_opener",
+                        lambda *a, **k: _RecordingOpener(opened))
+    server._post_audit("http://metadata.example", {"action": "search"})
+    assert opened == [], "cloud-metadata endpoints must never be contacted"

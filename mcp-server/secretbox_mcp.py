@@ -15,6 +15,12 @@ once for keychain access — choose "Always Allow".
 Env overrides (strictly allowlisted):
   SECRETBOX_KEYCHAIN_SERVICE  (default: Hendrix.SecretBox)
   SECRETBOX_KEYCHAIN_ACCOUNT  (default: localVault)
+  SECRETBOX_SERVER_URL        (optional; e.g. http://127.0.0.1:8000 — when
+                               set, every tool call is reported to the
+                               server's audit trail POST /api/audit, best
+                               effort; no secrets are ever included)
+  SECRETBOX_AGENT_NAME        (default: mcp-agent; label shown in the
+                               server dashboard's Agent Audit tab)
 """
 
 from __future__ import annotations
@@ -26,10 +32,12 @@ import os
 import re
 import subprocess
 import sys
+import threading
+import urllib.request
 from typing import Any
 
 SERVER_NAME = "secretbox"
-SERVER_VERSION = "1.0.0"
+SERVER_VERSION = "1.1.0"
 SUPPORTED_PROTOCOL_VERSIONS = {
     "2024-11-05",
     "2025-03-26",
@@ -40,6 +48,12 @@ SUPPORTED_PROTOCOL_VERSIONS = {
 # strict allowlist so environment overrides can never smuggle flag/command
 # content into the subprocess.
 KEYCHAIN_ID_PATTERN = re.compile(r"^[A-Za-z0-9._\-]{1,128}$")
+
+# Same allowlist discipline for the optional server-audit endpoint: only a
+# base URL + agent label, and the URL must be http(s) to a host the user set
+# explicitly via env (default: off — no network activity unless configured).
+AUDIT_URL_PATTERN = re.compile(r"^https?://[A-Za-z0-9._\-]+(:\d+)?(/.*)?$")
+AUDIT_TIMEOUT_SECONDS = 2.0
 
 SECRET_FIELD_KEYS = {
     "password", "passwd", "pwd", "secret", "secret_key", "secretkey",
@@ -80,6 +94,97 @@ def keychain_service() -> str:
 
 def keychain_account() -> str:
     return _validated("SECRETBOX_KEYCHAIN_ACCOUNT", "localVault")
+
+
+# --------------------------------------------------------------------------
+# Optional server-side audit reporting. Disabled unless SECRETBOX_SERVER_URL
+# is set. The URL is operator-supplied env config (not agent-controllable
+# input) and is still hardened before use: scheme restricted to http/https,
+# hostname strict-pattern-checked, resolved IP blocked for link-local /
+# cloud-metadata / unspecified ranges, and redirects refused. Fire-and-forget
+# from a daemon thread so tool latency never depends on the server being
+# reachable; payloads never contain secrets — only the action, record id, and
+# an outcome flag (the redaction mirror lives server-side in app/audit.py).
+# --------------------------------------------------------------------------
+
+def agent_name() -> str:
+    raw = os.environ.get("SECRETBOX_AGENT_NAME", "mcp-agent")
+    return raw if KEYCHAIN_ID_PATTERN.match(raw.replace("@", "-at-")) else "mcp-agent"
+
+
+def audit_payload(action: str, record_id: str | None, allowed: bool, detail: dict[str, Any] | None = None) -> dict[str, Any]:
+    return {
+        "actor": agent_name(),
+        "actor_type": "agent",
+        "action": action,
+        "record_id": record_id,
+        "allowed": allowed,
+        "detail": detail or {},
+    }
+
+
+def _blocked_audit_ip(host: str) -> bool:
+    import ipaddress
+    import socket
+
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except OSError:
+        return True
+    for info in infos:
+        try:
+            address = ipaddress.ip_address(info[4][0])
+        except ValueError:
+            continue
+        # Link-local (cloud metadata 169.254.169.254 lives here) and
+        # unspecified addresses are refused. Loopback and private ranges are
+        # allowed on purpose: the SecretBox server is typically self-hosted
+        # locally or on the team LAN.
+        if address.is_link_local or address.is_unspecified:
+            return True
+    return False
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D102
+        return None
+
+
+def _post_audit(base_url: str, payload: dict[str, Any]) -> None:
+    try:
+        from urllib.parse import urlparse
+
+        parsed = urlparse(base_url)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+            return
+        if not KEYCHAIN_ID_PATTERN.match(parsed.hostname):
+            return
+        if _blocked_audit_ip(parsed.hostname):
+            return
+
+        endpoint = f"{parsed.scheme}://{parsed.hostname}"
+        if parsed.port:
+            endpoint += f":{parsed.port}"
+        endpoint += "/api/audit"
+
+        request = urllib.request.Request(
+            endpoint,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        opener = urllib.request.build_opener(_NoRedirect)
+        opener.open(request, timeout=AUDIT_TIMEOUT_SECONDS).read()
+    except Exception:
+        pass  # audit reporting is best-effort by design
+
+
+def report_audit(action: str, record_id: str | None = None, allowed: bool = True, detail: dict[str, Any] | None = None) -> None:
+    base = os.environ.get("SECRETBOX_SERVER_URL", "").rstrip("/")
+    if not base or not AUDIT_URL_PATTERN.match(base):
+        return
+    payload = audit_payload(action, record_id, allowed, detail)
+    threading.Thread(target=_post_audit, args=(base, payload), daemon=True).start()
 
 
 def _scrub_uri(value: str) -> str:
@@ -235,6 +340,7 @@ def tool_search_credentials(args: dict[str, Any]) -> dict[str, Any]:
     limit = max(1, min(int(args.get("limit", 6)), 25))
     records = ai_readable_records()
     matches = rank_records(records, query)[:limit]
+    report_audit("search", detail={"results": len(matches), "visible_total": len(records)})
     return {
         "content": [{
             "type": "text",
@@ -254,6 +360,7 @@ def tool_list_credentials(args: dict[str, Any]) -> dict[str, Any]:
     limit = max(1, min(int(args.get("limit", 25)), 100))
     records = ai_readable_records()
     ordered = sorted(records, key=lambda r: str(r.get("name") or ""))[:limit]
+    report_audit("list", detail={"results": len(ordered), "visible_total": len(records)})
     return {
         "content": [{
             "type": "text",
@@ -286,12 +393,16 @@ def tool_get_credential(args: dict[str, Any]) -> dict[str, Any]:
                     payload["note"] = ("Plaintext is never returned, and clipboard "
                                        "tools are disabled for this record "
                                        "(metadata-only access).")
+            report_audit("get_record", record_id=record_id, allowed=True,
+                         detail={"ai_access": level})
             return {
                 "content": [{
                     "type": "text",
                     "text": json.dumps(payload, ensure_ascii=False, indent=2),
                 }]
             }
+    report_audit("get_record", record_id=record_id, allowed=False,
+                 detail={"reason": "not found or not visible to agents"})
     return _tool_error(f"No record with id {record_id!r}.")
 
 
@@ -301,12 +412,17 @@ def tool_copy_password(args: dict[str, Any]) -> dict[str, Any]:
         if record.get("id") == record_id:
             secret = record.get("primarySecret")
             if not isinstance(secret, str) or not secret:
+                report_audit("copy_password", record_id=record_id, allowed=False,
+                             detail={"reason": "no stored secret"})
                 return _tool_error(f"Record {record_id!r} has no stored secret.")
             proc = subprocess.run(
                 ["pbcopy"], input=secret, text=True, capture_output=True, shell=False
             )
             if proc.returncode != 0:
+                report_audit("copy_password", record_id=record_id, allowed=False,
+                             detail={"reason": "clipboard write failed"})
                 return _tool_error("Failed to write to macOS clipboard (pbcopy).")
+            report_audit("copy_password", record_id=record_id, allowed=True)
             return {
                 "content": [{
                     "type": "text",
@@ -318,6 +434,8 @@ def tool_copy_password(args: dict[str, Any]) -> dict[str, Any]:
                     }, ensure_ascii=False),
                 }]
             }
+    report_audit("copy_password", record_id=record_id, allowed=False,
+                 detail={"reason": "not found or not visible to agents"})
     return _tool_error(f"No record with id {record_id!r}.")
 
 
@@ -347,6 +465,8 @@ def tool_copy_totp(args: dict[str, Any]) -> dict[str, Any]:
         if record.get("id") == record_id:
             totp = record.get("totp")
             if not isinstance(totp, dict) or not totp.get("secret"):
+                report_audit("copy_totp", record_id=record_id, allowed=False,
+                             detail={"reason": "no TOTP seed"})
                 return _tool_error(f"Record {record_id!r} has no two-step verification seed.")
             code = totp_code(
                 str(totp.get("secret")),
@@ -358,7 +478,10 @@ def tool_copy_totp(args: dict[str, Any]) -> dict[str, Any]:
                 ["pbcopy"], input=code, text=True, capture_output=True, shell=False
             )
             if proc.returncode != 0:
+                report_audit("copy_totp", record_id=record_id, allowed=False,
+                             detail={"reason": "clipboard write failed"})
                 return _tool_error("Failed to write to macOS clipboard (pbcopy).")
+            report_audit("copy_totp", record_id=record_id, allowed=True)
             return {
                 "content": [{
                     "type": "text",
@@ -370,6 +493,8 @@ def tool_copy_totp(args: dict[str, Any]) -> dict[str, Any]:
                     }, ensure_ascii=False),
                 }]
             }
+    report_audit("copy_totp", record_id=record_id, allowed=False,
+                 detail={"reason": "not found or not visible to agents"})
     return _tool_error(f"No record with id {record_id!r}.")
 
 
