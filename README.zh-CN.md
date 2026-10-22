@@ -25,6 +25,20 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 
 一切运行在你的设备上：SwiftUI 客户端（macOS 菜单栏 + 主窗口 / iPhone）+ 可选 FastAPI 服务器 + 零依赖 MCP 服务器。
 
+## 服务器：运维看板、Agent 审计与 AI 网关
+
+可选的 FastAPI 服务器不只是同步后端，更是运维控制平面。启动后（`cd server && docker compose up --build`）打开 **http://127.0.0.1:8000/dashboard**：
+
+- **Overview**——密码库统计、类型 / 模板 / 标签分布、24 小时活跃度曲线
+- **Records & permissions**——全量清单与强度徽章，行内直接编辑每条记录的权限矩阵（只读 / 隐藏密码 / 二次确认 / AI 访问级）
+- **Security Review**——启发式强度评分（长度、字符集、常见密码、键盘序列、日期样式）、基于密码指纹的复用分组、长期未改与 TOTP 覆盖检查。只输出结论：明文仅在服务端内存中解密，绝不离开进程
+- **Agent Audit**——服务端写入、搜索、AI 网关调用与 MCP 工具调用（可选上报）汇入同一条可过滤事件流，附小时级统计。搜索查询文本绝不入库——精确匹配模式下查询即明文密码
+- **AI Gateway**——配置一次 OpenAI 兼容上游；客户端把对话请求发给 `POST /ai/v1/chat/completions`，由服务端附加自己的 API 密钥转发。密钥绝不离开服务端，每次调用强制使用服务端配置的模型（并连同 token 用量记入审计）
+
+<img src="docs/screenshots/dashboard.png" width="1200" alt="SecretBox 服务端运维看板：侧边栏导航、总览图表、安全审查、Agent 审计、AI 网关">
+
+在应用侧，这体现为 设置 → OpenAI-compatible provider 中的 **Use server AI gateway** 选项——服务器报告已配置 AI 接入即可勾选。
+
 ## 截图与使用方法
 
 ### 1. 登录
@@ -73,7 +87,7 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 
 ### 6. 设置
 
-服务器模式（默认关闭——本地保险箱加密存于 Keychain）、OpenAI 兼容服务配置、智能整理周期。
+服务器模式（默认关闭——本地保险箱加密存于 Keychain）、OpenAI 兼容服务配置——服务器已配置 AI 接入时，直接勾选 **Use server AI gateway** 即可、智能整理周期。**Open Server Dashboard** 按钮直达运维看板。
 
 <img src="docs/screenshots/settings.png" width="580" alt="设置面板">
 
@@ -109,6 +123,10 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 - OpenAI 兼容 LLM 增强（模板归一、重排序），AI 只见脱敏元数据
 - `mcp-server/`：零依赖 stdio MCP 服务器，Claude Code / OpenCode / Codex 可查元数据、经剪贴板取密码与验证码——明文绝不进入 agent 上下文，未授权条目对 agent 完全不可见
 
+**运维看板与 AI 网关**
+- 服务端 `/dashboard`：可视化总览、条目权限在线编辑、安全风险审查（强度/复用/长期未改）、Agent 审计事件流
+- AI 网关：服务端以自有上游密钥统一代理 AI 调用，客户端勾选「Use server AI」即可，无需持有任何 provider 密钥；每次调用均入审计
+
 **本地优先**
 - 默认本地模式：整库经 Keychain 加密存储，无需服务器
 - 可选 Server 模式：FastAPI 同步（TOTP 种子 Fernet 密文落库）
@@ -129,7 +147,7 @@ iOS 需 Xcode 26+ 与 iOS 26 模拟器 runtime；本地模式开箱即用（登�
 
 ```bash
 cd server
-docker compose up --build    # http://127.0.0.1:8000
+docker compose up --build    # http://127.0.0.1:8000 —— 运维看板在 /dashboard
 python3 scripts/seed_demo.py # 可选：灌入演示数据
 ```
 
@@ -165,7 +183,7 @@ SecretBox/            # SwiftUI 应用（Xcode 工程，macOS + iOS）
   SecretBox/          #   源码（视图/AppModel/TOTP 引擎/平台适配）
   SecretBoxTests/     #   单元测试 + 快照基线
   SecretBoxUITests/   #   UI 冒烟
-server/               # FastAPI + SQLAlchemy + SQLite
+server/               # FastAPI + SQLAlchemy + SQLite —— API、运维看板、审计轨迹、AI 网关
 mcp-server/           # 零依赖 stdio MCP 服务器
 scripts/              # 测试/注册脚本
 testsets/             # persona-200 场景套件产物

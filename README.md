@@ -25,6 +25,20 @@ Paste a connection string or an account snippet, get an organized item — ops-n
 
 Everything runs on your device: a SwiftUI client (macOS menu bar + main window / iPhone), an optional FastAPI server, and a zero-dependency MCP server.
 
+## The server: ops dashboard, agent audit & the AI gateway
+
+The optional FastAPI server is more than a sync backend — it's the ops control plane. Once it runs (`cd server && docker compose up --build`), open **http://127.0.0.1:8000/dashboard**:
+
+- **Overview** — vault stats, type / template / tag distribution, and a 24-hour activity sparkline
+- **Records & permissions** — the full inventory with strength badges, plus inline editing of each record's permission matrix (read-only / hide-secret / re-auth / AI access level)
+- **Security review** — heuristic strength scoring (length, charset, common passwords, keyboard runs, date patterns), reuse groups computed from password fingerprints, stale-password and TOTP-coverage findings. Verdicts only: plaintext is decrypted in server memory and never leaves the process
+- **Agent audit** — every server write, search, AI-gateway call, and (opt-in) MCP tool call in one filterable stream with hourly stats. Search query text is never stored — in exact-match mode the query *is* the password
+- **AI gateway** — configure an OpenAI-compatible upstream once; clients then send chat requests through `POST /ai/v1/chat/completions` and the server attaches its own API key. The key never leaves the server, and the server-configured model is enforced on every forwarded call (each call is audit-logged with token usage)
+
+<img src="docs/screenshots/dashboard.png" width="1200" alt="SecretBox server ops dashboard: sidebar navigation, overview charts, security findings, agent audit, AI gateway">
+
+In the app this surfaces as the **Use server AI gateway** option in Settings → OpenAI-compatible provider, available as soon as the server reports AI access configured.
+
 ## Screenshots & Usage
 
 ### 1. Sign in
@@ -73,7 +87,7 @@ Verification codes are generated entirely on-device (RFC 6238); the server only 
 
 ### 6. Settings
 
-Server mode (off by default — the vault lives in the encrypted Keychain locally), OpenAI-compatible provider configuration, and smart-organization cadence.
+Server mode (off by default — the vault lives in the encrypted Keychain locally), OpenAI-compatible provider configuration — or just tick **Use server AI gateway** once the server has AI access configured — and smart-organization cadence. The **Open Server Dashboard** button jumps straight to the ops dashboard.
 
 <img src="docs/screenshots/settings.png" width="580" alt="Settings sheet">
 
@@ -85,6 +99,8 @@ Server mode (off by default — the vault lives in the encrypted Keychain locall
 - **Seamless MFA** (Bitwarden Integrated Authenticator equivalent) — per-item TOTP seeds, live 30-second codes with a countdown ring, `otpauth://` auto-capture, QR scanning on iOS
 - **Per-item permission matrix** (Bitwarden-style granular access) — read-only, hide-password, biometric re-prompt, three-level AI access; the reserved per-record subjects grow into team collections/groups/roles in phase 2
 - **AI integration** — LLM enrichment/reranking on redacted metadata only; a stdio MCP server lets Claude Code / OpenCode / Codex query metadata and copy secrets via the clipboard — plaintext never enters the agent context, and unauthorized items are indistinguishable from missing ones
+- **Ops dashboard** — server-side visual overview, per-record permission editing, security risk review (strength / reuse / stale findings), and the agent audit trail, all at `/dashboard`
+- **AI gateway** — the server brokers AI calls with its own upstream key; clients opt in via "Use server AI" without ever holding a provider key, and every call is audit-logged
 - **Local-first** — encrypted Keychain storage by default, optional server sync (TOTP seeds stored as Fernet ciphertext)
 
 ## Getting started
@@ -103,7 +119,7 @@ iOS needs Xcode 26+ and an iOS 26 simulator runtime. Local mode works out of the
 
 ```bash
 cd server
-docker compose up --build    # http://127.0.0.1:8000
+docker compose up --build    # http://127.0.0.1:8000 — ops dashboard at /dashboard
 python3 scripts/seed_demo.py # optional demo data
 ```
 
@@ -139,7 +155,7 @@ SecretBox/            # SwiftUI app (Xcode project, macOS + iOS)
   SecretBox/          #   sources (views / app model / TOTP engine / platform support)
   SecretBoxTests/     #   unit tests + snapshot baselines + docs screenshot generator
   SecretBoxUITests/   #   UI smoke chains
-server/               # FastAPI + SQLAlchemy + SQLite
+server/               # FastAPI + SQLAlchemy + SQLite — API, ops dashboard, audit trail, AI gateway
 mcp-server/           # zero-dependency stdio MCP server
 scripts/              # test / registration scripts
 testsets/             # persona-200 scenario suite artifacts
