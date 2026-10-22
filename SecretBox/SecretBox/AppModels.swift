@@ -148,6 +148,17 @@ struct ProviderSettingsViewData: Codable {
     var model: String?
 }
 
+/// Probe result for the server-side AI gateway (`GET /api/ai/status`).
+/// `enabled` mirrors the server's provider configuration — when true the
+/// settings UI offers the "use server AI" option and clients can route AI
+/// requests through `/ai/v1/chat/completions` without holding an upstream key.
+struct AIGatewayStatusData: Codable {
+    var enabled: Bool
+    var model: String?
+    var baseURL: String?
+    var gatewayPath: String?
+}
+
 // MARK: - TOTP (Bitwarden Integrated Authenticator equivalent)
 
 /// HMAC variant for RFC 6238 code generation. Raw values match the server's

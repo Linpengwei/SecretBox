@@ -4,6 +4,7 @@ struct SettingsView: View {
     @ObservedObject var model: SecretBoxAppModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         ScrollView {
@@ -11,6 +12,21 @@ struct SettingsView: View {
         }
         .scrollDismissesKeyboard(.immediately)
         .background(AppTheme.pageBackground(colorScheme))
+    }
+
+    private var serverAICaption: String {
+        if !model.serverEnabled {
+            return "Enable server mode first."
+        }
+        if model.useServerAI {
+            let modelSuffix = model.serverAIModel.map { " · model \($0)" } ?? ""
+            return "AI requests are routed through the SecretBox server\(modelSuffix). No provider key is needed on this device."
+        }
+        if model.serverAIAvailable {
+            let modelSuffix = model.serverAIModel.map { " (\($0))" } ?? ""
+            return "Server AI detected\(modelSuffix) — turn on to use it instead of configuring a provider here."
+        }
+        return "No AI access configured on the server. Configure it on the server dashboard's AI tab to enable this option."
     }
 
     private var settingsContent: some View {
@@ -29,21 +45,37 @@ struct SettingsView: View {
                          : "Server disabled. The app works in local-only MVP mode.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    Button("Open Server Dashboard") {
+                        var base = model.serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
+                        while base.hasSuffix("/") { base.removeLast() }
+                        if let url = URL(string: base + "/dashboard") {
+                            openURL(url)
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(!model.serverEnabled)
                 }
             }
 
             GroupBox("OpenAI-compatible provider") {
                 VStack(alignment: .leading, spacing: 12) {
+                    Toggle("Use server AI gateway", isOn: $model.useServerAI)
+                        .disabled(!model.serverEnabled || !model.serverAIAvailable)
+                    Text(serverAICaption)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     TextField("Base URL", text: $model.providerBaseURL)
                         .textFieldStyle(.roundedBorder)
-                        .disabled(!model.serverEnabled)
+                        .disabled(!model.serverEnabled || model.useServerAI)
                     SecureField("API Key", text: $model.providerAPIKey)
                         .textFieldStyle(.roundedBorder)
-                        .disabled(!model.serverEnabled)
+                        .disabled(!model.serverEnabled || model.useServerAI)
                     TextField("Model", text: $model.providerModel)
                         .textFieldStyle(.roundedBorder)
-                        .disabled(!model.serverEnabled)
-                    Text(model.serverEnabled ? (model.providerConfigured ? "Configured on server" : "Not configured on server") : "Provider settings are available only when server mode is enabled")
+                        .disabled(!model.serverEnabled || model.useServerAI)
+                    Text(model.useServerAI
+                         ? "Provider settings are managed on the server dashboard."
+                         : model.serverEnabled ? (model.providerConfigured ? "Configured on server" : "Not configured on server") : "Provider settings are available only when server mode is enabled")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

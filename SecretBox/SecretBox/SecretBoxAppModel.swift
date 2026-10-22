@@ -140,6 +140,15 @@ final class SecretBoxAppModel: ObservableObject {
     @Published var providerAPIKey = ""
     @Published var providerModel = "gpt-4o-mini"
     @Published var providerConfigured = false
+    // Server AI gateway: availability is detected from the server, the
+    // preference to use it is local (persisted, never pushed to the server).
+    @Published var serverAIAvailable = false
+    @Published var serverAIModel: String?
+    @Published var useServerAI = false {
+        didSet {
+            defaults.set(useServerAI, forKey: Self.useServerAIKey)
+        }
+    }
 
     @Published var statusMessage = "Ready"
     @Published var isWorking = false
@@ -166,6 +175,7 @@ final class SecretBoxAppModel: ObservableObject {
 
     private static let serverURLKey = "SecretBox.serverURL"
     private static let serverEnabledKey = "SecretBox.serverEnabled"
+    private static let useServerAIKey = "SecretBox.useServerAI"
     private static let localRecordsKey = "SecretBox.localRecords"
     private static let organizationLastRunKey = "SecretBox.organization.lastRun"
     private static let organizationThresholdBucketKey = "SecretBox.organization.thresholdBucket"
@@ -198,6 +208,7 @@ final class SecretBoxAppModel: ObservableObject {
         self.reauthGate = reauthGate
         serverURL = defaults.string(forKey: Self.serverURLKey) ?? "http://127.0.0.1:8000"
         serverEnabled = defaults.object(forKey: Self.serverEnabledKey) as? Bool ?? false
+        useServerAI = defaults.bool(forKey: Self.useServerAIKey)
         organizationIntervalDays = defaults.object(forKey: Self.organizationIntervalDaysKey) as? Double ?? 7
         if let data = defaults.data(forKey: Self.organizationSummaryKey) {
             organizationSummary = try? JSONDecoder().decode(OrganizationRunSummary.self, from: data)
@@ -515,6 +526,31 @@ final class SecretBoxAppModel: ObservableObject {
         } catch {
             statusMessage = error.localizedDescription
         }
+        await refreshServerAIStatus()
+    }
+
+    /// Probe the server AI gateway. When the server has an AI provider
+    /// configured, the "use server AI" option becomes available in settings;
+    /// if the server later loses its configuration, the local preference
+    /// falls back off instead of silently routing AI calls at a dead gateway.
+    func refreshServerAIStatus() async {
+        guard !shouldSkipServerCalls else {
+            serverAIAvailable = providerConfigured
+            serverAIModel = providerConfigured ? providerModel : nil
+            return
+        }
+        do {
+            let status = try await api.fetchAIStatus(baseURL: serverURL)
+            serverAIAvailable = status.enabled
+            serverAIModel = status.enabled ? status.model : nil
+            if useServerAI && !status.enabled {
+                useServerAI = false
+                statusMessage = "Server AI is no longer configured"
+            }
+        } catch {
+            serverAIAvailable = false
+            serverAIModel = nil
+        }
     }
 
     func saveProviderSettings() async {
@@ -527,11 +563,22 @@ final class SecretBoxAppModel: ObservableObject {
         isWorking = true
         defer { isWorking = false }
 
+        // With the server AI gateway selected the provider lives entirely on
+        // the server (managed via the dashboard); pushing the local fields
+        // would overwrite that configuration with whatever happens to be in
+        // the form.
+        if useServerAI {
+            await refreshServerAIStatus()
+            statusMessage = "Using server AI\(serverAIModel.map { " (\($0))" } ?? "")"
+            return
+        }
+
         do {
             let payload = ProviderSettingsPayload(baseURL: providerBaseURL, apiKey: providerAPIKey, model: providerModel)
             let settings = try await api.saveProviderSettings(baseURL: serverURL, payload: payload)
             providerConfigured = settings.configured
             providerAPIKey = ""
+            await refreshServerAIStatus()
             statusMessage = "Provider settings saved"
         } catch {
             statusMessage = error.localizedDescription

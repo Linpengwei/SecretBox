@@ -34,6 +34,10 @@ struct SecretBoxAPI {
         try await request(baseURL: baseURL, path: "/api/provider", method: "GET", payload: Optional<String>.none)
     }
 
+    func fetchAIStatus(baseURL: String) async throws -> AIGatewayStatusData {
+        try await request(baseURL: baseURL, path: "/api/ai/status", method: "GET", payload: Optional<String>.none)
+    }
+
     func saveProviderSettings(baseURL: String, payload: ProviderSettingsPayload) async throws -> ProviderSettingsViewData {
         try await request(baseURL: baseURL, path: "/api/provider", method: "PUT", payload: payload)
     }
