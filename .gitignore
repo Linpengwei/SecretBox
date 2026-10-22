@@ -34,3 +34,4 @@ beta/
 # Xcode user state
 xcuserdata/
 *.xcuserstate
+.derived-release/

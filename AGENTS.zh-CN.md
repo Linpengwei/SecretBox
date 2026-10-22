@@ -17,6 +17,7 @@ AI 原生密码管理器，面向企业与个人——人与 AI agent 之间的�
 - MCP 测试：`cd mcp-server && python3 -m pytest test_secretbox_mcp.py`。
 - 本地跑服务器：`cd server && docker compose up --build`（FastAPI 在 127.0.0.1:8000）。
 - 灌演示数据：`cd server && python3 scripts/seed_demo.py`。
+- 应用"打不开/点了没反应"时：多半是残留的 Xcode 调试会话把应用进程挂起了（僵尸实例占着 bundle ID，macOS 只会去"激活"它）。`./scripts/kill-stale-secretbox.sh` 一键清理；应用启动时也会自动清理这类冻结实例（见 `SecretBoxApp.reapFrozenSiblingInstances`）。从 Xcode 调试完记得 ⌘. 停止会话。
 
 详见 `TESTING.md`；注意 macOS UI 测试在非普通 Terminal/Xcode 环境下可能报 `Sandbox restriction` / `testmanagerd` 错误。
 

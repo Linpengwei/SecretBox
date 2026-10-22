@@ -17,6 +17,7 @@ AI-native password manager for teams and individuals — the vault between human
 - MCP tests: `cd mcp-server && python3 -m pytest test_secretbox_mcp.py`.
 - Run server locally: `cd server && docker compose up --build` (FastAPI on 127.0.0.1:8000).
 - Seed demo data: `cd server && python3 scripts/seed_demo.py`.
+- If the app "won't open" (clicks do nothing): a leftover Xcode debug session has likely suspended the app process (a zombie instance still owns the bundle ID, so macOS only "activates" it). `./scripts/kill-stale-secretbox.sh` reaps it; the app also reaps frozen siblings at launch (see `SecretBoxApp.reapFrozenSiblingInstances`). Stop debug sessions with ⌘. when done.
 
 See `TESTING.md` for details; note macOS UI tests may fail with `Sandbox restriction` / `testmanagerd` errors when not run from a normal Terminal or Xcode.
 
