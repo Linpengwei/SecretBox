@@ -35,3 +35,11 @@ beta/
 xcuserdata/
 *.xcuserstate
 .derived-release/
+
+# MAUI
+**/bin/
+**/obj/
+.vs/
+*.user
+TestResults/
+artifacts/
