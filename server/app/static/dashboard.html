@@ -6,295 +6,349 @@
 <title>SecretBox Server Dashboard</title>
 <style>
   :root {
-    --bg: #0d1117; --panel: #161b27; --panel2: #1c2333; --border: #2a3348;
-    --text: #e6e9f0; --muted: #8b94a8; --accent: #5b8cff; --accent2: #7c5bff;
-    --good: #3fb96d; --warn: #e2b93b; --bad: #e2574b; --info: #4aa3c7;
+    color-scheme: dark;
+    --bg: #090d16; --sidebar: #0d1220; --panel: #121a29; --panel2: #182235;
+    --border: #263249; --border-soft: #1d283a; --text: #eef2fa; --muted: #9aa7bd;
+    --accent: #78a5ff; --accent2: #9a83ff; --good: #65d89a; --warn: #f0c968;
+    --bad: #ff8c80; --info: #75c7e8; --shadow: 0 16px 42px rgba(0,0,0,.22);
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-         font: 14px/1.5 -apple-system, "SF Pro Text", "Helvetica Neue", "PingFang SC", sans-serif;
-         display: flex; min-height: 100vh; }
-  .sidebar { width: 224px; flex: none; background: #10141d; border-right: 1px solid var(--border);
-             position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
-             padding: 18px 12px 14px; }
-  .brand { display: flex; align-items: center; gap: 11px; padding: 2px 8px 16px;
-           border-bottom: 1px solid var(--border); margin-bottom: 12px; }
-  .brand h1 { font-size: 15px; margin: 0; font-weight: 650; }
-  .brand .sub { color: var(--muted); font-size: 11.5px; margin-top: 1px; }
-  .logo { width: 32px; height: 32px; border-radius: 9px; flex: none;
-          background: linear-gradient(135deg, var(--accent), var(--accent2));
-          display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
-  nav { display: flex; flex-direction: column; gap: 3px; }
-  nav button { display: block; width: 100%; text-align: left; background: none;
-               border: 1px solid transparent; color: var(--muted);
-               padding: 9px 12px; border-radius: 9px; cursor: pointer; font-size: 13.5px; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background:
+      radial-gradient(circle at 78% -10%, rgba(120,165,255,.09), transparent 32rem), var(--bg);
+    color: var(--text); display: flex; min-height: 100vh;
+    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", sans-serif; }
+  button, input, select { font: inherit; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sidebar { width: 236px; flex: none; background: rgba(13,18,32,.96); border-right: 1px solid var(--border);
+    position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+    padding: 22px 14px 16px; overflow-y: auto; }
+  .brand { display: flex; align-items: center; gap: 12px; padding: 0 8px 20px;
+    border-bottom: 1px solid var(--border-soft); margin-bottom: 16px; }
+  .brand h1 { font-size: 15px; margin: 0; font-weight: 700; letter-spacing: -.01em; }
+  .brand .sub { color: var(--muted); font-size: 11px; margin-top: 2px; text-transform: uppercase; letter-spacing: .12em; }
+  .logo { width: 36px; height: 36px; border-radius: 11px; flex: none; color: white;
+    background: linear-gradient(135deg, #689eff, #8c6ef2); box-shadow: 0 8px 22px rgba(104,126,255,.24);
+    display: flex; align-items: center; justify-content: center; font-weight: 750; font-size: 13px; }
+  .nav-label { padding: 0 12px 7px; color: #73819a; font-size: 10px; font-weight: 700;
+    letter-spacing: .13em; text-transform: uppercase; }
+  nav { display: flex; flex-direction: column; gap: 5px; }
+  nav button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    background: none; border: 1px solid transparent; color: var(--muted); padding: 10px 12px;
+    border-radius: 10px; cursor: pointer; font-size: 13px; transition: background .15s, color .15s; }
+  nav button::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .55; }
   nav button:hover { color: var(--text); background: var(--panel2); }
-  nav button.active { color: var(--text); background: linear-gradient(90deg, rgba(91,140,255,.16), rgba(124,91,255,.10));
-                      border-color: var(--border); font-weight: 600; }
-  .sidebar-footer { margin-top: auto; padding: 10px 8px 0; color: var(--muted);
-                    font-size: 11.5px; border-top: 1px solid var(--border); }
-  main { flex: 1; min-width: 0; padding: 26px 28px; max-width: 1160px; margin: 0 auto; }
+  nav button.active { color: #dfe9ff; background: linear-gradient(90deg, rgba(120,165,255,.17), rgba(154,131,255,.09));
+    border-color: #344463; font-weight: 650; }
+  nav button.active::before { background: var(--accent); opacity: 1; box-shadow: 0 0 0 4px rgba(120,165,255,.12); }
+  .sidebar-footer { margin-top: auto; padding: 16px 10px 0; color: var(--muted);
+    font-size: 11px; border-top: 1px solid var(--border-soft); }
+  .sidebar-footer strong { display: block; color: #c6d0e1; font-size: 11px; font-weight: 600; margin-bottom: 3px; }
+  main { flex: 1; min-width: 0; padding: 32px clamp(20px, 3vw, 42px) 48px; width: 100%; max-width: 1480px; margin: 0 auto; }
   section.tab { display: none; }
-  section.tab.active { display: block; }
-  @media (max-width: 780px) {
-    body { flex-direction: column; }
-    .sidebar { width: 100%; height: auto; position: static; border-right: none;
-               border-bottom: 1px solid var(--border); padding: 12px; }
-    .brand { border-bottom: none; margin-bottom: 8px; padding-bottom: 8px; }
-    nav { flex-direction: row; flex-wrap: wrap; }
-    nav button { width: auto; }
-    .sidebar-footer { display: none; }
-    main { padding: 16px; }
-  }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px; }
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
-  .card .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
-  .card .value { font-size: 26px; font-weight: 700; margin-top: 4px; }
-  .card .hint { color: var(--muted); font-size: 12px; margin-top: 2px; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
-  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-  .panel h3 { margin: 0 0 10px; font-size: 13px; color: var(--muted); font-weight: 600;
-              text-transform: uppercase; letter-spacing: .05em; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px;
-       padding: 8px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  td { padding: 8px 10px; border-bottom: 1px solid #202839; vertical-align: top; }
-  tr:hover td { background: rgba(91,140,255,.04); }
-  .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
-  .badge.weak { background: rgba(226,87,75,.15); color: var(--bad); }
-  .badge.fair { background: rgba(226,185,59,.15); color: var(--warn); }
-  .badge.strong { background: rgba(63,185,109,.15); color: var(--good); }
-  .badge.unknown { background: rgba(139,148,168,.15); color: var(--muted); }
-  .badge.type { background: rgba(91,140,255,.13); color: var(--accent); margin-right: 4px; }
-  .badge.ok { background: rgba(63,185,109,.15); color: var(--good); }
-  .badge.denied { background: rgba(226,87,75,.15); color: var(--bad); }
-  .chip { display: inline-block; background: var(--panel2); border: 1px solid var(--border);
-          border-radius: 20px; padding: 2px 10px; font-size: 12px; margin: 2px 4px 2px 0; color: var(--text); }
-  .chip .n { color: var(--muted); margin-left: 4px; }
-  input, select, textarea { background: var(--panel2); border: 1px solid var(--border); color: var(--text);
-         border-radius: 8px; padding: 8px 10px; font-size: 13px; width: 100%; }
-  input:focus, select:focus, textarea:focus { outline: 1px solid var(--accent); }
-  label.field { display: block; margin-bottom: 10px; color: var(--muted); font-size: 12px; }
-  label.field input, label.field select { margin-top: 4px; }
-  button.primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none;
-         color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; }
-  button.primary:disabled { opacity: .45; cursor: not-allowed; }
-  button.ghost { background: var(--panel2); border: 1px solid var(--border); color: var(--text);
-         padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  section.tab.active { display: block; animation: enter .18s ease-out; }
+  @keyframes enter { from { opacity: .5; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 24px; }
+  .page-head h2 { font-size: clamp(23px, 2.2vw, 29px); line-height: 1.2; letter-spacing: -.035em; margin: 0 0 7px; }
+  .page-head p { color: var(--muted); margin: 0; max-width: 680px; font-size: 13px; }
+  .page-actions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+  .freshness { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .freshness.error { color: var(--bad); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 14px; margin-bottom: 18px; }
+  .card { position: relative; overflow: hidden; background: linear-gradient(145deg, rgba(24,34,53,.9), rgba(18,26,41,.96));
+    border: 1px solid var(--border); border-radius: 14px; padding: 17px 18px; box-shadow: 0 8px 26px rgba(0,0,0,.1); }
+  .card::after { content: ""; position: absolute; width: 70px; height: 70px; right: -28px; top: -32px;
+    border-radius: 50%; background: rgba(120,165,255,.07); }
+  .card .label { color: var(--muted); font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: .075em; }
+  .card .value { font-size: 29px; line-height: 1.25; font-weight: 720; letter-spacing: -.035em; margin-top: 8px; }
+  .card .hint { color: var(--muted); font-size: 11.5px; margin-top: 5px; overflow-wrap: anywhere; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .panel { background: rgba(18,26,41,.94); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px; margin-bottom: 16px; box-shadow: var(--shadow); min-width: 0; }
+  .grid2 .panel { margin-bottom: 16px; }
+  .panel fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .panel h3 { margin: 0; font-size: 13px; color: #d5deed; font-weight: 650; letter-spacing: -.01em; }
+  .panel .section-note { color: var(--muted); font-size: 11px; }
+  .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border-soft); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th { text-align: left; color: var(--muted); background: rgba(13,18,32,.55); font-weight: 600; font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: .055em; padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: rgba(120,165,255,.035); }
+  #recordsTable { min-width: 990px; }
+  #auditTable { min-width: 900px; }
+  .cell-title { color: var(--text); font-weight: 650; }
+  .cell-subtitle { color: var(--muted); font-size: 11.5px; margin-top: 3px; max-width: 330px; overflow-wrap: anywhere; }
+  .detail-cell { max-width: 360px; overflow-wrap: anywhere; word-break: break-word; }
+  .badge { display: inline-flex; align-items: center; padding: 2px 8px; border: 1px solid transparent;
+    border-radius: 999px; font-size: 10.5px; line-height: 1.55; font-weight: 650; white-space: nowrap; }
+  .badge.weak, .badge.denied { background: rgba(255,140,128,.1); border-color: rgba(255,140,128,.2); color: var(--bad); }
+  .badge.fair { background: rgba(240,201,104,.1); border-color: rgba(240,201,104,.18); color: var(--warn); }
+  .badge.strong, .badge.ok { background: rgba(101,216,154,.1); border-color: rgba(101,216,154,.18); color: var(--good); }
+  .badge.unknown { background: rgba(154,167,189,.1); border-color: rgba(154,167,189,.18); color: #b2bdd0; }
+  .badge.type { background: rgba(120,165,255,.09); border-color: rgba(120,165,255,.17); color: #a9c5ff; margin: 1px 4px 1px 0; }
+  .chip { display: inline-flex; align-items: center; background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 999px; padding: 3px 9px; font-size: 11px; margin: 2px 5px 2px 0; color: #d7dfeb; max-width: 100%; }
+  .chip .n { color: var(--muted); margin-left: 5px; }
+  input, select, textarea { background: #101827; border: 1px solid var(--border); color: var(--text);
+    border-radius: 9px; padding: 9px 11px; font-size: 12.5px; width: 100%; min-height: 38px; }
+  input::placeholder { color: #718099; }
+  input:focus, select:focus, textarea:focus { border-color: #527dca; }
+  label.field { display: block; margin-bottom: 13px; color: #b0bdcf; font-size: 11.5px; font-weight: 550; }
+  label.field input, label.field select { margin-top: 6px; }
+  button.primary, button.ghost { min-height: 36px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 12px;
+    padding: 8px 14px; transition: transform .12s, border-color .12s, background .12s; }
+  button.primary { background: linear-gradient(135deg, #6798f5, #866ee2); border: 1px solid #8195ef; color: white; }
+  button.ghost { background: var(--panel2); border: 1px solid var(--border); color: #dce4f1; }
+  button.primary:hover:not(:disabled), button.ghost:hover:not(:disabled) { transform: translateY(-1px); border-color: #56709c; }
+  button.primary:disabled, button.ghost:disabled { opacity: .45; cursor: not-allowed; }
   .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .toolbar input, .toolbar select { width: auto; flex: 1; min-width: 145px; }
+  .toolbar .search-input { flex-grow: 2; min-width: 220px; }
+  .toolbar button { flex: none; }
   .findings { display: flex; flex-direction: column; gap: 10px; }
   .finding { border: 1px solid var(--border); border-left: 3px solid var(--muted); border-radius: 10px;
-             padding: 12px 14px; background: var(--panel2); }
+    padding: 13px 14px; background: rgba(24,34,53,.72); }
   .finding.high { border-left-color: var(--bad); }
   .finding.medium { border-left-color: var(--warn); }
   .finding.low { border-left-color: var(--info); }
-  .finding.info { border-left-color: var(--muted); }
-  .finding .title { font-weight: 600; }
-  .finding .advice { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
-  .records-link { color: var(--accent); cursor: pointer; text-decoration: underline; }
-  .drawer { position: fixed; top: 0; right: -420px; width: 400px; max-width: 92vw; height: 100vh;
-            background: var(--panel); border-left: 1px solid var(--border); padding: 20px;
-            overflow-y: auto; transition: right .18s ease; z-index: 50; }
-  .drawer.open { right: 0; }
-  .perm-toggle { display: flex; justify-content: space-between; align-items: center; padding: 10px 0;
-                 border-bottom: 1px solid #202839; }
-  .switch { position: relative; width: 38px; height: 22px; flex: none; }
-  .switch input { opacity: 0; width: 0; height: 0; }
+  .finding .title { font-weight: 650; }
+  .finding .advice { color: var(--muted); font-size: 12px; margin-top: 5px; }
+  .drawer-backdrop { position: fixed; inset: 0; background: rgba(2,5,10,.6); backdrop-filter: blur(2px);
+    opacity: 0; visibility: hidden; transition: opacity .18s, visibility .18s; z-index: 40; }
+  .drawer-backdrop.open { opacity: 1; visibility: visible; }
+  .drawer { position: fixed; top: 0; right: 0; width: 410px; max-width: 94vw; height: 100dvh;
+    background: #111928; border-left: 1px solid var(--border); padding: 22px; overflow-y: auto;
+    transform: translateX(102%); visibility: hidden; transition: transform .2s ease;
+    z-index: 50; box-shadow: -20px 0 60px rgba(0,0,0,.35); }
+  .drawer.open { transform: translateX(0); visibility: visible; }
+  .drawer h2 { margin: 0; font-size: 21px; }
+  .drawer fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  .perm-toggle { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 14px 0;
+    border-bottom: 1px solid var(--border-soft); }
+  .switch { position: relative; width: 40px; height: 23px; flex: none; }
+  .switch input { opacity: 0; width: 1px; height: 1px; min-height: 0; position: absolute; }
   .switch span { position: absolute; inset: 0; background: var(--panel2); border: 1px solid var(--border);
-                 border-radius: 20px; cursor: pointer; transition: .15s; }
+    border-radius: 20px; cursor: pointer; transition: .15s; }
   .switch span::after { content: ""; position: absolute; width: 16px; height: 16px; border-radius: 50%;
-                 background: var(--muted); top: 2px; left: 2px; transition: .15s; }
-  .switch input:checked + span { background: rgba(91,140,255,.35); }
-  .switch input:checked + span::after { left: 17px; background: var(--accent); }
-  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
+    background: var(--muted); top: 2px; left: 2px; transition: .15s; }
+  .switch input:checked + span { background: rgba(120,165,255,.3); border-color: #527dca; }
+  .switch input:checked + span::after { left: 19px; background: #a9c5ff; }
+  .switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 11.5px; overflow-wrap: anywhere; }
   .muted { color: var(--muted); }
-  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-           background: var(--panel2); border: 1px solid var(--border); border-radius: 10px;
-           padding: 10px 18px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 99; }
-  .toast.show { opacity: 1; }
-  .bar-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; }
-  .bar-row .name { width: 120px; color: var(--muted); font-size: 12px; text-align: right; flex: none; }
-  .bar-row .bar { height: 14px; border-radius: 4px;
-                  background: linear-gradient(90deg, var(--accent), var(--accent2)); min-width: 2px; }
-  .bar-row .count { font-size: 12px; color: var(--text); }
-  .spark { width: 100%; height: 60px; }
-  .kv { display: grid; grid-template-columns: 170px 1fr; gap: 6px 12px; font-size: 13px; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 8px); max-width: min(520px, 90vw);
+    background: #1b2639; border: 1px solid #3b4d6c; border-radius: 11px; box-shadow: var(--shadow);
+    padding: 11px 18px; opacity: 0; visibility: hidden; transition: opacity .2s, transform .2s, visibility .2s;
+    pointer-events: none; z-index: 99; text-align: center; }
+  .toast.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+  .bar-row { display: grid; grid-template-columns: minmax(72px, 120px) minmax(80px, 1fr) 32px;
+    align-items: center; gap: 10px; margin: 9px 0; }
+  .bar-row .name { color: var(--muted); font-size: 11.5px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { height: 8px; border-radius: 999px; background: #202b3e; overflow: hidden; }
+  .bar-row .bar { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent2)); min-width: 2px; }
+  .bar-row .count { font-size: 11.5px; color: #dbe4f2; text-align: right; }
+  .spark { width: 100%; height: 76px; display: block; }
+  .kv { display: grid; grid-template-columns: minmax(110px, 155px) minmax(0, 1fr); gap: 9px 14px; font-size: 12.5px; }
   .kv .k { color: var(--muted); }
-  pre.response { background: #0a0e14; border: 1px solid var(--border); border-radius: 10px;
-                 padding: 12px; overflow: auto; font-size: 12px; white-space: pre-wrap; max-height: 300px; }
-  .toolbar { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-  .toolbar input, .toolbar select { width: auto; flex: 1; min-width: 140px; }
-  h2 { font-size: 17px; margin: 4px 0 16px; }
-  .empty { color: var(--muted); padding: 18px; text-align: center; }
+  pre.response { background: #090e17; border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; overflow: auto; font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere;
+    max-height: 300px; min-height: 82px; color: #d4deed; }
+  .empty { color: var(--muted); padding: 24px 16px; text-align: center; }
+  .empty strong { display: block; color: #d3ddeb; font-weight: 600; margin-bottom: 4px; }
+  .table-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  @media (max-width: 980px) { .grid2 { grid-template-columns: 1fr; } }
+  @media (max-width: 780px) {
+    body { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: sticky; z-index: 30; border-right: none;
+      border-bottom: 1px solid var(--border); padding: 12px 14px 10px; overflow: visible; }
+    .brand { border-bottom: none; margin-bottom: 10px; padding: 0 2px; }
+    .logo { width: 32px; height: 32px; }
+    .nav-label, .sidebar-footer { display: none; }
+    nav { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; gap: 6px; }
+    nav button { width: auto; flex: none; padding: 8px 11px; }
+    nav button::before { display: none; }
+    main { padding: 22px 16px 36px; }
+    .page-head { flex-direction: column; gap: 13px; margin-bottom: 19px; }
+    .page-actions { justify-content: flex-start; }
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .card { padding: 14px; }
+    .card .value { font-size: 25px; }
+    .panel { padding: 14px; }
+    .toolbar > * { flex: 1 1 140px; }
+    .toolbar .search-input { flex-basis: 100%; min-width: 0; }
+  }
+  @media (max-width: 420px) { .cards { grid-template-columns: 1fr; } .kv { grid-template-columns: 1fr; gap: 3px; } .kv .k { margin-top: 7px; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
 </style>
 </head>
 <body>
 <aside class="sidebar">
   <div class="brand">
-    <div class="logo">SB</div>
-    <div>
-      <h1>SecretBox Server</h1>
-      <div class="sub">ops dashboard</div>
-    </div>
+    <div class="logo" aria-hidden="true">SB</div>
+    <div><h1>SecretBox Server</h1><div class="sub">Ops dashboard</div></div>
   </div>
-  <nav id="nav">
-    <button data-tab="overview" class="active">Overview</button>
+  <div class="nav-label">Workspace</div>
+  <nav id="nav" aria-label="Dashboard sections">
+    <button data-tab="overview" class="active" aria-current="page">Overview</button>
     <button data-tab="records">Records &amp; Permissions</button>
     <button data-tab="security">Security Review</button>
     <button data-tab="audit">Agent Audit</button>
     <button data-tab="ai">AI Gateway</button>
   </nav>
-  <div class="sidebar-footer">
-    <div id="serverTime"></div>
-  </div>
+  <div class="sidebar-footer"><strong>Local server time</strong><div id="serverTime"></div></div>
 </aside>
 
 <main>
-  <!-- Overview -->
-  <section class="tab active" id="tab-overview">
-    <h2>Overview</h2>
+  <section class="tab active" id="tab-overview" aria-labelledby="overviewTitle">
+    <header class="page-head">
+      <div><h2 id="overviewTitle">Overview</h2><p>Vault health, credential distribution, and recent server activity at a glance.</p></div>
+      <div class="page-actions"><span class="freshness" id="overviewFreshness">Loading…</span><button class="ghost" id="overviewReload">Refresh</button></div>
+    </header>
     <div class="cards" id="overviewCards"></div>
     <div class="grid2">
-      <div class="panel"><h3>Records by type</h3><div id="chartType"></div></div>
-      <div class="panel"><h3>Records by template</h3><div id="chartTemplate"></div></div>
-      <div class="panel"><h3>Top tags</h3><div id="topTags"></div></div>
-      <div class="panel"><h3>Agent &amp; API activity (24h)</h3><svg class="spark" id="sparkAudit"></svg>
-        <div id="actorChips" style="margin-top:8px"></div></div>
+      <div class="panel"><div class="panel-head"><h3>Records by type</h3><span class="section-note">Inventory</span></div><div id="chartType"></div></div>
+      <div class="panel"><div class="panel-head"><h3>Records by template</h3><span class="section-note">Organization</span></div><div id="chartTemplate"></div></div>
+      <div class="panel"><div class="panel-head"><h3>Top tags</h3><span class="section-note">Most used</span></div><div id="topTags"></div></div>
+      <div class="panel"><div class="panel-head"><h3>Agent &amp; API activity</h3><span class="section-note">Last 24 hours</span></div>
+        <svg class="spark" id="sparkAudit" role="img" aria-label="Hourly agent and API activity over the last 24 hours"></svg>
+        <div id="actorChips" style="margin-top:10px"></div></div>
     </div>
-    <div class="panel"><h3>Recent events</h3><div id="recentEvents"></div></div>
+    <div class="panel"><div class="panel-head"><h3>Recent events</h3><span class="section-note">Latest 12</span></div><div id="recentEvents"></div></div>
   </section>
 
-  <!-- Records & permissions -->
-  <section class="tab" id="tab-records">
-    <h2>Records &amp; Permissions</h2>
+  <section class="tab" id="tab-records" aria-labelledby="recordsTitle">
+    <header class="page-head">
+      <div><h2 id="recordsTitle">Records &amp; Permissions</h2><p>Review credential metadata and control what clients and AI agents can access.</p></div>
+      <div class="page-actions"><span class="freshness" id="recordsFreshness">Loading…</span><span class="badge unknown" id="recordsCount">0 records</span></div>
+    </header>
     <div class="panel">
       <div class="toolbar">
-        <input id="recordFilter" placeholder="Filter by name / username / tag…">
+        <label class="sr-only" for="recordFilter">Filter records</label>
+        <input class="search-input" id="recordFilter" placeholder="Filter by name / username / tag…">
+        <label class="sr-only" for="recordTypeFilter">Record type</label>
         <select id="recordTypeFilter"><option value="">All types</option></select>
-        <select id="recordStrengthFilter">
-          <option value="">Any strength</option><option value="weak">Weak</option>
-          <option value="fair">Fair</option><option value="strong">Strong</option>
-        </select>
+        <label class="sr-only" for="recordStrengthFilter">Password strength</label>
+        <select id="recordStrengthFilter"><option value="">Any strength</option><option value="weak">Weak</option><option value="fair">Fair</option><option value="strong">Strong</option></select>
+        <button class="ghost" id="recordsClear">Clear filters</button>
         <button class="ghost" id="recordsReload">Reload</button>
       </div>
-      <div style="overflow-x:auto"><table id="recordsTable">
-        <thead><tr><th>Record</th><th>Type</th><th>Username</th><th>Tags</th><th>Strength</th><th>2FA</th><th>Permissions</th><th></th></tr></thead>
+      <div class="table-wrap"><table id="recordsTable">
+        <thead><tr><th scope="col">Record</th><th scope="col">Type</th><th scope="col">Username</th><th scope="col">Tags</th><th scope="col">Strength</th><th scope="col">2FA</th><th scope="col">Permissions</th><th scope="col">Actions</th></tr></thead>
         <tbody></tbody>
       </table></div>
-      <div class="empty" id="recordsEmpty" style="display:none">No records match.</div>
+      <div class="empty" id="recordsEmpty" hidden><strong>No records to display</strong><span id="recordsEmptyText">No records match the current filters.</span></div>
     </div>
   </section>
 
-  <!-- Security -->
-  <section class="tab" id="tab-security">
-    <h2>Security Risk Review</h2>
+  <section class="tab" id="tab-security" aria-labelledby="securityTitle">
+    <header class="page-head">
+      <div><h2 id="securityTitle">Security Review</h2><p>Prioritize weak, reused, and stale credentials without exposing plaintext secrets.</p></div>
+      <div class="page-actions"><span class="freshness" id="securityFreshness">Loading…</span><button class="ghost" id="securityReload">Refresh</button></div>
+    </header>
     <div class="cards" id="securityCards"></div>
-    <div class="panel"><h3>Score distribution</h3><div id="scoreBars"></div></div>
-    <div class="panel"><h3>Findings</h3><div class="findings" id="findings"></div></div>
+    <div class="panel"><div class="panel-head"><h3>Score distribution</h3><span class="section-note">Heuristic assessment</span></div><div id="scoreBars"></div></div>
+    <div class="panel"><div class="panel-head"><h3>Findings</h3><span class="section-note">Recommended actions</span></div><div class="findings" id="findings"></div></div>
   </section>
 
-  <!-- Audit -->
-  <section class="tab" id="tab-audit">
-    <h2>Agent Audit</h2>
+  <section class="tab" id="tab-audit" aria-labelledby="auditTitle">
+    <header class="page-head">
+      <div><h2 id="auditTitle">Agent Audit</h2><p>Trace agent, client, dashboard, and server activity with fine-grained filters.</p></div>
+      <div class="page-actions"><span class="freshness" id="auditFreshness">Loading…</span><span class="badge unknown" id="auditLoaded">0 loaded</span></div>
+    </header>
     <div class="cards" id="auditCards"></div>
-    <div class="panel"><h3>Events by action</h3><div id="auditActionBars"></div></div>
+    <div class="panel"><div class="panel-head"><h3>Events by action</h3><span class="section-note">All time</span></div><div id="auditActionBars"></div></div>
     <div class="panel">
       <div class="toolbar">
-        <select id="auditAction"><option value="">All actions</option></select>
-        <select id="auditActorType">
-          <option value="">All actor types</option><option value="agent">agent</option>
-          <option value="client">client</option><option value="dashboard">dashboard</option><option value="server">server</option>
-        </select>
-        <select id="auditAllowed"><option value="">Allowed + denied</option><option value="true">Allowed only</option><option value="false">Denied only</option></select>
+        <label class="sr-only" for="auditAction">Audit action</label><select id="auditAction"><option value="">All actions</option></select>
+        <label class="sr-only" for="auditActorType">Actor type</label><select id="auditActorType"><option value="">All actor types</option><option value="agent">agent</option><option value="client">client</option><option value="dashboard">dashboard</option><option value="server">server</option></select>
+        <label class="sr-only" for="auditAllowed">Audit result</label><select id="auditAllowed"><option value="">Allowed + denied</option><option value="true">Allowed only</option><option value="false">Denied only</option></select>
         <button class="ghost" id="auditReload">Reload</button>
-        <label class="row" style="gap:6px;color:var(--muted);font-size:12px">
-          <input type="checkbox" id="auditAuto" style="width:auto" checked> auto-refresh 10s</label>
+        <label class="row" style="gap:7px;color:var(--muted);font-size:11.5px"><input type="checkbox" id="auditAuto" style="width:auto;min-height:0" checked> Auto-refresh 10s</label>
       </div>
-      <div style="overflow-x:auto"><table id="auditTable">
-        <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Record</th><th>Result</th><th>Detail</th></tr></thead>
+      <div class="table-wrap"><table id="auditTable">
+        <thead><tr><th scope="col">Time</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Record</th><th scope="col">Result</th><th scope="col">Detail</th></tr></thead>
         <tbody></tbody>
       </table></div>
-      <div class="row" style="margin-top:12px"><button class="ghost" id="auditMore">Load more</button></div>
+      <div class="table-footer"><span class="muted" id="auditStatus" role="status">Loading events…</span><button class="ghost" id="auditMore" disabled>Load more</button></div>
     </div>
   </section>
 
-  <!-- AI -->
-  <section class="tab" id="tab-ai">
-    <h2>AI Gateway</h2>
+  <section class="tab" id="tab-ai" aria-labelledby="aiTitle">
+    <header class="page-head">
+      <div><h2 id="aiTitle">AI Gateway</h2><p>Broker OpenAI-compatible requests through the server without distributing provider keys.</p></div>
+      <div class="page-actions"><span class="freshness" id="aiFreshness">Loading…</span><button class="ghost" id="aiReload">Refresh</button></div>
+    </header>
     <div class="grid2">
       <div class="panel">
-        <h3>Server AI access</h3>
+        <div class="panel-head"><h3>Server AI access</h3><span class="section-note">Connection</span></div>
         <div id="aiStatus"></div>
-        <div class="kv" style="margin-top:12px">
+        <div class="kv" style="margin-top:16px">
           <div class="k">Gateway endpoint</div><div class="mono">POST /ai/v1/chat/completions</div>
           <div class="k">Upstream base URL</div><div class="mono" id="aiBaseUrl">—</div>
           <div class="k">Enforced model</div><div class="mono" id="aiModel">—</div>
         </div>
-        <p class="muted" style="font-size:12.5px">Clients select "Use server AI" in the app's OpenAI-compatible
-        provider section and send requests here; the server attaches its own upstream key. The key never
-        leaves the server. The configured model is enforced for every forwarded call.</p>
+        <p class="muted" style="font-size:12px;margin:18px 0 0">Clients select “Use server AI” in the app’s OpenAI-compatible provider section. The server attaches its own upstream key and enforces the configured model.</p>
       </div>
       <div class="panel">
-        <h3>Provider configuration</h3>
-        <label class="field">Upstream base URL (OpenAI-compatible, includes /v1)
-          <input id="aiConfigBase" placeholder="https://api.openai.com/v1"></label>
-        <label class="field">API key <span class="muted">(stored server-side only)</span>
-          <input id="aiConfigKey" type="password" placeholder="sk-…"></label>
-        <label class="field">Model <input id="aiConfigModel" placeholder="gpt-4o-mini"></label>
-        <div class="row"><button class="primary" id="aiConfigSave">Save provider</button>
-          <span class="muted" id="aiConfigMsg"></span></div>
+        <div class="panel-head"><h3>Provider configuration</h3><span class="section-note">Server-side only</span></div>
+        <fieldset id="aiConfigFields">
+          <label class="field">Upstream base URL (OpenAI-compatible, includes /v1)<input id="aiConfigBase" placeholder="https://api.openai.com/v1"></label>
+          <label class="field">API key <span class="muted">(stored server-side only)</span><input id="aiConfigKey" type="password" placeholder="sk-…" autocomplete="new-password"></label>
+          <label class="field">Model <input id="aiConfigModel" placeholder="gpt-4o-mini"></label>
+          <div class="row"><button class="primary" id="aiConfigSave">Save provider</button><span class="muted" id="aiConfigMsg" role="status"></span></div>
+        </fieldset>
       </div>
     </div>
     <div class="panel">
-      <h3>Gateway test</h3>
-      <div class="row">
-        <input id="aiTestPrompt" style="flex:1" placeholder="Ask the configured model something… (e.g. Reply with OK)">
-        <button class="primary" id="aiTestSend">Send test prompt</button>
-      </div>
-      <pre class="response" id="aiTestOut" style="margin-top:12px">Response will appear here.</pre>
+      <div class="panel-head"><h3>Gateway test</h3><span class="section-note">Non-streaming request</span></div>
+      <div class="row"><label class="sr-only" for="aiTestPrompt">Test prompt</label>
+        <input id="aiTestPrompt" style="flex:1;min-width:220px" placeholder="Ask the configured model something… (e.g. Reply with OK)">
+        <button class="primary" id="aiTestSend">Send test prompt</button></div>
+      <pre class="response" id="aiTestOut" style="margin-top:12px" role="status">Response will appear here.</pre>
     </div>
   </section>
 </main>
 
-<div class="drawer" id="permDrawer">
-  <div class="row" style="justify-content:space-between">
-    <h2 style="margin:0">Permissions</h2>
-    <button class="ghost" id="permClose">Close</button>
-  </div>
+<div class="drawer-backdrop" id="permBackdrop"></div>
+<div class="drawer" id="permDrawer" role="dialog" aria-modal="true" aria-labelledby="permTitle" aria-hidden="true" inert>
+  <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h2 id="permTitle" tabindex="-1">Permissions</h2><button class="ghost" id="permClose">Close</button></div>
   <p class="muted" id="permRecordName" style="margin:8px 0 14px"></p>
-  <div class="perm-toggle"><div>Read-only<br><span class="muted" style="font-size:12px">Clients block edits</span></div>
-    <label class="switch"><input type="checkbox" id="permReadOnly"><span></span></label></div>
-  <div class="perm-toggle"><div>Hide secret<br><span class="muted" style="font-size:12px">Usable but never displayed</span></div>
-    <label class="switch"><input type="checkbox" id="permHideSecret"><span></span></label></div>
-  <div class="perm-toggle"><div>Require re-auth<br><span class="muted" style="font-size:12px">Biometric before secret use</span></div>
-    <label class="switch"><input type="checkbox" id="permReauth"><span></span></label></div>
-  <label class="field" style="margin-top:14px">AI agent access level
-    <select id="permAiAccess">
-      <option value="none">none — invisible to agents</option>
-      <option value="metadata">metadata — redacted metadata only</option>
-      <option value="metadata_and_tools">metadata + clipboard tools</option>
+  <fieldset id="permFields">
+    <div class="perm-toggle"><label for="permReadOnly">Read-only<br><span class="muted" style="font-size:11.5px">Clients block edits</span></label>
+      <label class="switch"><input type="checkbox" id="permReadOnly"><span aria-hidden="true"></span></label></div>
+    <div class="perm-toggle"><label for="permHideSecret">Hide secret<br><span class="muted" style="font-size:11.5px">Usable but never displayed</span></label>
+      <label class="switch"><input type="checkbox" id="permHideSecret"><span aria-hidden="true"></span></label></div>
+    <div class="perm-toggle"><label for="permReauth">Require re-auth<br><span class="muted" style="font-size:11.5px">Biometric before secret use</span></label>
+      <label class="switch"><input type="checkbox" id="permReauth"><span aria-hidden="true"></span></label></div>
+    <label class="field" style="margin-top:16px">AI agent access level<select id="permAiAccess">
+      <option value="none">none — invisible to agents</option><option value="metadata">metadata — redacted metadata only</option><option value="metadata_and_tools">metadata + clipboard tools</option>
     </select></label>
-  <p class="muted" style="font-size:12px">Level <b>none</b> keeps the MCP invariant: the record is
-  indistinguishable from a missing one for AI agents.</p>
-  <div class="row" style="margin-top:16px"><button class="primary" id="permSave">Save permissions</button>
-    <span id="permMsg" class="muted"></span></div>
+    <p class="muted" style="font-size:11.5px">Level <b>none</b> keeps the MCP invariant: the record is indistinguishable from a missing one for AI agents.</p>
+    <div class="row" style="margin-top:18px"><button class="primary" id="permSave">Save permissions</button><span id="permMsg" class="muted" role="status"></span></div>
+  </fieldset>
 </div>
-
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 "use strict";
 
-// ---------- small helpers ----------
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g,
   (ch) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+const truncate = (value, limit) => {
+  const chars = Array.from(String(value ?? ""));
+  return chars.length > limit ? chars.slice(0, limit - 1).join("") + "…" : chars.join("");
+};
 async function api(path, options = {}) {
-  const response = await fetch(path, {
-    headers: { "Content-Type": "application/json", "X-SecretBox-Actor": "dashboard" },
-    ...options,
-  });
+  const response = await fetch(path, { headers: { "Content-Type": "application/json", "X-SecretBox-Actor": "dashboard" }, ...options });
   if (!response.ok) {
     let detail = `${response.status}`;
     try { detail += " " + JSON.stringify((await response.json()).detail); } catch (e) {}
@@ -305,276 +359,300 @@ async function api(path, options = {}) {
 let toastTimer;
 function toast(text) {
   const el = $("toast"); el.textContent = text; el.classList.add("show");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 2600);
 }
 function fmtTime(value) {
   if (!value) return "—";
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? esc(value)
+  return Number.isNaN(date.getTime()) ? String(value)
     : date.toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+function setBusy(button, busy, label = "Working…") {
+  if (busy) { button.dataset.label = button.textContent; button.textContent = label; }
+  else { button.textContent = button.dataset.label || button.textContent; }
+  button.disabled = busy;
+}
+async function runSection(name, loader, silent = false) {
+  const state = $(name + "Freshness");
+  state.textContent = "Refreshing…"; state.classList.remove("error");
+  try {
+    await loader();
+    state.textContent = "Updated " + new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return true;
+  } catch (error) {
+    state.textContent = "Refresh failed"; state.classList.add("error");
+    if (!silent) toast(`${name[0].toUpperCase() + name.slice(1)}: ${error.message}`);
+    return false;
+  }
 }
 function bars(container, entries, { max } = {}) {
   const ceiling = max ?? Math.max(1, ...entries.map((e) => e[1]));
   $(container).innerHTML = entries.length
-    ? entries.map(([name, count]) =>
-      `<div class="bar-row"><div class="name">${esc(name)}</div>
-       <div class="bar" style="width:${Math.round((count / ceiling) * 100) * 0.66}%"></div>
-       <div class="count">${count}</div></div>`).join("")
+    ? entries.map(([name, count]) => `<div class="bar-row"><div class="name" title="${esc(name)}">${esc(name)}</div>
+      <div class="bar-track"><div class="bar" style="width:${Math.max(0, Math.min(100, (count / ceiling) * 100))}%"></div></div>
+      <div class="count">${count}</div></div>`).join("")
     : `<div class="empty">No data yet.</div>`;
 }
 function sparkline(svg, hourly) {
   const points = hourly || [];
-  const width = 560, height = 60, step = points.length > 1 ? width / (points.length - 1) : width;
+  const width = 560, height = 76, step = points.length > 1 ? width / (points.length - 1) : width;
   const max = Math.max(1, ...points.map((p) => p.count));
-  const path = points.map((p, i) =>
-    `${i ? "L" : "M"}${(i * step).toFixed(1)},${(height - 6 - (p.count / max) * (height - 14)).toFixed(1)}`).join(" ");
+  const path = points.map((p, i) => `${i ? "L" : "M"}${(i * step).toFixed(1)},${(height - 8 - (p.count / max) * (height - 22)).toFixed(1)}`).join(" ");
   const area = path ? `${path} L${width},${height} L0,${height} Z` : "";
   svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
-  svg.innerHTML = `
-    <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#5b8cff" stop-opacity=".45"/><stop offset="1" stop-color="#5b8cff" stop-opacity="0"/>
-    </linearGradient></defs>
-    ${area ? `<path d="${area}" fill="url(#sg)"/>` : ""}
-    ${path ? `<path d="${path}" fill="none" stroke="#5b8cff" stroke-width="1.6"/>` : ""}
-    ${points.length ? `<text x="0" y="10" fill="#8b94a8" font-size="10">${points[0].hour.slice(11, 13)}:00</text>
-    <text x="${width}" y="10" text-anchor="end" fill="#8b94a8" font-size="10">now</text>` : ""}`;
+  svg.innerHTML = `<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#78a5ff" stop-opacity=".4"/><stop offset="1" stop-color="#78a5ff" stop-opacity="0"/></linearGradient></defs>
+    ${area ? `<path d="${area}" fill="url(#sg)"/>` : ""}${path ? `<path d="${path}" fill="none" stroke="#78a5ff" stroke-width="2"/>` : ""}
+    ${points.length ? `<text x="0" y="12" fill="#9aa7bd" font-size="10">${esc(points[0].hour.slice(11, 13))}:00</text><text x="${width}" y="12" text-anchor="end" fill="#9aa7bd" font-size="10">now</text>`
+      : `<text x="${width / 2}" y="${height / 2}" text-anchor="middle" fill="#9aa7bd" font-size="12">No activity in the last 24 hours</text>`}`;
 }
 
-// ---------- tabs ----------
 $("nav").addEventListener("click", (event) => {
   const button = event.target.closest("button"); if (!button) return;
-  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("active", b === button));
+  document.querySelectorAll("nav button").forEach((b) => {
+    b.classList.toggle("active", b === button);
+    if (b === button) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
   document.querySelectorAll("section.tab").forEach((s) => s.classList.toggle("active", s.id === `tab-${button.dataset.tab}`));
   window.dispatchEvent(new Event("tab:" + button.dataset.tab));
 });
 
-// ---------- overview ----------
 async function loadOverview() {
   const data = await api("/api/dashboard/overview");
   const s = data.records, a = data.audit_stats;
   $("overviewCards").innerHTML = `
-    <div class="card"><div class="label">Vault records</div><div class="value">${s.total}</div>
-      <div class="hint">${s.totp_enabled} with 2FA · ${s.duplicates} duplicate titles</div></div>
-    <div class="card"><div class="label">AI provider</div>
-      <div class="value">${data.ai.configured ? "Ready" : "Off"}</div>
-      <div class="hint">${data.ai.configured ? "model " + esc(data.ai.model) : "configure on the AI tab"}</div></div>
-    <div class="card"><div class="label">Events (24h)</div><div class="value">${a.last_24h}</div>
-      <div class="hint">${a.total} total · ${a.denied} denied</div></div>`;
+    <div class="card"><div class="label">Vault records</div><div class="value">${s.total}</div><div class="hint">${s.totp_enabled} with 2FA · ${s.duplicates} duplicate titles</div></div>
+    <div class="card"><div class="label">AI provider</div><div class="value" style="color:${data.ai.configured ? "var(--good)" : "var(--muted)"}">${data.ai.configured ? "Ready" : "Off"}</div><div class="hint">${data.ai.configured ? "Model " + esc(data.ai.model) : "Configure on the AI tab"}</div></div>
+    <div class="card"><div class="label">Events · 24h</div><div class="value">${a.last_24h}</div><div class="hint">${a.total} total · ${a.denied} denied</div></div>`;
   bars("chartType", Object.entries(s.by_type).sort((x, y) => y[1] - x[1]));
   bars("chartTemplate", Object.entries(s.by_template).sort((x, y) => y[1] - x[1]));
-  $("topTags").innerHTML = s.top_tags.length
-    ? s.top_tags.map((t) => `<span class="chip">${esc(t.tag)}<span class="n">${t.count}</span></span>`).join("")
-    : `<div class="empty">No tags yet.</div>`;
+  $("topTags").innerHTML = s.top_tags.length ? s.top_tags.map((t) => `<span class="chip">${esc(t.tag)}<span class="n">${t.count}</span></span>`).join("") : `<div class="empty">No tags yet.</div>`;
   sparkline($("sparkAudit"), a.hourly);
   $("actorChips").innerHTML = Object.entries(a.per_actor_recent).sort((x, y) => y[1] - x[1]).slice(0, 8)
-    .map(([actor, count]) => `<span class="chip">${esc(actor)}<span class="n">${count}</span></span>`).join("")
-    || `<span class="muted">No activity in the last 24h.</span>`;
+    .map(([actor, count]) => `<span class="chip">${esc(actor)}<span class="n">${count}</span></span>`).join("") || `<span class="muted">No activity in the last 24h.</span>`;
   const events = (await api("/api/audit?limit=12")).events;
-  $("recentEvents").innerHTML = events.length ? `<table><tbody>${events.map((e) => `
-    <tr><td class="muted" style="white-space:nowrap">${fmtTime(e.ts)}</td>
-    <td><span class="badge type">${esc(e.actor_type)}</span>${esc(e.actor)}</td>
-    <td class="mono">${esc(e.action)}</td>
-    <td>${e.allowed ? '<span class="badge ok">allowed</span>' : '<span class="badge denied">denied</span>'}</td>
-    <td class="muted mono">${esc(JSON.stringify(e.detail).slice(0, 90))}</td></tr>`).join("")}</tbody></table>`
-    : `<div class="empty">No audit events yet. Agent tool calls and API writes appear here.</div>`;
+  $("recentEvents").innerHTML = events.length ? `<div class="table-wrap"><table><thead><tr><th scope="col">Time</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Result</th><th scope="col">Detail</th></tr></thead><tbody>${events.map((e) => `
+    <tr><td class="muted" style="white-space:nowrap">${esc(fmtTime(e.ts))}</td><td><span class="badge type">${esc(e.actor_type)}</span>${esc(e.actor)}</td>
+    <td class="mono">${esc(e.action)}</td><td>${e.allowed ? '<span class="badge ok">allowed</span>' : '<span class="badge denied">denied</span>'}</td>
+    <td class="muted mono detail-cell">${esc(truncate(JSON.stringify(e.detail), 90))}</td></tr>`).join("")}</tbody></table></div>`
+    : `<div class="empty"><strong>No audit events yet</strong>Agent tool calls and API writes will appear here.</div>`;
 }
+$("overviewReload").addEventListener("click", () => runSection("overview", loadOverview));
 
-// ---------- records & permissions ----------
 let recordsCache = [];
 function strengthBadge(strength) {
   if (!strength) return "";
   return `<span class="badge ${esc(strength.label)}">${esc(strength.label)}${strength.score != null ? " · " + strength.score : ""}</span>`;
 }
 function permSummary(record) {
-  if (!record.permissions) return `<span class="muted">defaults</span>`;
+  if (!record.permissions) return `<span class="muted">Defaults</span>`;
   const flags = [];
   if (record.permissions.read_only) flags.push("RO");
   if (record.permissions.hide_secret) flags.push("hide");
   if (record.permissions.require_reauth) flags.push("reauth");
-  return `<span class="badge type">ai: ${esc(record.permissions.ai_access)}</span>` +
-         (flags.length ? `<span class="muted mono">${flags.join(" ")}</span>` : "");
+  return `<span class="badge type">AI: ${esc(record.permissions.ai_access)}</span>` + (flags.length ? `<span class="muted mono">${flags.join(" ")}</span>` : "");
 }
 function renderRecords() {
-  const text = $("recordFilter").value.trim().toLowerCase();
-  const type = $("recordTypeFilter").value;
-  const strength = $("recordStrengthFilter").value;
+  const text = $("recordFilter").value.trim().toLowerCase(), type = $("recordTypeFilter").value, strength = $("recordStrengthFilter").value;
   const rows = recordsCache.filter((r) => {
     if (type && r.item_type !== type) return false;
     if (strength && (r.strength?.label || "unknown") !== strength) return false;
     if (!text) return true;
     return [r.name, r.subtitle, r.notes, (r.tags || []).join(" ")].join(" ").toLowerCase().includes(text);
   });
-  $("recordsEmpty").style.display = rows.length ? "none" : "block";
+  $("recordsCount").textContent = `${rows.length} / ${recordsCache.length} records`;
+  $("recordsEmpty").hidden = rows.length > 0;
+  $("recordsEmptyText").textContent = recordsCache.length ? "No records match the current filters." : "Add a record through the app or API to get started.";
+  $("recordsTable").hidden = rows.length === 0;
   $("recordsTable").querySelector("tbody").innerHTML = rows.map((r) => `
-    <tr><td><b>${esc(r.name)}</b><div class="muted" style="font-size:12px">${esc(r.notes || "").slice(0, 80)}</div></td>
-    <td><span class="badge type">${esc(r.item_type)}</span>${r.template_type ? `<div class="muted" style="font-size:12px;margin-top:3px">${esc(r.template_type)}</div>` : ""}</td>
-    <td>${esc(r.subtitle || "—")}</td>
-    <td>${(r.tags || []).slice(0, 3).map((t) => `<span class="chip">${esc(t)}</span>`).join("")}</td>
-    <td>${strengthBadge(r.strength)}${r.strength?.reused ? '<div class="muted" style="font-size:11px;margin-top:3px">reused</div>' : ""}</td>
-    <td>${r.totp_enabled ? '<span class="badge ok">on</span>' : '<span class="muted">—</span>'}</td>
-    <td>${permSummary(r)}</td>
-    <td><button class="ghost" data-perm="${esc(r.id)}">Edit</button></td></tr>`).join("");
+    <tr><td><div class="cell-title">${esc(r.name)}</div><div class="cell-subtitle">${esc(truncate(r.notes || "", 80))}</div></td>
+    <td><span class="badge type">${esc(r.item_type)}</span>${r.template_type ? `<div class="cell-subtitle">${esc(r.template_type)}</div>` : ""}</td>
+    <td class="detail-cell">${esc(r.subtitle || "—")}</td><td>${(r.tags || []).slice(0, 3).map((t) => `<span class="chip">${esc(t)}</span>`).join("") || '<span class="muted">—</span>'}</td>
+    <td>${strengthBadge(r.strength)}${r.strength?.reused ? '<div class="cell-subtitle">Reused</div>' : ""}</td>
+    <td>${r.totp_enabled ? '<span class="badge ok">On</span>' : '<span class="muted">—</span>'}</td><td>${permSummary(r)}</td>
+    <td><button class="ghost" data-perm="${esc(r.id)}" aria-label="Edit permissions for ${esc(r.name)}">Edit</button></td></tr>`).join("");
 }
 async function loadRecords() {
   recordsCache = await api("/api/records");
+  const select = $("recordTypeFilter"), current = select.value;
   const types = [...new Set(recordsCache.map((r) => r.item_type))].sort();
-  $("recordTypeFilter").innerHTML = `<option value="">All types</option>` +
-    types.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+  select.innerHTML = `<option value="">All types</option>` + types.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
+  if (types.includes(current)) select.value = current;
   renderRecords();
 }
-["recordFilter", "recordTypeFilter", "recordStrengthFilter"].forEach((id) =>
-  $(id).addEventListener("input", renderRecords));
-$("recordsReload").addEventListener("click", () => loadRecords().then(() => toast("Records reloaded")));
+["recordFilter", "recordTypeFilter", "recordStrengthFilter"].forEach((id) => $(id).addEventListener("input", renderRecords));
+$("recordsClear").addEventListener("click", () => { $("recordFilter").value = ""; $("recordTypeFilter").value = ""; $("recordStrengthFilter").value = ""; renderRecords(); });
+$("recordsReload").addEventListener("click", async () => { await runSection("records", loadRecords) && toast("Records reloaded"); });
 
-let permRecordId = null;
+let permRecordId = null, permTrigger = null, permSaveGeneration = 0;
+function closePermissions() {
+  $("permDrawer").classList.remove("open"); $("permBackdrop").classList.remove("open");
+  $("permDrawer").setAttribute("aria-hidden", "true"); $("permDrawer").inert = true;
+  document.querySelector(".sidebar").inert = false; document.querySelector("main").inert = false;
+  if (permTrigger?.isConnected) permTrigger.focus();
+}
 $("recordsTable").addEventListener("click", (event) => {
   const button = event.target.closest("button[data-perm]"); if (!button) return;
   const record = recordsCache.find((r) => r.id === button.dataset.perm); if (!record) return;
-  permRecordId = record.id;
-  $("permRecordName").textContent = `${record.name} · ${record.item_type}` +
-    (record.template_type ? ` (${record.template_type})` : "");
+  permSaveGeneration += 1;
+  permRecordId = record.id; permTrigger = button;
+  $("permRecordName").textContent = `${record.name} · ${record.item_type}` + (record.template_type ? ` (${record.template_type})` : "");
   const p = record.permissions || {};
-  $("permReadOnly").checked = !!p.read_only;
-  $("permHideSecret").checked = !!p.hide_secret;
-  $("permReauth").checked = !!p.require_reauth;
-  $("permAiAccess").value = p.ai_access || "none";
-  $("permMsg").textContent = "";
-  $("permDrawer").classList.add("open");
+  $("permReadOnly").checked = !!p.read_only; $("permHideSecret").checked = !!p.hide_secret;
+  $("permReauth").checked = !!p.require_reauth; $("permAiAccess").value = p.ai_access || "none";
+  $("permMsg").textContent = ""; $("permFields").disabled = false;
+  $("permDrawer").inert = false; $("permDrawer").setAttribute("aria-hidden", "false");
+  document.querySelector(".sidebar").inert = true; document.querySelector("main").inert = true;
+  $("permDrawer").classList.add("open"); $("permBackdrop").classList.add("open");
+  requestAnimationFrame(() => $("permTitle").focus());
 });
-$("permClose").addEventListener("click", () => $("permDrawer").classList.remove("open"));
+$("permClose").addEventListener("click", closePermissions);
+$("permBackdrop").addEventListener("click", closePermissions);
+document.addEventListener("keydown", (event) => {
+  if (!$("permDrawer").classList.contains("open")) return;
+  if (event.key === "Escape") { closePermissions(); return; }
+  if (event.key !== "Tab") return;
+  const drawer = $("permDrawer");
+  const focusable = [...drawer.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    .filter((el) => !el.closest("[inert]") && el.offsetParent !== null);
+  if (!focusable.length) { event.preventDefault(); $("permTitle").focus(); return; }
+  const first = focusable[0], last = focusable[focusable.length - 1], active = document.activeElement;
+  if (event.shiftKey && (active === first || active === $("permTitle") || !drawer.contains(active))) {
+    event.preventDefault(); last.focus();
+  } else if (!event.shiftKey && (active === last || !drawer.contains(active))) {
+    event.preventDefault(); first.focus();
+  }
+});
 $("permSave").addEventListener("click", async () => {
+  const savingId = permRecordId; if (!savingId) return;
+  const operation = ++permSaveGeneration;
+  $("permFields").disabled = true; $("permMsg").textContent = "Saving…";
   try {
-    await api(`/api/records/${encodeURIComponent(permRecordId)}/permissions`, {
-      method: "PUT",
-      body: JSON.stringify({
-        read_only: $("permReadOnly").checked,
-        hide_secret: $("permHideSecret").checked,
-        require_reauth: $("permReauth").checked,
-        ai_access: $("permAiAccess").value,
-      }),
-    });
-    $("permDrawer").classList.remove("open");
-    toast("Permissions saved");
-    await loadRecords();
-  } catch (error) { $("permMsg").textContent = error.message; }
+    await api(`/api/records/${encodeURIComponent(savingId)}/permissions`, { method: "PUT", body: JSON.stringify({
+      read_only: $("permReadOnly").checked, hide_secret: $("permHideSecret").checked,
+      require_reauth: $("permReauth").checked, ai_access: $("permAiAccess").value }) });
+    if (operation !== permSaveGeneration) return;
+    closePermissions(); toast("Permissions saved"); await runSection("records", loadRecords);
+  } catch (error) {
+    if (operation === permSaveGeneration) $("permMsg").textContent = error.message;
+  } finally {
+    if (operation === permSaveGeneration) $("permFields").disabled = false;
+  }
 });
 
-// ---------- security ----------
 async function loadSecurity() {
-  const report = await api("/api/dashboard/security");
-  const s = report.summary;
+  const report = await api("/api/dashboard/security"), s = report.summary;
+  const zero = (value) => Number(value) === 0;
   $("securityCards").innerHTML = `
-    <div class="card"><div class="label">Average strength</div>
-      <div class="value">${s.average_score ?? "—"}</div><div class="hint">0–100 heuristic score</div></div>
-    <div class="card"><div class="label">Weak</div><div class="value" style="color:var(--bad)">${s.weak}</div>
-      <div class="hint">rotate these first</div></div>
-    <div class="card"><div class="label">Fair</div><div class="value" style="color:var(--warn)">${s.fair}</div></div>
-    <div class="card"><div class="label">Strong</div><div class="value" style="color:var(--good)">${s.strong}</div></div>
-    <div class="card"><div class="label">Reused</div><div class="value" style="color:var(--bad)">${s.reused}</div>
-      <div class="hint">records sharing a password</div></div>
-    <div class="card"><div class="label">Stale ${report.stale_days}d+</div><div class="value">${s.stale}</div></div>`;
+    <div class="card"><div class="label">Average strength</div><div class="value">${s.average_score ?? "—"}</div><div class="hint">0–100 heuristic score</div></div>
+    <div class="card"><div class="label">Weak</div><div class="value" style="color:${zero(s.weak) ? "var(--text)" : "var(--bad)"}">${s.weak}</div><div class="hint">Rotate these first</div></div>
+    <div class="card"><div class="label">Fair</div><div class="value" style="color:${zero(s.fair) ? "var(--text)" : "var(--warn)"}">${s.fair}</div><div class="hint">Room to improve</div></div>
+    <div class="card"><div class="label">Strong</div><div class="value" style="color:var(--good)">${s.strong}</div><div class="hint">Healthy credentials</div></div>
+    <div class="card"><div class="label">Reused</div><div class="value" style="color:${zero(s.reused) ? "var(--text)" : "var(--bad)"}">${s.reused}</div><div class="hint">Records sharing a password</div></div>
+    <div class="card"><div class="label">Stale ${report.stale_days}d+</div><div class="value">${s.stale}</div><div class="hint">Due for rotation</div></div>`;
   bars("scoreBars", [["weak", s.weak], ["fair", s.fair], ["strong", s.strong]]);
   $("findings").innerHTML = report.findings.length ? report.findings.map((f) => {
-    const chips = f.records.slice(0, 8).map((r) =>
-      `<span class="chip">${esc(r.name)}${r.type ? " · " + esc(r.type) : ""}</span>`).join("");
+    const chips = f.records.slice(0, 8).map((r) => `<span class="chip">${esc(r.name)}${r.type ? " · " + esc(r.type) : ""}</span>`).join("");
     const extra = f.records.length > 8 ? `<span class="muted"> +${f.records.length - 8} more</span>` : "";
-    const recordChips = f.records.length ? `<div style="margin-top:8px">${chips}${extra}</div>` : "";
-    return `
-    <div class="finding ${esc(f.severity)}">
-      <div class="title">${esc(f.title)} <span class="badge unknown" style="margin-left:6px">${esc(f.severity)}</span></div>
-      <div class="advice">${esc(f.advice)}</div>
-      ${recordChips}
-    </div>`;
-  }).join("") : `<div class="empty">No findings — the vault looks clean.</div>`;
+    return `<div class="finding ${esc(f.severity)}"><div class="title">${esc(f.title)} <span class="badge unknown" style="margin-left:6px">${esc(f.severity)}</span></div>
+      <div class="advice">${esc(f.advice)}</div>${f.records.length ? `<div style="margin-top:9px">${chips}${extra}</div>` : ""}</div>`;
+  }).join("") : `<div class="empty"><strong>No findings</strong>The vault looks clean.</div>`;
 }
+$("securityReload").addEventListener("click", () => runSection("security", loadSecurity));
 
-// ---------- audit ----------
-let auditOffset = 0;
+let auditOffset = 0, auditGeneration = 0, auditLoading = false, auditHasMore = false;
 async function loadAuditStats() {
   const stats = await api("/api/audit/stats");
-  $("auditCards").innerHTML = `
-    <div class="card"><div class="label">Total events</div><div class="value">${stats.total}</div></div>
-    <div class="card"><div class="label">Last 24h</div><div class="value">${stats.last_24h}</div></div>
-    <div class="card"><div class="label">Denied</div><div class="value" style="color:var(--bad)">${stats.denied}</div></div>`;
+  $("auditCards").innerHTML = `<div class="card"><div class="label">Total events</div><div class="value">${stats.total}</div><div class="hint">All recorded activity</div></div>
+    <div class="card"><div class="label">Last 24h</div><div class="value">${stats.last_24h}</div><div class="hint">Recent server activity</div></div>
+    <div class="card"><div class="label">Denied</div><div class="value" style="color:${stats.denied ? "var(--bad)" : "var(--text)"}">${stats.denied}</div><div class="hint">Blocked or failed actions</div></div>`;
   bars("auditActionBars", Object.entries(stats.per_action).sort((x, y) => y[1] - x[1]));
-  const select = $("auditAction");
-  const current = select.value;
-  select.innerHTML = `<option value="">All actions</option>` +
-    Object.keys(stats.per_action).sort().map((a) => `<option value="${esc(a)}">${esc(a)}</option>`).join("");
+  const select = $("auditAction"), current = select.value;
+  select.innerHTML = `<option value="">All actions</option>` + Object.keys(stats.per_action).sort().map((a) => `<option value="${esc(a)}">${esc(a)}</option>`).join("");
   select.value = current;
 }
 async function loadAuditEvents(reset = true) {
-  if (reset) auditOffset = 0;
-  const params = new URLSearchParams({ limit: "50", offset: String(auditOffset) });
+  if (auditLoading && !reset) return;
+  const generation = reset ? ++auditGeneration : auditGeneration, offset = reset ? 0 : auditOffset;
+  auditLoading = true; setBusy($("auditMore"), true, "Loading…");
+  const params = new URLSearchParams({ limit: "50", offset: String(offset) });
   if ($("auditAction").value) params.set("action", $("auditAction").value);
   if ($("auditActorType").value) params.set("actor_type", $("auditActorType").value);
   if ($("auditAllowed").value) params.set("allowed", $("auditAllowed").value);
-  const data = await api(`/api/audit?${params}`);
-  const rows = data.events.map((e) => `
-    <tr><td class="muted" style="white-space:nowrap">${fmtTime(e.ts)}</td>
-    <td><span class="badge type">${esc(e.actor_type)}</span><div>${esc(e.actor)}</div></td>
-    <td class="mono">${esc(e.action)}</td>
-    <td class="mono muted">${e.record_id ? esc(e.record_id.slice(0, 8)) + "…" : "—"}</td>
-    <td>${e.allowed ? '<span class="badge ok">allowed</span>' : '<span class="badge denied">denied</span>'}</td>
-    <td class="muted mono">${esc(JSON.stringify(e.detail).slice(0, 120))}</td></tr>`).join("");
-  const body = $("auditTable").querySelector("tbody");
-  if (reset) body.innerHTML = rows || `<tr><td colspan="6" class="empty">No events match.</td></tr>`;
-  else body.insertAdjacentHTML("beforeend", rows);
-  auditOffset += data.events.length;
-}
-["auditAction", "auditActorType", "auditAllowed"].forEach((id) =>
-  $(id).addEventListener("change", () => loadAuditEvents(true)));
-$("auditReload").addEventListener("click", async () => {
-  await Promise.all([loadAuditStats(), loadAuditEvents(true)]); toast("Audit reloaded");
-});
-$("auditMore").addEventListener("click", () => loadAuditEvents(false));
-setInterval(() => {
-  if ($("tab-audit").classList.contains("active") && $("auditAuto").checked) {
-    loadAuditStats(); loadAuditEvents(true);
+  try {
+    const data = await api(`/api/audit?${params}`); if (generation !== auditGeneration) return;
+    const rows = data.events.map((e) => `<tr><td class="muted" style="white-space:nowrap">${esc(fmtTime(e.ts))}</td>
+      <td><span class="badge type">${esc(e.actor_type)}</span><div>${esc(e.actor)}</div></td><td class="mono">${esc(e.action)}</td>
+      <td class="mono muted" title="${esc(e.record_id || "")}">${e.record_id ? esc(e.record_id.slice(0, 8)) + "…" : "—"}</td>
+      <td>${e.allowed ? '<span class="badge ok">allowed</span>' : '<span class="badge denied">denied</span>'}</td>
+      <td class="muted mono detail-cell">${esc(truncate(JSON.stringify(e.detail), 120))}</td></tr>`).join("");
+    const body = $("auditTable").querySelector("tbody");
+    if (reset) body.innerHTML = rows || `<tr><td colspan="6" class="empty">No events match.</td></tr>`; else body.insertAdjacentHTML("beforeend", rows);
+    auditOffset = offset + data.events.length; auditHasMore = data.events.length === 50;
+    $("auditLoaded").textContent = `${auditOffset} loaded`;
+    $("auditStatus").textContent = auditHasMore ? `${auditOffset} events loaded. More results are available.` : `${auditOffset} events loaded · End of results`;
+  } finally {
+    if (generation === auditGeneration) {
+      auditLoading = false; setBusy($("auditMore"), false); $("auditMore").disabled = !auditHasMore;
+      $("auditMore").textContent = auditHasMore ? "Load more" : "All loaded";
+    }
   }
+}
+async function refreshAudit() { await Promise.all([loadAuditStats(), loadAuditEvents(true)]); }
+["auditAction", "auditActorType", "auditAllowed"].forEach((id) => $(id).addEventListener("change", () => runSection("audit", () => loadAuditEvents(true))));
+$("auditReload").addEventListener("click", async () => { await runSection("audit", refreshAudit) && toast("Audit reloaded"); });
+$("auditMore").addEventListener("click", () => loadAuditEvents(false).catch((error) => { $("auditStatus").textContent = "Load failed: " + error.message; }));
+setInterval(() => {
+  if (!$("tab-audit").classList.contains("active") || !$("auditAuto").checked) return;
+  runSection("audit", async () => {
+    await loadAuditStats();
+    if (auditOffset <= 50) await loadAuditEvents(true);
+    else $("auditStatus").textContent = `${auditOffset} events loaded · Reload to include the latest events`;
+  }, true);
 }, 10000);
 
-// ---------- AI gateway ----------
+let aiFormDirty = false;
+["aiConfigBase", "aiConfigKey", "aiConfigModel"].forEach((id) => $(id).addEventListener("input", () => { aiFormDirty = true; }));
 async function loadAI() {
   const [status, provider] = await Promise.all([api("/api/ai/status"), api("/api/provider")]);
-  $("aiStatus").innerHTML = status.enabled
-    ? `<span class="badge ok">enabled</span> <span class="muted">clients can select “Use server AI”</span>`
-    : `<span class="badge denied">not configured</span> <span class="muted">save a provider below to enable the gateway</span>`;
-  $("aiBaseUrl").textContent = status.base_url || "—";
-  $("aiModel").textContent = status.model || "—";
-  $("aiConfigBase").value = provider.base_url || "";
-  $("aiConfigModel").value = provider.model || "gpt-4o-mini";
+  $("aiStatus").innerHTML = status.enabled ? `<span class="badge ok">Enabled</span> <span class="muted">Clients can select “Use server AI”</span>`
+    : `<span class="badge unknown">Not configured</span> <span class="muted">Save a provider to enable the gateway</span>`;
+  $("aiBaseUrl").textContent = status.base_url || "—"; $("aiModel").textContent = status.model || "—";
+  if (!aiFormDirty) { $("aiConfigBase").value = provider.base_url || ""; $("aiConfigModel").value = provider.model || "gpt-4o-mini"; }
 }
+$("aiReload").addEventListener("click", () => runSection("ai", loadAI));
 $("aiConfigSave").addEventListener("click", async () => {
-  const key = $("aiConfigKey").value.trim();
-  const base = $("aiConfigBase").value.trim();
+  const key = $("aiConfigKey").value.trim(), base = $("aiConfigBase").value.trim();
+  const model = $("aiConfigModel").value.trim() || "gpt-4o-mini";
   if (!base || !key) { $("aiConfigMsg").textContent = "Base URL and API key are required."; return; }
+  $("aiConfigFields").disabled = true; setBusy($("aiConfigSave"), true, "Saving…");
   try {
-    await api("/api/provider", { method: "PUT", body: JSON.stringify({
-      base_url: base, api_key: key, model: $("aiConfigModel").value.trim() || "gpt-4o-mini" }) });
-    $("aiConfigKey").value = ""; $("aiConfigMsg").textContent = "Saved.";
-    toast("AI provider saved"); await loadAI();
+    await api("/api/provider", { method: "PUT", body: JSON.stringify({ base_url: base, api_key: key, model }) });
+    $("aiConfigKey").value = ""; aiFormDirty = false; $("aiConfigMsg").textContent = "Saved.";
+    toast("AI provider saved"); await runSection("ai", loadAI);
   } catch (error) { $("aiConfigMsg").textContent = error.message; }
+  finally { $("aiConfigFields").disabled = false; setBusy($("aiConfigSave"), false); }
 });
 $("aiTestSend").addEventListener("click", async () => {
-  const prompt = $("aiTestPrompt").value.trim(); if (!prompt) return;
-  $("aiTestOut").textContent = "Waiting for the gateway…";
+  const prompt = $("aiTestPrompt").value.trim(); if (!prompt) { $("aiTestOut").textContent = "Enter a test prompt first."; return; }
+  setBusy($("aiTestSend"), true, "Sending…"); $("aiTestOut").textContent = "Waiting for the gateway…";
   try {
-    const result = await api("/ai/v1/chat/completions", { method: "POST", body: JSON.stringify({
-      messages: [{ role: "user", content: prompt }] }) });
-    $("aiTestOut").textContent = result.choices?.[0]?.message?.content ?? JSON.stringify(result, null, 2);
-    toast("Gateway replied");
+    const result = await api("/ai/v1/chat/completions", { method: "POST", body: JSON.stringify({ messages: [{ role: "user", content: prompt }] }) });
+    $("aiTestOut").textContent = result.choices?.[0]?.message?.content ?? JSON.stringify(result, null, 2); toast("Gateway replied");
   } catch (error) { $("aiTestOut").textContent = "Gateway error: " + error.message; }
+  finally { setBusy($("aiTestSend"), false); }
 });
 
-// ---------- boot ----------
-window.addEventListener("tab:overview", loadOverview);
-window.addEventListener("tab:security", loadSecurity);
-window.addEventListener("tab:ai", loadAI);
+window.addEventListener("tab:overview", () => runSection("overview", loadOverview));
+window.addEventListener("tab:security", () => runSection("security", loadSecurity));
+window.addEventListener("tab:ai", () => runSection("ai", loadAI));
 (async function boot() {
-  $("serverTime").textContent = new Date().toLocaleString();
-  setInterval(() => { $("serverTime").textContent = new Date().toLocaleString(); }, 30000);
-  await Promise.all([loadOverview(), loadAuditStats(), loadAuditEvents(true), loadRecords(), loadSecurity(), loadAI()]);
+  const updateTime = () => { $("serverTime").textContent = new Date().toLocaleString(); };
+  updateTime(); setInterval(updateTime, 30000);
+  const results = await Promise.all([
+    runSection("overview", loadOverview, true), runSection("records", loadRecords, true),
+    runSection("security", loadSecurity, true), runSection("audit", refreshAudit, true), runSection("ai", loadAI, true),
+  ]);
+  if (results.some((ok) => !ok)) toast("Some dashboard sections could not be loaded. Use Refresh to retry.");
 })();
 </script>
 </body>
