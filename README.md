@@ -12,7 +12,7 @@ AI coding agents and chat assistants constantly need credentials — database UR
 
 - **Agents see metadata, not secrets.** The built-in MCP server lets Claude Code / OpenCode / Codex search your vault and read redacted details (name, type, host, the shape of the secret). Plaintext is structurally impossible in any response.
 - **Secrets travel by clipboard.** When an agent genuinely needs the password or the current two-step code, `copy_password` / `copy_totp` place it on the clipboard for the human to paste — it never passes through the conversation.
-- **Paste a reference, not the secret.** The "复制 AI 引用" button copies a `<secretbox-credential id=…>` snippet that is safe to paste into any chat; the agent resolves it through the MCP server in one call.
+- **Paste a reference, not the secret.** The "Copy AI reference" button copies a `<secretbox-credential id=…>` snippet that is safe to paste into any chat; the agent resolves it through the MCP server in one call.
 - **Every record carries an AI permission level** — denied (default) / metadata / metadata + tools. Denied records are indistinguishable from missing ones: no metadata, no existence leak.
 
 ## A complete password manager underneath
@@ -41,55 +41,55 @@ In the app this surfaces as the **Use server AI gateway** option in Settings →
 
 ## Screenshots & Usage
 
-### 1. Sign in
+### 1 · Sign in
 
 Launch and sign in with any non-empty credentials (local demo login for now; real server auth is on the roadmap).
 
-<img src="docs/screenshots/login.png" width="480" alt="Login screen">
+<img src="docs/screenshots/login.png" width="640" alt="SecretBox login window">
 
-### 2. The vault
+### 2 · The vault
 
-The main window has three panes: filters and clusters on the left, the item browser in the middle, and the full detail on the right. Type a keyword (host / service / env / username / tag) and hit **Search** — or paste the password itself for an exact keyed-hash match.
+Three panes: filters and clusters on the left, the item browser in the middle, the full detail on the right. Type a keyword (host / service / env / username / tag) and hit **Search** — or paste the password itself for an exact keyed-hash match.
 
-<img src="docs/screenshots/vault-main.png" width="1200" alt="Main vault window with detail open">
+<img src="docs/screenshots/vault-main.png" width="1200" alt="Main vault window: cluster browser, item list, and detail with a live verification code">
 
-The detail pane shows the structured record: cluster schema, detected context, identity, fields, the secret, and — for items with two-step verification — the **live verification code** that rotates every 30 seconds. Click the countdown ring to copy the code; **Copy password** sits right next to it.
+The detail pane shows the structured record — cluster schema, detected context, identity, fields, the secret — and, for items with two-step verification, the **live verification code** rotating every 30 seconds. Click the countdown ring to copy the code; **Copy password** sits right next to it.
 
-### 3. Menu bar panel (macOS)
+### 3 · Menu bar panel (macOS)
 
-The menu bar popover packs both everyday moves into one compact panel, with a 捕获 / 检索 toggle that remembers your last mode:
+One compact popover, two modes — **Capture** and **Retrieve** — and it remembers the last one you used:
 
-- **捕获 (Capture)** — paste loose text, check the Smart Preview, hit **⌘↩** (or ⌘S) to save. 保存 stays disabled until a real secret or `otpauth://` URI is detected, so junk never lands in the vault.
-- **检索 (Quick access)** — type a keyword, move with **↑↓**, press **↩** to copy the password (or the current TOTP code for authenticator-only items), **⌘↩** to reveal the record in the main window. An empty query lists your most recently used items; every copy confirms with a transient capsule.
+- **Capture** — paste loose text, check the Smart Preview, hit **⌘↩** (or ⌘S) to save. **Save** stays disabled until a real secret or `otpauth://` URI is detected, so junk never lands in the vault.
+- **Retrieve** — type a keyword, move with **↑↓**, press **↩** to copy the password (or the current TOTP code for authenticator-only items), **⌘↩** to reveal the record in the main window. An empty query lists your most recently used items; every copy confirms with a transient capsule.
 
-<img src="docs/screenshots/menubar-panels.png" width="720" alt="macOS menu bar panel: capture mode (left) and quick access mode (right)">
+<img src="docs/screenshots/menubar-panels.png" width="760" alt="macOS menu bar panel: capture mode (left) and retrieve mode (right)">
 
 Every quick copy respects the item's permissions — biometric re-prompt items ask first, and items denied to AI never expose the AI-reference action.
 
-### 4. Quick capture
+### 4 · Quick capture
 
 Click **Quick capture** (the + button) and paste anything loose — a redis URI, an S3 key pair, an account snippet, or text with an embedded `otpauth://` link. The Smart Preview shows what SecretBox detected (type, tags, fields) and lets you correct individual fields before saving.
 
-<img src="docs/screenshots/quick-capture.png" width="820" alt="Quick capture sheet with detected preview">
+<img src="docs/screenshots/quick-capture.png" width="880" alt="Quick capture sheet with the detected-fields preview">
 
-Pasting an `otpauth://` Key URI alongside the credentials automatically attaches the TOTP seed to the record ("已检测到两步验证" badge); a URI-only paste creates a bare authenticator entry.
+Pasting an `otpauth://` Key URI alongside the credentials automatically attaches the TOTP seed to the record (a "Two-step verification detected" badge); a URI-only paste creates a bare authenticator entry.
 
-### 5. MFA (two-step verification) & permissions
+### 5 · Two-step verification & permissions
 
 Open **Edit** on any item and scroll down:
 
-- **两步验证 (TOTP)** — paste a base32 seed or a full `otpauth://` link (or scan a QR code on iPhone). The parsed issuer / digits / period preview validates as you type; the seed is never displayed again after saving.
-- **权限 (Permissions)** — the per-item matrix: read-only lock (blocks editing and deletion), hidden password (usable but never visible), biometric re-prompt before copying, and the three-level AI access selector (denied / metadata / metadata + tools).
+- **Two-step verification (TOTP)** — paste a base32 seed or a full `otpauth://` link (or scan a QR code on iPhone). The parsed issuer / digits / period preview validates as you type; the seed is never displayed again after saving.
+- **Permissions** — the per-item matrix: read-only lock (blocks editing and deletion), hidden password (usable but never visible), biometric re-prompt before copying, and the three-level AI access selector (deny / metadata / metadata + tools).
 
-<img src="docs/screenshots/edit-totp-permissions.png" width="820" alt="Editor with TOTP section and permission matrix">
+<img src="docs/screenshots/edit-totp-permissions.png" width="880" alt="Item editor with the TOTP section and permission matrix">
 
 Verification codes are generated entirely on-device (RFC 6238); the server only ever stores the seed as ciphertext.
 
-### 6. Settings
+### 6 · Settings
 
-Server mode (off by default — the vault lives in the encrypted Keychain locally), OpenAI-compatible provider configuration — or just tick **Use server AI gateway** once the server has AI access configured — and smart-organization cadence. The **Open Server Dashboard** button jumps straight to the ops dashboard.
+Server mode (off by default — the vault lives in the encrypted Keychain locally), the OpenAI-compatible provider — or just tick **Use server AI gateway** once the server has AI access configured — and the smart-organization cadence. The **Open server dashboard** button jumps straight to the ops dashboard.
 
-<img src="docs/screenshots/settings.png" width="580" alt="Settings sheet">
+<img src="docs/screenshots/settings.png" width="640" alt="Settings sheet with server and provider sections">
 
 ## Feature summary
 
