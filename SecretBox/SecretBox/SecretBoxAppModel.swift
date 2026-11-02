@@ -377,8 +377,8 @@ final class SecretBoxAppModel: ObservableObject {
                 templateType: "account",
                 clusterDecision: parsedAccountClusterDecision,
                 signals: [],
-                tags: ["totp", "两步验证"],
-                highlights: ["Authenticator: \(totp.issuer ?? totp.account ?? "未命名")"],
+                tags: ["totp", "verification"],
+                highlights: ["Authenticator: \(totp.issuer ?? totp.account ?? "Unnamed")"],
                 hasSecret: false,
                 editableFields: [],
                 hasTOTP: true
@@ -393,7 +393,7 @@ final class SecretBoxAppModel: ObservableObject {
             .map { "\($0.label): \($0.value)" }
         var previewTags = previewTags(from: parsed.signals, fields: fields, secret: parsed.primarySecret, templateType: effectiveType)
         if capturedTOTP != nil {
-            previewTags.append("两步验证")
+            previewTags.append("verification")
         }
         return PastedSecretPreview(
             templateType: effectiveType,

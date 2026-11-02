@@ -1119,7 +1119,7 @@ final class SecretBoxAppModelTests: XCTestCase {
         let model = makeOfflineModel()
         model.pastedText = "service=GitHub username=ops@example.com password=x otpauth://totp/GitHub?secret=JBSWY3DPEHPK3PXP"
         XCTAssertTrue(model.pastedSecretPreview?.hasTOTP == true)
-        XCTAssertTrue(model.pastedSecretPreview?.tags.contains("两步验证") == true)
+        XCTAssertTrue(model.pastedSecretPreview?.tags.contains("verification") == true)
     }
 
     // MARK: - Permission matrix

@@ -103,8 +103,8 @@ struct RecordVaultView: View {
     /// plain label in stills; plain SwiftUI rows render identically everywhere.
     private var modeToggle: some View {
         HStack(spacing: 2) {
-            modeToggleButton("捕获", systemImage: "plus.square.on.square", mode: .capture)
-            modeToggleButton("检索", systemImage: "magnifyingglass", mode: .search)
+            modeToggleButton("Capture", systemImage: "plus.square.on.square", mode: .capture)
+            modeToggleButton("Retrieve", systemImage: "magnifyingglass", mode: .search)
         }
         .padding(3)
         .background(editorFill, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
@@ -152,7 +152,7 @@ struct RecordVaultView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("SecretBox")
                     .font(.subheadline.weight(.semibold))
-                Text("\(model.localRecords.count) 条记录")
+                Text("\(model.localRecords.count) records")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
@@ -171,7 +171,7 @@ struct RecordVaultView: View {
                     .frame(width: 28, height: 28)
             }
             .buttonStyle(.plain)
-            .help("打开查询界面")
+            .help("Open search")
             .accessibilityIdentifier("menubar.dashboard")
             .background(panelFill, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
             .overlay {
@@ -216,7 +216,7 @@ struct RecordVaultView: View {
                             .accessibilityIdentifier("menubar.pasteField")
 
                         if model.pastedText.isEmpty {
-                            Text("在此处粘贴")
+                            Text("Paste here")
                                 .font(.title3.weight(.medium))
                                 .foregroundStyle(.secondary)
                                 .padding(.top, 14)
@@ -243,7 +243,7 @@ struct RecordVaultView: View {
 
             VStack(spacing: 6) {
                 if !model.pastedText.isEmpty && !model.canSavePastedCapture {
-                    Text("未检测到密钥或 otpauth:// 链接")
+                    Text("No secret or otpauth:// link detected yet")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -251,7 +251,7 @@ struct RecordVaultView: View {
                 Button {
                     Task { await model.saveFromPastedText() }
                 } label: {
-                    Text("保存")
+                    Text("Save")
                         .font(.title2.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
@@ -386,7 +386,7 @@ struct RecordVaultView: View {
                             && displayedRecords.isEmpty {
                             recentEmptyHint
                         } else if displayedRecords.isEmpty {
-                            Text("无匹配记录")
+                            Text("No matching records")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .padding(.top, 24)
@@ -394,7 +394,7 @@ struct RecordVaultView: View {
                                 .accessibilityIdentifier("menubar.search.empty")
                         } else {
                             if quickQuery.trimmingCharacters(in: .whitespaces).isEmpty {
-                                Text("最近使用")
+                                Text("Recent")
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(.secondary)
                                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -428,7 +428,7 @@ struct RecordVaultView: View {
     }
 
     private var baseSearchField: some View {
-        TextField("搜索 · ↑↓ 选择 · ↩ 复制 · ⌘↩ 打开", text: $quickQuery)
+        TextField("Search · ↑↓ select · ↩ copy · ⌘↩ open", text: $quickQuery)
             .textFieldStyle(.roundedBorder)
             .focused($quickSearchFocused)
             .accessibilityIdentifier("menubar.search.field")
@@ -452,9 +452,9 @@ struct RecordVaultView: View {
             Image(systemName: "clock.arrow.circlepath")
                 .font(.title3)
                 .foregroundStyle(.secondary)
-            Text("暂无最近使用")
+            Text("Nothing recent yet")
                 .font(.callout.weight(.medium))
-            Text("复制密码或验证码后，记录会出现在这里")
+            Text("Records you copy from appear here")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -500,24 +500,24 @@ struct RecordVaultView: View {
                 if showsActions {
                     HStack(spacing: 2) {
                         if record.password?.isEmpty == false {
-                            rowActionButton("doc.on.doc", help: "复制密码") {
+                            rowActionButton("doc.on.doc", help: "Copy password") {
                                 Task { await model.quickAccessCopyPassword(for: record) }
                             }
                             .accessibilityIdentifier("menubar.search.row.\(index).copyPassword")
                         }
                         if record.totp != nil {
-                            rowActionButton("timer", help: "复制验证码") {
+                            rowActionButton("timer", help: "Copy verification code") {
                                 Task { await model.quickAccessCopyTOTP(for: record) }
                             }
                             .accessibilityIdentifier("menubar.search.row.\(index).copyTOTP")
                         }
                         if record.effectivePermissions.aiAccess != .none {
-                            rowActionButton("sparkles", help: "复制 AI 引用") {
+                            rowActionButton("sparkles", help: "Copy AI reference") {
                                 model.quickAccessCopyAIReference(for: record)
                             }
                             .accessibilityIdentifier("menubar.search.row.\(index).copyAIReference")
                         }
-                        rowActionButton("arrow.up.forward.app", help: "在主窗口打开") {
+                        rowActionButton("arrow.up.forward.app", help: "Open in main window") {
                             revealInDashboard(record)
                         }
                         .accessibilityIdentifier("menubar.search.row.\(index).openDetail")
@@ -671,7 +671,7 @@ struct RecordVaultView: View {
                         .frame(maxWidth: .infinity, minHeight: 220, alignment: .topLeading)
 
                     if model.pastedText.isEmpty {
-                        Text("在此处粘贴")
+                        Text("Paste here")
                             .font(.title3.weight(.medium))
                             .foregroundStyle(.secondary)
                             .padding(.top, 14)
@@ -687,7 +687,7 @@ struct RecordVaultView: View {
                 Button {
                     Task { await model.saveFromPastedText() }
                 } label: {
-                    Text("保存")
+                    Text("Save")
                         .font(.title3.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)

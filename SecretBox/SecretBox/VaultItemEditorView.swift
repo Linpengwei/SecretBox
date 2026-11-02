@@ -270,7 +270,7 @@ struct VaultItemEditorView: View {
             }
 
             if preview.hasTOTP {
-                Label("已检测到两步验证：otpauth:// 种子将保存为该条目的验证码来源", systemImage: "timer.badge.checkmark")
+                Label("Two-step verification detected: the otpauth:// seed becomes this item's code source", systemImage: "timer.badge.checkmark")
                     .font(.caption.weight(.medium))
                     .foregroundStyle(AppTheme.brand)
             }
@@ -367,17 +367,17 @@ struct VaultItemEditorView: View {
 
     private var totpSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("两步验证 (TOTP)")
+            Text("Two-step verification (TOTP)")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
 
             if model.recordTOTPRemoveRequested {
                 HStack {
-                    Label("移除后此条目不再生成验证码", systemImage: "minus.circle")
+                    Label("Removing the seed stops code generation", systemImage: "minus.circle")
                         .font(.callout)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button("撤销") {
+                    Button("Undo") {
                         model.recordTOTPRemoveRequested = false
                     }
                 }
@@ -386,21 +386,21 @@ struct VaultItemEditorView: View {
                     Image(systemName: "timer.badge.checkmark")
                         .foregroundStyle(AppTheme.brand)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("已配置验证码（每 \(existing.period) 秒轮换）")
+                        Text("Configured — rotates every \(existing.period)s")
                             .font(.callout.weight(.medium))
-                        Text("出于安全考虑种子不再回显；留空输入框即保持不变。")
+                        Text("The seed is never shown again after saving; leave the field empty to keep it.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("移除", role: .destructive) {
+                    Button("Remove", role: .destructive) {
                         model.recordTOTPRemoveRequested = true
                     }
                     .accessibilityIdentifier("entry.totpRemove")
                 }
             } else {
                 HStack(spacing: 12) {
-                    TextField("Base32 种子或 otpauth:// 链接", text: $model.recordTOTPInput, axis: .vertical)
+                    TextField("Base32 seed or otpauth:// link", text: $model.recordTOTPInput, axis: .vertical)
                         .font(.system(.callout, design: .monospaced))
                         .textFieldStyle(.roundedBorder)
                         .lineLimit(1...3)
@@ -412,7 +412,7 @@ struct VaultItemEditorView: View {
                         Image(systemName: "qrcode.viewfinder")
                     }
                     .buttonStyle(.bordered)
-                    .accessibilityLabel("扫描二维码")
+                    .accessibilityLabel("Scan QR code")
                     .accessibilityIdentifier("entry.totpScan")
                     .sheet(isPresented: $showTOTPScanner) {
                         TOTPQRScannerView { uri in
@@ -425,7 +425,7 @@ struct VaultItemEditorView: View {
 
                 let trimmedInput = model.recordTOTPInput.trimmingCharacters(in: .whitespacesAndNewlines)
                 if trimmedInput.isEmpty {
-                    Text("粘贴服务的 base32 种子，或完整的 otpauth://totp/… 链接。")
+                    Text("Paste the service's base32 seed, or a full otpauth://totp/… link.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else if let parsed = draftTOTPParsed {
@@ -434,7 +434,7 @@ struct VaultItemEditorView: View {
                         .foregroundStyle(AppTheme.brand)
                         .accessibilityIdentifier("entry.totpParsed")
                 } else {
-                    Label("无法识别：需要合法 base32 种子或 otpauth:// 链接", systemImage: "exclamationmark.triangle")
+                    Label("Unrecognized: needs a valid base32 seed or otpauth:// link", systemImage: "exclamationmark.triangle")
                         .font(.caption.weight(.medium))
                         .foregroundStyle(.red)
                         .accessibilityIdentifier("entry.totpInvalid")
@@ -453,7 +453,7 @@ struct VaultItemEditorView: View {
         if let account = parsed.account, !account.isEmpty {
             parts.append(account)
         }
-        parts.append("\(parsed.digits) 位 · \(parsed.period) 秒 · \(parsed.algorithm.rawValue)")
+        parts.append("\(parsed.digits) digits · \(parsed.period)s · \(parsed.algorithm.rawValue)")
         return parts.joined(separator: " · ")
     }
 
@@ -461,14 +461,14 @@ struct VaultItemEditorView: View {
 
     private var permissionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("权限")
+            Text("Permissions")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
 
             Toggle(isOn: $model.recordPermissions.readOnly) {
-                Text("只读锁定")
+                Text("Read-only lock")
                     .font(.callout.weight(.medium))
-                Text("锁定后此条目不可编辑或删除，需先在此解锁。")
+                Text("Locked items cannot be edited or deleted until unlocked here.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -476,9 +476,9 @@ struct VaultItemEditorView: View {
             .accessibilityIdentifier("entry.permissionReadOnly")
 
             Toggle(isOn: $model.recordPermissions.hideSecret) {
-                Text("隐藏密码")
+                Text("Hidden password")
                     .font(.callout.weight(.medium))
-                Text("密码可复制使用，但明文永不在界面显示（对应 Bitwarden Hide Passwords）。")
+                Text("Copyable but the plaintext is never displayed (Bitwarden-style).")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -486,9 +486,9 @@ struct VaultItemEditorView: View {
             .accessibilityIdentifier("entry.permissionHideSecret")
 
             Toggle(isOn: $model.recordPermissions.requireReauth) {
-                Text("生物识别二次确认")
+                Text("Biometric re-prompt")
                     .font(.callout.weight(.medium))
-                Text("复制密码或验证码前需通过 Touch ID / Face ID / 设备密码。")
+                Text("Touch ID / Face ID / device password is required before copying.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -496,12 +496,12 @@ struct VaultItemEditorView: View {
             .accessibilityIdentifier("entry.permissionReauth")
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("AI 访问")
+                Text("AI access")
                     .font(.callout.weight(.medium))
-                Picker("AI 访问", selection: $model.recordPermissions.aiAccess) {
-                    Text("禁止").tag(AIAccessLevel.none)
-                    Text("仅元数据").tag(AIAccessLevel.metadata)
-                    Text("元数据 + 工具").tag(AIAccessLevel.metadataAndTools)
+                Picker("AI access", selection: $model.recordPermissions.aiAccess) {
+                    Text("Deny").tag(AIAccessLevel.none)
+                    Text("Metadata").tag(AIAccessLevel.metadata)
+                    Text("Metadata + tools").tag(AIAccessLevel.metadataAndTools)
                 }
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier("entry.aiAccess")
@@ -517,11 +517,11 @@ struct VaultItemEditorView: View {
     private var aiAccessDescription: String {
         switch model.recordPermissions.aiAccess {
         case .none:
-            return "MCP agent 完全看不到这条记录（默认）。"
+            return "The MCP agent cannot see this record at all (default)."
         case .metadata:
-            return "agent 可查询此记录的脱敏元数据，不能调用复制工具。"
+            return "Agents can query redacted metadata; copy tools stay disabled."
         case .metadataAndTools:
-            return "agent 可查询元数据，并通过剪贴板复制密码/验证码。"
+            return "Agents can query metadata and copy passwords/codes via the clipboard."
         }
     }
 

@@ -509,7 +509,7 @@ struct SearchVaultView: View {
     @ViewBuilder
     private var copyAIRefButton: some View {
         if let record = model.selectedSearchRecord ?? model.filteredResults.first, record.password != nil {
-            Button("复制 AI 引用") {
+            Button("Copy AI reference") {
                 if record.effectivePermissions.aiAccess != .none {
                     model.copyAIReference(for: record)
                 } else {
@@ -519,14 +519,14 @@ struct SearchVaultView: View {
             .buttonStyle(.bordered)
             .accessibilityIdentifier("detail.copyAIRef")
             .confirmationDialog(
-                "这条记录还没有开放给 AI",
+                "This record is not shared with AI yet",
                 isPresented: Binding(
                     get: { recordPendingAIReference?.id == record.id },
                     set: { if !$0 { recordPendingAIReference = nil } }
                 ),
                 titleVisibility: .visible
             ) {
-                Button("开放 AI 访问并复制引用") {
+                Button("Enable AI access and copy reference") {
                     model.setAIReadable(id: record.id, allowed: true)
                     model.copyAIReference(for: record)
                     recordPendingAIReference = nil
@@ -535,7 +535,7 @@ struct SearchVaultView: View {
                     recordPendingAIReference = nil
                 }
             } message: {
-                Text("未开放给 AI 的记录对 MCP agent 完全不可见，粘贴的引用将无法被解析。开放后 agent 可凭 record_id 直接取用，明文不会进入对话。")
+                Text("Records not shared with AI are invisible to the MCP agent — a pasted reference would not resolve. Once shared, the agent resolves the record id directly; plaintext never enters the conversation.")
             }
         }
     }
@@ -626,7 +626,7 @@ struct SearchVaultView: View {
                         if record.effectivePermissions.hideSecret {
                             HStack(alignment: .firstTextBaseline) {
                                 detailRow("Password", String(repeating: "•", count: 12), monospaced: true)
-                                Text("已隐藏 · 可复制使用，明文不可见")
+                                Text("Hidden · copyable, never displayed")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -637,7 +637,7 @@ struct SearchVaultView: View {
                 }
 
                 if let totp = record.totp {
-                    itemSection(title: "两步验证 (Verification Code)") {
+                    itemSection(title: "Two-step verification") {
                         TOTPLiveCodeSection(
                             secret: totp,
                             masked: record.effectivePermissions.hideSecret
@@ -662,13 +662,13 @@ struct SearchVaultView: View {
                         }
                         Spacer()
                         Menu {
-                            Button("禁止") {
+                            Button("Deny") {
                                 model.setAIAccess(id: record.id, level: .none)
                             }
-                            Button("仅元数据") {
+                            Button("Metadata") {
                                 model.setAIAccess(id: record.id, level: .metadata)
                             }
-                            Button("元数据 + 工具") {
+                            Button("Metadata + tools") {
                                 model.setAIAccess(id: record.id, level: .metadataAndTools)
                             }
                         } label: {
@@ -783,34 +783,34 @@ struct SearchVaultView: View {
 
     private func aiAccessTitle(_ level: AIAccessLevel) -> String {
         switch level {
-        case .none: return "未开放给 AI"
-        case .metadata: return "仅元数据开放"
-        case .metadataAndTools: return "开放给 AI 读取"
+        case .none: return "Not shared with AI"
+        case .metadata: return "Metadata only"
+        case .metadataAndTools: return "Shared with AI"
         }
     }
 
     private func aiAccessDetail(_ level: AIAccessLevel) -> String {
         switch level {
-        case .none: return "MCP agent 完全看不到这条记录。"
-        case .metadata: return "agent 可查询脱敏元数据，不能调用复制工具。"
-        case .metadataAndTools: return "agent 可查询元数据，并通过剪贴板复制密码/验证码。"
+        case .none: return "The MCP agent cannot see this record at all."
+        case .metadata: return "Agents can query redacted metadata; copy tools stay disabled."
+        case .metadataAndTools: return "Agents can query metadata and copy passwords/codes via the clipboard."
         }
     }
 
     private func aiAccessShortLabel(_ level: AIAccessLevel) -> String {
         switch level {
-        case .none: return "禁止"
-        case .metadata: return "仅元数据"
-        case .metadataAndTools: return "元数据 + 工具"
+        case .none: return "Deny"
+        case .metadata: return "Metadata"
+        case .metadataAndTools: return "Metadata + tools"
         }
     }
 
     private func permissionBadgeText(_ record: VaultRecord) -> String {
         var badges: [String] = []
         let permissions = record.effectivePermissions
-        if permissions.readOnly { badges.append("只读锁定") }
-        if permissions.hideSecret { badges.append("密码已隐藏") }
-        if permissions.requireReauth { badges.append("使用前需二次确认") }
+        if permissions.readOnly { badges.append("Read-only") }
+        if permissions.hideSecret { badges.append("Hidden password") }
+        if permissions.requireReauth { badges.append("Re-auth required") }
         return badges.joined(separator: " · ")
     }
 
@@ -1041,7 +1041,7 @@ struct TOTPCodeView: View {
                 .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("复制验证码")
+            .accessibilityLabel("Copy verification code")
             .accessibilityIdentifier("detail.totpCopy")
         }
         .animation(.linear(duration: 1), value: remaining)
@@ -1059,7 +1059,7 @@ struct TOTPCodeView: View {
         var parts: [String] = []
         if let issuer = secret.issuer, !issuer.isEmpty { parts.append(issuer) }
         if let account = secret.account, !account.isEmpty { parts.append(account) }
-        parts.append("\(remaining) 秒后刷新")
+        parts.append("Refreshes in \(remaining)s")
         return parts.joined(separator: " · ")
     }
 }

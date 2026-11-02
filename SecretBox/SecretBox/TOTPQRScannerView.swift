@@ -20,7 +20,7 @@ struct TOTPQRScannerView: View {
                         Image(systemName: "camera.on.rectangle")
                             .font(.largeTitle)
                             .foregroundStyle(.secondary)
-                        Text("相机不可用\n请改用上方输入框手动粘贴 otpauth:// 链接")
+                        Text("Camera unavailable\nPaste an otpauth:// link manually instead")
                             .font(.callout)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
@@ -36,11 +36,11 @@ struct TOTPQRScannerView: View {
                 }
             }
             .background(AppTheme.pageBackground(colorScheme))
-            .navigationTitle("扫描验证码二维码")
+            .navigationTitle("Scan verification code QR")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("关闭") { dismiss() }
+                    Button("Close") { dismiss() }
                 }
             }
         }
