@@ -27,7 +27,7 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 
 ## 服务器：运维看板、Agent 审计与 AI 网关
 
-可选的 FastAPI 服务器不只是同步后端，更是运维控制平面。启动后（`cd server && docker compose up --build`）打开 **http://127.0.0.1:8000/dashboard**：
+可选的 FastAPI 服务器不只是同步后端，更是运维控制平面。启动后（`cd server && docker compose up --build`）打开 **http://127.0.0.1:8000/dashboard**——一个安静、仪器感的控制台（左侧边栏、石墨色表面、单一钴蓝信号色），让数据而非界面装饰承载颜色：
 
 - **Overview**——密码库统计、类型 / 模板 / 标签分布、24 小时活跃度曲线
 - **Records & permissions**——全量清单与强度徽章，行内直接编辑每条记录的权限矩阵（只读 / 隐藏密码 / 二次确认 / AI 访问级）
@@ -53,7 +53,7 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 
 <img src="docs/screenshots/vault-main.png" width="1200" alt="密码库主窗口与详情">
 
-详情页展示结构化条目：聚类 Schema、识别上下文、身份、字段、密钥区，以及带两步验证条目的**实时验证码**（30 秒轮换）。点倒计时环即复制验证码，**Copy Password** 就在旁边。
+详情页展示结构化条目：聚类 Schema、识别上下文、身份、字段、密钥区，以及带两步验证条目的**实时验证码**（30 秒轮换）。点倒计时环即复制验证码，**Copy password** 就在旁边。
 
 ### 3. 菜单栏面板（macOS）
 
@@ -68,7 +68,7 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 
 ### 4. 快速捕获
 
-点 **Quick Capture**（+ 按钮）粘贴任意松散文本——redis URI、S3 密钥对、账号片段、或含 `otpauth://` 链接的混合内容。Smart Preview 实时显示识别结果（类型/标签/字段），保存前可逐字段修正。
+点 **Quick capture**（+ 按钮）粘贴任意松散文本——redis URI、S3 密钥对、账号片段、或含 `otpauth://` 链接的混合内容。Smart Preview 实时显示识别结果（类型/标签/字段），保存前可逐字段修正。
 
 <img src="docs/screenshots/quick-capture.png" width="820" alt="快速捕获与智能预览">
 

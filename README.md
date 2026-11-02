@@ -27,7 +27,7 @@ Everything runs on your device: a SwiftUI client (macOS menu bar + main window /
 
 ## The server: ops dashboard, agent audit & the AI gateway
 
-The optional FastAPI server is more than a sync backend — it's the ops control plane. Once it runs (`cd server && docker compose up --build`), open **http://127.0.0.1:8000/dashboard**:
+The optional FastAPI server is more than a sync backend — it's the ops control plane. Once it runs (`cd server && docker compose up --build`), open **http://127.0.0.1:8000/dashboard** — a quiet, instrument-like console (left sidebar, graphite surfaces, a single cobalt accent) where the data carries the color, not the chrome:
 
 - **Overview** — vault stats, type / template / tag distribution, and a 24-hour activity sparkline
 - **Records & permissions** — the full inventory with strength badges, plus inline editing of each record's permission matrix (read-only / hide-secret / re-auth / AI access level)
@@ -53,7 +53,7 @@ The main window has three panes: filters and clusters on the left, the item brow
 
 <img src="docs/screenshots/vault-main.png" width="1200" alt="Main vault window with detail open">
 
-The detail pane shows the structured record: cluster schema, detected context, identity, fields, the secret, and — for items with two-step verification — the **live verification code** that rotates every 30 seconds. Click the countdown ring to copy the code; **Copy Password** sits right next to it.
+The detail pane shows the structured record: cluster schema, detected context, identity, fields, the secret, and — for items with two-step verification — the **live verification code** that rotates every 30 seconds. Click the countdown ring to copy the code; **Copy password** sits right next to it.
 
 ### 3. Menu bar panel (macOS)
 
@@ -68,7 +68,7 @@ Every quick copy respects the item's permissions — biometric re-prompt items a
 
 ### 4. Quick capture
 
-Click **Quick Capture** (the + button) and paste anything loose — a redis URI, an S3 key pair, an account snippet, or text with an embedded `otpauth://` link. The Smart Preview shows what SecretBox detected (type, tags, fields) and lets you correct individual fields before saving.
+Click **Quick capture** (the + button) and paste anything loose — a redis URI, an S3 key pair, an account snippet, or text with an embedded `otpauth://` link. The Smart Preview shows what SecretBox detected (type, tags, fields) and lets you correct individual fields before saving.
 
 <img src="docs/screenshots/quick-capture.png" width="820" alt="Quick capture sheet with detected preview">
 
