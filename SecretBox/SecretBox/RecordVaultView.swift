@@ -37,17 +37,6 @@ struct RecordVaultView: View {
         }
     }
 
-    private var accentGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                AppTheme.brand.opacity(0.92),
-                AppTheme.brand.opacity(0.72),
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
     private var backgroundGradient: some View {
         LinearGradient(
             colors: [
@@ -143,7 +132,7 @@ struct RecordVaultView: View {
             .background {
                 if selected {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(accentGradient)
+                        .fill(AppTheme.brand)
                 }
             }
             .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -158,7 +147,7 @@ struct RecordVaultView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 28, height: 28)
-                .background(accentGradient, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .background(AppTheme.brand, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("SecretBox")
@@ -271,7 +260,7 @@ struct RecordVaultView: View {
                 .disabled(!model.canSavePastedCapture)
                 .opacity(model.canSavePastedCapture ? 1 : 0.45)
                 .accessibilityIdentifier("menubar.save")
-                .background(accentGradient)
+                .background(AppTheme.brand)
                 .foregroundStyle(.white)
                 .keyboardShortcut(.return, modifiers: .command)
             }
@@ -704,7 +693,7 @@ struct RecordVaultView: View {
                         .padding(.vertical, 10)
                 }
                 .buttonStyle(.plain)
-                .background(accentGradient, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(AppTheme.brand, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .foregroundStyle(.white)
             }
             .padding(18)

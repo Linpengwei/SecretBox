@@ -26,7 +26,7 @@ struct LoginView: View {
                         model.signIn(username, password)
                     }
                 }) {
-                    Text("Sign In")
+                    Text("Sign in")
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)

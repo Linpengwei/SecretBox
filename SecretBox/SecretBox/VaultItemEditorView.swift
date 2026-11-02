@@ -91,7 +91,7 @@ struct VaultItemEditorView: View {
                 }
                 .keyboardShortcut(.cancelAction)
 
-                Button("Save Capture") {
+                Button("Save capture") {
                     Task { await model.saveFromPastedText() }
                 }
                 .buttonStyle(.borderedProminent)
@@ -150,7 +150,7 @@ struct VaultItemEditorView: View {
 
             HStack {
                 if model.isEditingRecord, let editingID = model.editingRecordID {
-                    Button("Delete Record", role: .destructive) {
+                    Button("Delete record", role: .destructive) {
                         showDeleteConfirmation = true
                     }
                     .disabled(model.editingRecordIsLocked)
@@ -176,7 +176,7 @@ struct VaultItemEditorView: View {
                 }
                 .keyboardShortcut(.cancelAction)
 
-                Button("Update Item") {
+                Button("Update item") {
                     Task { await model.saveRecord() }
                 }
                 .buttonStyle(.borderedProminent)

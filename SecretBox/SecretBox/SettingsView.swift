@@ -45,7 +45,7 @@ struct SettingsView: View {
                          : "Server disabled. The app works in local-only MVP mode.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Button("Open Server Dashboard") {
+                    Button("Open server dashboard") {
                         var base = model.serverURL.trimmingCharacters(in: .whitespacesAndNewlines)
                         while base.hasSuffix("/") { base.removeLast() }
                         if let url = URL(string: base + "/dashboard") {
@@ -101,7 +101,7 @@ struct SettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
 
-                    Button("AI Auto Organize Now") {
+                    Button("AI auto organize now") {
                         Task { await model.runSmartOrganizationNow() }
                     }
                     .buttonStyle(.borderedProminent)
@@ -110,7 +110,7 @@ struct SettingsView: View {
             }
 
             HStack(spacing: 12) {
-                Button("Save Settings") {
+                Button("Save settings") {
                     Task { await model.saveProviderSettings() }
                 }
                 .buttonStyle(.borderedProminent)

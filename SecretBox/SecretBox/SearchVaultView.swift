@@ -37,7 +37,7 @@ struct SearchVaultView: View {
                     Button {
                         model.beginCreate()
                     } label: {
-                        Label("Quick Capture", systemImage: "plus")
+                        Label("Quick capture", systemImage: "plus")
                     }
                     .accessibilityIdentifier("dashboard.capture")
                 }
@@ -468,7 +468,7 @@ struct SearchVaultView: View {
     }
 
     private var quickCaptureButton: some View {
-        Button("Quick Capture") {
+        Button("Quick capture") {
             model.beginCreate()
         }
         .buttonStyle(.bordered)
@@ -490,7 +490,7 @@ struct SearchVaultView: View {
     @ViewBuilder
     private var copyPasswordButton: some View {
         if let record = model.selectedSearchRecord, let password = record.password {
-            Button("Copy Password") {
+            Button("Copy password") {
                 Task {
                     guard await model.requestSecretUse(for: record, action: "copy the password") else { return }
                     model.copyPassword(password)
@@ -687,7 +687,7 @@ struct SearchVaultView: View {
 
                 Divider()
 
-                Button("Delete Record", role: .destructive) {
+                Button("Delete record", role: .destructive) {
                     recordPendingDeletion = record
                 }
                 .disabled(record.effectivePermissions.readOnly)
