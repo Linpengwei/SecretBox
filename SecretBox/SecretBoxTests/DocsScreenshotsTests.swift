@@ -3,10 +3,14 @@ import SwiftUI
 import XCTest
 @testable import SecretBox
 
-/// Regenerates the documentation screenshots in `docs/screenshots/` from
+/// Renders the documentation screenshots in `docs/screenshots/` from
 /// deterministic demo data (InMemoryRecordStore + fake credentials only —
-/// never the user's real vault). Renders offscreen via SnapshotLite so the
-/// images are stable across machines.
+/// never the user's real vault) via offscreen SnapshotLite rendering.
+///
+/// The committed captures are REAL window screenshots taken from the running
+/// app (Retina, dark appearance). To avoid clobbering them, this generator
+/// only writes when SECRETBOX_DOCS_RENDER=1 is set — it then produces
+/// synthetic fallbacks at the same paths.
 @MainActor
 final class DocsScreenshotsTests: XCTestCase {
     @MainActor
@@ -58,6 +62,9 @@ final class DocsScreenshotsTests: XCTestCase {
     }
 
     func testGenerateDocumentationScreenshots() async throws {
+        guard ProcessInfo.processInfo.environment["SECRETBOX_DOCS_RENDER"] == "1" else {
+            throw XCTSkip("docs/screenshots holds real-app captures; set SECRETBOX_DOCS_RENDER=1 to regenerate synthetic ones")
+        }
         // Documentation captures use the dark appearance — it matches the
         // product's night-vault aesthetic and the dark ops dashboard.
         let dark = NSAppearance(named: .darkAqua)

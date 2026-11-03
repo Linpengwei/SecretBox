@@ -62,7 +62,10 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 - **Capture（捕获）**——粘贴松散文本，核对 Smart Preview，**⌘↩**（或 ⌘S）保存；未检测到密钥或 `otpauth://` 链接时 **Save** 保持禁用，垃圾内容进不了密码库。
 - **Retrieve（检索）**——输入关键字，**↑↓** 选择，**↩** 复制密码（纯验证器条目复制当前验证码），**⌘↩** 在主窗口定位记录；空查询显示最近使用；每次复制都有瞬时确认胶囊。
 
-<img src="docs/screenshots/menubar-panels.png" width="760" alt="macOS 菜单栏面板：Capture 模式（左）与 Retrieve 模式（右）">
+<p>
+  <img src="docs/screenshots/menubar-capture.png" width="320" alt="macOS 菜单栏面板：Capture 模式">
+  <img src="docs/screenshots/menubar-retrieve.png" width="320" alt="macOS 菜单栏面板：Retrieve 模式">
+</p>
 
 所有快捷复制都遵循条目权限——需要生物识别二次确认的条目会先验证，对 AI 禁用的条目不会出现 AI 引用入口。
 
@@ -70,7 +73,7 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 
 点 **Quick capture**（+ 按钮）粘贴任意松散文本——redis URI、S3 密钥对、账号片段、或含 `otpauth://` 链接的混合内容。Smart Preview 实时显示识别结果（类型/标签/字段），保存前可逐字段修正。
 
-<img src="docs/screenshots/quick-capture.png" width="880" alt="快速捕获与已识别字段预览">
+<img src="docs/screenshots/quick-capture.png" width="1200" alt="快速捕获与已识别字段预览">
 
 凭据旁粘贴 `otpauth://` 链接会自动挂载 TOTP 种子（预览标注 "Two-step verification detected"）；只有链接的粘贴会生成独立的验证器条目。
 
@@ -81,7 +84,7 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 - **两步验证 (TOTP)**——粘贴 base32 种子或完整 `otpauth://` 链接（iPhone 可扫码），输入时实时解析预览；种子保存后不再回显。
 - **权限**——条目级矩阵：只读锁定（禁编辑/删除）、隐藏密码（可用不可见）、生物识别二次确认、AI 访问三级（禁止/仅元数据/元数据+工具）。
 
-<img src="docs/screenshots/edit-totp-permissions.png" width="880" alt="条目编辑器：两步验证与权限矩阵">
+<img src="docs/screenshots/edit-totp-permissions.png" width="1200" alt="条目编辑器：两步验证与权限矩阵">
 
 验证码完全在设备本地生成（RFC 6238）；服务器只保存密文种子。
 
@@ -89,7 +92,7 @@ AI 编程 agent 与聊天助手随时需要凭据——数据库地址、API Key
 
 服务器模式（默认关闭——本地保险箱加密存于 Keychain）、OpenAI 兼容服务配置——服务器已配置 AI 接入时，直接勾选 **Use server AI gateway** 即可、智能整理周期。**Open server dashboard** 按钮直达运维看板。
 
-<img src="docs/screenshots/settings.png" width="640" alt="设置面板：服务器与 AI 服务配置">
+<img src="docs/screenshots/settings.png" width="1200" alt="设置面板：服务器与 AI 服务配置">
 
 ## 功能一览
 

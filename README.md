@@ -62,7 +62,10 @@ One compact popover, two modes — **Capture** and **Retrieve** — and it remem
 - **Capture** — paste loose text, check the Smart Preview, hit **⌘↩** (or ⌘S) to save. **Save** stays disabled until a real secret or `otpauth://` URI is detected, so junk never lands in the vault.
 - **Retrieve** — type a keyword, move with **↑↓**, press **↩** to copy the password (or the current TOTP code for authenticator-only items), **⌘↩** to reveal the record in the main window. An empty query lists your most recently used items; every copy confirms with a transient capsule.
 
-<img src="docs/screenshots/menubar-panels.png" width="760" alt="macOS menu bar panel: capture mode (left) and retrieve mode (right)">
+<p>
+  <img src="docs/screenshots/menubar-capture.png" width="320" alt="macOS menu bar panel: capture mode">
+  <img src="docs/screenshots/menubar-retrieve.png" width="320" alt="macOS menu bar panel: retrieve mode">
+</p>
 
 Every quick copy respects the item's permissions — biometric re-prompt items ask first, and items denied to AI never expose the AI-reference action.
 
@@ -70,7 +73,7 @@ Every quick copy respects the item's permissions — biometric re-prompt items a
 
 Click **Quick capture** (the + button) and paste anything loose — a redis URI, an S3 key pair, an account snippet, or text with an embedded `otpauth://` link. The Smart Preview shows what SecretBox detected (type, tags, fields) and lets you correct individual fields before saving.
 
-<img src="docs/screenshots/quick-capture.png" width="880" alt="Quick capture sheet with the detected-fields preview">
+<img src="docs/screenshots/quick-capture.png" width="1200" alt="Quick capture sheet with the detected-fields preview">
 
 Pasting an `otpauth://` Key URI alongside the credentials automatically attaches the TOTP seed to the record (a "Two-step verification detected" badge); a URI-only paste creates a bare authenticator entry.
 
@@ -81,7 +84,7 @@ Open **Edit** on any item and scroll down:
 - **Two-step verification (TOTP)** — paste a base32 seed or a full `otpauth://` link (or scan a QR code on iPhone). The parsed issuer / digits / period preview validates as you type; the seed is never displayed again after saving.
 - **Permissions** — the per-item matrix: read-only lock (blocks editing and deletion), hidden password (usable but never visible), biometric re-prompt before copying, and the three-level AI access selector (deny / metadata / metadata + tools).
 
-<img src="docs/screenshots/edit-totp-permissions.png" width="880" alt="Item editor with the TOTP section and permission matrix">
+<img src="docs/screenshots/edit-totp-permissions.png" width="1200" alt="Item editor with the TOTP section and permission matrix">
 
 Verification codes are generated entirely on-device (RFC 6238); the server only ever stores the seed as ciphertext.
 
@@ -89,7 +92,7 @@ Verification codes are generated entirely on-device (RFC 6238); the server only 
 
 Server mode (off by default — the vault lives in the encrypted Keychain locally), the OpenAI-compatible provider — or just tick **Use server AI gateway** once the server has AI access configured — and the smart-organization cadence. The **Open server dashboard** button jumps straight to the ops dashboard.
 
-<img src="docs/screenshots/settings.png" width="640" alt="Settings sheet with server and provider sections">
+<img src="docs/screenshots/settings.png" width="1200" alt="Settings sheet with server and provider sections">
 
 ## Feature summary
 
