@@ -58,7 +58,9 @@ final class DocsScreenshotsTests: XCTestCase {
     }
 
     func testGenerateDocumentationScreenshots() async throws {
-        let light = NSAppearance(named: .vibrantLight)
+        // Documentation captures use the dark appearance — it matches the
+        // product's night-vault aesthetic and the dark ops dashboard.
+        let dark = NSAppearance(named: .darkAqua)
 
         // 1. Login screen.
         let loggedOut = SecretBoxAppModel(
@@ -66,30 +68,30 @@ final class DocsScreenshotsTests: XCTestCase {
             defaults: freshDefaults(),
             recordStore: InMemoryRecordStore()
         )
-        try save(LoginView(model: loggedOut), size: CGSize(width: 960, height: 1080), appearance: light, named: "login")
+        try save(LoginView(model: loggedOut), size: CGSize(width: 960, height: 1080), appearance: dark, named: "login")
 
         // 2. Main vault window: browser + detail with the live TOTP code.
         let model = await makeDemoModel()
         model.searchQuery = "billing"
         await model.searchPasswords()
-        try save(SearchVaultView(model: model), size: CGSize(width: 2400, height: 1500), appearance: light, named: "vault-main")
+        try save(SearchVaultView(model: model), size: CGSize(width: 2400, height: 1500), appearance: dark, named: "vault-main")
 
         // 3. Quick capture sheet with detected preview.
         let captureModel = await makeDemoModel()
         captureModel.beginCreate()
         captureModel.pastedText = "redis://default:RedisProd%232026@redis-cache.internal:6379/0 env=prod service=session-cache"
-        try save(VaultItemEditorView(model: captureModel), size: CGSize(width: 1640, height: 1240), appearance: light, named: "quick-capture")
+        try save(VaultItemEditorView(model: captureModel), size: CGSize(width: 1640, height: 1240), appearance: dark, named: "quick-capture")
 
         // 4. Editor: TOTP + permission matrix on an existing record.
         if let record = model.filteredResults.first(where: { $0.totp != nil }) ?? model.filteredResults.first {
             model.beginEditing(record)
         }
-        try save(VaultItemEditorView(model: model), size: CGSize(width: 1640, height: 1560), appearance: light, named: "edit-totp-permissions")
+        try save(VaultItemEditorView(model: model), size: CGSize(width: 1640, height: 1560), appearance: dark, named: "edit-totp-permissions")
 
         // 5. Settings sheet.
         let settingsModel = await makeDemoModel()
         settingsModel.serverEnabled = true
-        try save(SettingsView(model: settingsModel), size: CGSize(width: 1160, height: 1080), appearance: light, named: "settings")
+        try save(SettingsView(model: settingsModel), size: CGSize(width: 1160, height: 1080), appearance: dark, named: "settings")
 
         // 6. macOS menu bar panel: capture (left) and quick access (right).
         //    Both models seed their vault after construction (UI-test init
@@ -123,7 +125,7 @@ final class DocsScreenshotsTests: XCTestCase {
             .padding(28)
             .background(Color(nsColor: .windowBackgroundColor)),
             size: CGSize(width: 740, height: 620),
-            appearance: light,
+            appearance: dark,
             named: "menubar-panels"
         )
     }
