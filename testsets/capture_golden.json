@@ -1,0 +1,2659 @@
+{
+  "version": 1,
+  "about": "The capture golden corpus. secrets[0] is the primary secret a parser must lock into the protected slot; further entries are secondary secrets that must be captured as secrets and never stored as an ordinary field. template 'custom' means no specific template. Built by testsets/build_capture_golden.py — edit that script, not this file.",
+  "metrics": {
+    "found": "the parser returns at least one secret",
+    "primary": "the parser's primary secret equals secrets[0] (for URI-embedded passwords: the percent-decoded one)",
+    "template": "the detected template equals `template` ('custom' means none)",
+    "secondary": "for cases with more than one secret: every secondary secret is captured as a secret",
+    "leaks": "known secrets (any encoded form) appearing in an ordinary, non-hidden field or in a stored excerpt — must be 0"
+  },
+  "floors": {
+    "note": "Hand-maintained, in counts out of the full corpus. Raise a floor when a parser improves; never lower one to make a regression pass.",
+    "server": {
+      "found": 249,
+      "primary": 243,
+      "template": 243
+    }
+  },
+  "cases": [
+    {
+      "id": "SRE-001",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "redis://:OrderCache2024@order-cache.redis.internal:6379/0",
+      "secrets": [
+        "OrderCache2024"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "SRE-002",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "redis://:SessionCache2024@session-01.cache.example.org:6380/2",
+      "secrets": [
+        "SessionCache2024"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "SRE-003",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "redis://:Metrics%40Cache2024@metrics-redis.redis.internal:6379/1",
+      "secrets": [
+        "Metrics@Cache2024"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "SRE-004",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "REDIS_PASSWORD=BillingRedis2024\n\n# billing 支付网关缓存",
+      "secrets": [
+        "BillingRedis2024"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "SRE-005",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "REDIS_HOST=rec-cache.redis.internal\nREDIS_PASSWORD=RecommendCache2024\nREDIS_PORT=6379\n# 推荐召回链路",
+      "secrets": [
+        "RecommendCache2024"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "SRE-006",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "REDIS_HOST=stock-cache.redis.internal REDIS_PASSWORD=StockCache2024 REDIS_PORT=6379",
+      "secrets": [
+        "StockCache2024"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "SRE-007",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "REDISCLI_AUTH=ProdRedisAuth2024 redis-cli -h prod-redis-01.redis.internal -p 6379",
+      "secrets": [
+        "ProdRedisAuth2024"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "SRE-008",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "REDISCLI_AUTH=OpsRedis2024 redis-cli -h ops-redis-01.redis.internal -p 6381 --raw\n# 查看热 key",
+      "secrets": [
+        "OpsRedis2024"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "SRE-009",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "redis://:CartProd2024@cart-redis.internal:6379/0  # prod 购物车",
+      "secrets": [
+        "CartProd2024"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "SRE-010",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "redis://:CartStage2024@cart-redis.internal:6379/1\n# staging 购物车，别连成 prod 的 db0",
+      "secrets": [
+        "CartStage2024"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "SRE-011",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "postgres://order_sre:OrderDb2024@pg-order-01.db.internal:5432/order_db",
+      "secrets": [
+        "OrderDb2024"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "SRE-012",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "postgresql://report_ro:ReportUser2024@pg-user-01.db.internal:5432/user_db?sslmode=require",
+      "secrets": [
+        "ReportUser2024"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "SRE-013",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "mysql://pay_app:PayDb2024@mysql-pay-01.db.internal:3306/pay_db",
+      "secrets": [
+        "PayDb2024"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "SRE-014",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "mysql://risk_ro:RiskRead2024@mysql-risk-01.db.internal:3306/risk_db?charset=utf8mb4",
+      "secrets": [
+        "RiskRead2024"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "SRE-015",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "CLICKHOUSE_HOST=clickhouse-01.db.internal\nCLICKHOUSE_USER=analyst\nCLICKHOUSE_PASSWORD=Analytics2024",
+      "secrets": [
+        "Analytics2024"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "SRE-016",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "CLICKHOUSE_HOST=ck-log.db.internal\nCLICKHOUSE_USER=logwriter\nCLICKHOUSE_PASSWORD=Log#Write2024",
+      "secrets": [
+        "Log#Write2024"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "SRE-017",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "mongodb://profile_user:Profile%40Mongo2024@mongo-profile-01.db.internal:27017/profile_db?authSource=admin",
+      "secrets": [
+        "Profile@Mongo2024"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "SRE-018",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "jdbc:postgresql://pg-order-01.db.internal:5432/order_db?user=order_app&password=Jdbc%40Order2024&ssl=true",
+      "secrets": [
+        "Jdbc@Order2024"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "SRE-019",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nAWS_SECRET_ACCESS_KEY=BackupS3Secret2024\nAWS_REGION=ap-east-1",
+      "secrets": [
+        "BackupS3Secret2024"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "SRE-020",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nAWS_SECRET_ACCESS_KEY=WarehouseS3Key2024\nS3_ENDPOINT=https://s3-warehouse.internal",
+      "secrets": [
+        "WarehouseS3Key2024"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "SRE-021",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nexport AWS_SECRET_ACCESS_KEY=LogArchiveS3Key2024\nexport AWS_DEFAULT_REGION=cn-north-1",
+      "secrets": [
+        "LogArchiveS3Key2024"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "SRE-022",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "[minio-ops]\ntype = s3\nprovider = Minio\nendpoint = https://minio-ops.internal\naccess_key_id = AKIAIOSFODNN7EXAMPLE\nsecret_access_key = MinioOpsRclone2024",
+      "secrets": [
+        "MinioOpsRclone2024"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "SRE-023",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "[staging-s3]\ntype = s3\nendpoint = http://s3.staging.test\naccess_key_id = AKIAIOSFODNN7EXAMPLE\nsecret_access_key = StageS3Token2024",
+      "secrets": [
+        "StageS3Token2024"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "SRE-024",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "s3://images-prod?aws_access_key_id=AKIAIOSFODNN7EXAMPLE&aws_secret_access_key=ImagesS3Inline2024&region=us-east-1",
+      "secrets": [
+        "ImagesS3Inline2024"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "SRE-025",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "security.protocol=SASL_PLAINTEXT\nsasl.mechanism=PLAIN\nsasl.username=prod_sre\nsasl.password=ProdKafkaSasl2024\nbootstrap.servers=kafka-01.prod.internal:9092,kafka-02.prod.internal:9092",
+      "secrets": [
+        "ProdKafkaSasl2024"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "SRE-026",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "bootstrap.servers=event-kafka.internal:9093\nsecurity.protocol=SASL_SSL\nsasl.mechanism=SCRAM-SHA-256\nsasl.username=order-events\nsasl.password=Order#Events2024",
+      "secrets": [
+        "Order#Events2024"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "SRE-027",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "sasl.password=StageKafka2024\nbootstrap.servers=kafka.staging.test:9092\nsasl.username=stage_sre\nsasl.mechanism=PLAIN",
+      "secrets": [
+        "StageKafka2024"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "SRE-028",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "bootstrap.servers=tracking-kafka.example.net:9092\nsecurity.protocol=SASL_PLAINTEXT\nsasl.username=tracking\nsasl.password=TrackingKafka2024",
+      "secrets": [
+        "TrackingKafka2024"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "SRE-029",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "TOPIC=payment-callback\nENV=prod\nKAFKA_BROKER=kafka-pay.internal:9092\nPASSWORD=PayCallback2024",
+      "secrets": [
+        "PayCallback2024"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "SRE-030",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "env=staging\ntopic=risk-rule-change\nbootstrap.servers=kafka-risk.internal:9092\nsasl.password=RiskRuleTopic2024",
+      "secrets": [
+        "RiskRuleTopic2024"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "SRE-031",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "worker.properties:\nbootstrap.servers=connect-kafka.internal:9092\nsasl.mechanism=PLAIN\nsasl.username=connect-worker\nsasl.password=Connect#Worker2024",
+      "secrets": [
+        "Connect#Worker2024"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "SRE-032",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "connector.class=ElasticsearchSinkConnector\ntasks.max=4\nbootstrap.servers=sink-kafka.internal:9092\nsasl.password=Sink%Connector@2024\nsasl.username=sink_app",
+      "secrets": [
+        "Sink%Connector@2024"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "SRE-033",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "ak=LTAIEXAMPLE2024\nsk=PushServiceSecret2024\nendpoint=push.example.com",
+      "secrets": [
+        "PushServiceSecret2024"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "SRE-034",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "ak=AKIAIOSFODNN7EXAMPLE\nsk=ObjectStorageSk2024\nOSS_ENDPOINT=oss.internal",
+      "secrets": [
+        "ObjectStorageSk2024"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "SRE-035",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "AK=AKIAIOSFODNN7EXAMPLE\nSK=CdnRefreshSecret2024\n# 2024-09 轮换过，别用旧的",
+      "secrets": [
+        "CdnRefreshSecret2024"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "SRE-036",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "短信服务\nak=AKIAIOSFODNN7EXAMPLE\nsk=SmsSendSecret2024\n# 2024-10 轮换过",
+      "secrets": [
+        "SmsSendSecret2024"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "SRE-037",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "grafana.internal\nlogin: sre_ops\npassword: GrafanaSre2024\nrole: Viewer",
+      "secrets": [
+        "GrafanaSre2024"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "SRE-038",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "iticket.internal\nowner: sre@example.com\npassword: ITicketOps2024",
+      "secrets": [
+        "ITicketOps2024"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "SRE-039",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "amqp://report_sre:Rabbit%40Ops2024@rabbitmq-01.internal:5672/report_vhost",
+      "secrets": [
+        "Rabbit@Ops2024"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "SRE-040",
+      "source": "persona200",
+      "persona": "sre",
+      "text": "jump 口令: Jump#Host2024 （bastion-01.internal）",
+      "secrets": [
+        "Jump#Host2024"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DEVE-001",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "docker run -e GITHUB_TOKEN=ghp_52sJ8dK4wQ3rT7yU2iP9oL6vB5nM1 registry.example.com/builds:dev-2026",
+      "secrets": [
+        "ghp_52sJ8dK4wQ3rT7yU2iP9oL6vB5nM1"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DEVE-002",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "github_pat_dev2026_a1b2c3d4e5f6",
+      "secrets": [
+        "github_pat_dev2026_a1b2c3d4e5f6"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DEVE-003",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# self-hosted gitlab runner\nexport GITLAB_HOST=https://gitlab.internal\nexport GITLAB_TOKEN=glpat-dev2026xR9mK4cT7w\nexport GITLAB_RUNNER_NAME=staging-node-01",
+      "secrets": [
+        "glpat-dev2026xR9mK4cT7w"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DEVE-004",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# Used by dependabot to open PRs\nGITHUB_TOKEN=ghp_dep2026qa9vR2sK5wE8xT4uY",
+      "secrets": [
+        "ghp_dep2026qa9vR2sK5wE8xT4uY"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DEVE-005",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# deploy token props\nGITLAB_DEPLOY_USERNAME=gitlab+deploy-token-42\nGITLAB_DEPLOY_TOKEN=glptt-dev-2026-k8j4Hm2Lp9\nGITLAB_DEPLOY_PROJECT=core/api-gateway\nGITLAB_DEPLOY_ROLE=read_registry\nGITLAB_DEPLOY_EXPIRES=2026-12-31",
+      "secrets": [
+        "glptt-dev-2026-k8j4Hm2Lp9"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DEVE-006",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "machine ci.internal\nlogin deploy-bot\npassword ciPass2026omega",
+      "secrets": [
+        "ciPass2026omega"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DEVE-007",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "machine jenkins.internal\nlogin ci-viewer\npassword viewPass2026beta",
+      "secrets": [
+        "viewPass2026beta"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DEVE-008",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "docker login registry.example.com -u buildship -p shipPass2026alpha",
+      "secrets": [
+        "shipPass2026alpha"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DEVE-009",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# push to our ghcr mirror on k8s\ndocker login ghcr.internal -u ops-bot -p ghcrTok2026xZ7q",
+      "secrets": [
+        "ghcrTok2026xZ7q"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DEVE-010",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# npm account for private scope @acme\n//npm.example.com/:_authToken=npm_2026dev_private_7xKq\n@acme:registry=https://npm.example.com/\nalways-auth=true",
+      "secrets": [
+        "npm_2026dev_private_7xKq"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DEVE-011",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "DATABASE_URL=postgres://app:pgSecret2026gamma@db.internal:5432/appdb",
+      "secrets": [
+        "pgSecret2026gamma"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "DEVE-012",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# local postgres with ssl off\nDATABASE_URL=postgresql://app:pgDev2026zeta@localhost:5432/appdb?sslmode=disable",
+      "secrets": [
+        "pgDev2026zeta"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "DEVE-013",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "DATABASE_URL=mysql://sharduser:mysql2026theta@db-shard.internal:3306/orders?charset=utf8mb4",
+      "secrets": [
+        "mysql2026theta"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "DEVE-014",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "POSTGRES_HOST=postgres.internal\nPOSTGRES_DB=analytics\nPOSTGRES_USER=analyst\nPOSTGRES_PASSWORD=PgAdmin2026chi",
+      "secrets": [
+        "PgAdmin2026chi"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "DEVE-015",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "MYSQL_HOST=mysql.internal\nMYSQL_USER=shopkeeper\nMYSQL_PASSWORD=mysqlShop2026rho\nMYSQL_DATABASE=shop",
+      "secrets": [
+        "mysqlShop2026rho"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "DEVE-016",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "CLICKHOUSE_HOST=clickhouse.internal\nCLICKHOUSE_PORT=8123\nCLICKHOUSE_USER=ingest\nCLICKHOUSE_PASSWORD=chIngest2026sigma\nCLICKHOUSE_DATABASE=logs\nCLICKHOUSE_CLUSTER=default",
+      "secrets": [
+        "chIngest2026sigma"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "DEVE-017",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# legacy oracle pool, do not touch\nspring.datasource.platform=oracle\nspring.datasource.url=jdbc:oracle:thin:@oracle.internal:1521:FINDB\nspring.datasource.username=legacyapp\nspring.datasource.password=Ora#2026psi4x\nspring.datasource.hikari.maximum-pool-size=12\nspring.jpa.database-platform=org.hibernate.dialect.OracleDialect",
+      "secrets": [
+        "Ora#2026psi4x"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "DEVE-018",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "MONGODB_URI=mongodb://root:mongoDev2026mu@mongo.internal:27017/admin?authSource=admin",
+      "secrets": [
+        "mongoDev2026mu"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "DEVE-019",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "REDIS_HOST=redis.internal\nREDIS_PORT=6379\nREDIS_PASSWORD=kvRedis2026tau",
+      "secrets": [
+        "kvRedis2026tau"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "DEVE-020",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "redis://:localDev2026xi@localhost:6379/0",
+      "secrets": [
+        "localDev2026xi"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "DEVE-021",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# staging cache, keep in sync with infra repo\nREDIS_URL=redis://:stageRedis2026om@srediscache.internal:6379/2",
+      "secrets": [
+        "stageRedis2026om"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "DEVE-022",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# sentinel + one shared cache cluster\nexport REDIS_SENTINEL_HOSTS=redis-sentinel.internal:26379,redis-sentinel-2.internal:26379\nexport REDIS_MASTER_NAME=mymaster\nexport REDIS_PASSWORD=sentinel2026pi9\nexport REDIS_DB=2",
+      "secrets": [
+        "sentinel2026pi9"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "DEVE-023",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "redis_host=localhost\nredis_port=6379\nredis_auth=localRedis2026nu",
+      "secrets": [
+        "localRedis2026nu"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "DEVE-024",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "S3_ENDPOINT=http://minio.internal:9000\nAWS_ACCESS_KEY_ID=s3devaccesskey2026\nAWS_SECRET_ACCESS_KEY=s3devSecret2026upsilon",
+      "secrets": [
+        "s3devSecret2026upsilon"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "DEVE-025",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# local minio bucket for uploads\nS3_ENDPOINT=http://minio.test:9000\nbucket=media-uploads\naws_access_key_id=s3minioKey2026phi\naws_secret_access_key=s3minioSecret2026",
+      "secrets": [
+        "s3minioSecret2026"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "DEVE-026",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "AWS_REGION=us-east-1\nAWS_BUCKET=assets-backup\nAWS_ACCESS_KEY_ID=AKIA2026DEVXAMPLE\nAWS_SECRET_ACCESS_KEY=awsBucketSecret2026psi",
+      "secrets": [
+        "awsBucketSecret2026psi"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "DEVE-027",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# local kafka for integration tests\nbrokers=kafka1.test:9092,kafka2.test:9092,kafka3.test:9092\nsasl_username=kafka-dev-user\nsasl_password=kafkaDev2026chi2\nsecurity_protocol=SASL_PLAINTEXT",
+      "secrets": [
+        "kafkaDev2026chi2"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "DEVE-028",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# topic for order events\nKAFKA_BROKERS=kafka.internal:9092\nKAFKA_TOPIC=order-events\nKAFKA_SASL_PASSWORD=orderTopic2026omega2",
+      "secrets": [
+        "orderTopic2026omega2"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "DEVE-029",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# private registry auth\n//registry.example.com/:_authToken=regToken2026devdelta\nregistry=https://registry.example.com/\nalways-auth=true",
+      "secrets": [
+        "regToken2026devdelta"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DEVE-030",
+      "source": "persona200",
+      "persona": "developer",
+      "text": "# rotate on calendar change, stored here for dev\nexport SCRIPT_PASSPHRASE='Dev$2026epsilon`p9'\nexport SCRIPT_MODE=deploy",
+      "secrets": [
+        "Dev$2026epsilon`p9"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "PROD-001",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "https://growth-admin.example.com/login\n账号：pm_growth\n密码：GrowthPM2026#Go",
+      "secrets": [
+        "GrowthPM2026#Go"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-002",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：权限后台\n账号：pm_rbac\n密码：PermPM2026#Alpha",
+      "secrets": [
+        "PermPM2026#Alpha"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-003",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "https://ops-demo.internal/login\n账号：ops_pm\n密码：OpsPM2026_77",
+      "secrets": [
+        "OpsPM2026_77"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-004",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：活动后台登录\n账号：pm.activity\n密码：ActPM2026!Run",
+      "secrets": [
+        "ActPM2026!Run"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-005",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "飞鲸数据后台 https://feijing.internal\n账号：pm_a\n密码：FeiJing2026，北极星！\n飞鲸实验后台 https://feijing-lab.internal\n账号：pm_b\n密码：FeiJing2026，北极星？",
+      "secrets": [
+        "FeiJing2026，北极星！"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-006",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：审计后台\nurl：https://audit.example.org\n邮箱：pm.audit@example.org\n密码：AuditPM2026$1",
+      "secrets": [
+        "AuditPM2026$1"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-007",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "内容中台 https://content.example.net\n账号：pm_content\n密码：Content2026，先上！\n内容后台 https://content-admin.example.net\n账号：pm_content2\n密码：Content2026，先上？",
+      "secrets": [
+        "Content2026，先上！"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-008",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "https://growth-admin.example.org\nlogin: pm-growth\npassword: Growth2026@PM",
+      "secrets": [
+        "Growth2026@PM"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-009",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：Looker 只读\n账号：pm_looker\n密码：LookerPM2026#Read",
+      "secrets": [
+        "LookerPM2026#Read"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-010",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "https://tableau.example.net/signin\nuser: pm_tableau\npass: Tableau2026!read",
+      "secrets": [
+        "Tableau2026!read"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-011",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "数据工具A：https://bi-pro.example.com\n账号：pm_bi\n密码：BItool2026，北向！\n数据工具B：https://bi-lite.example.com\n账号：pm_bi2\n密码：BItool2026，北向？",
+      "secrets": [
+        "BItool2026，北向！"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-012",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：Metabase 报表查看\n账号：pm_meta\n密码：Meta2026_View",
+      "secrets": [
+        "Meta2026_View"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-013",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：办公室 VPN\n账号：pm_vpn\n密码：VPN2026#West",
+      "secrets": [
+        "VPN2026#West"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-014",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "vpn://corp.example.com\n用户名：pm.shanghai\n密码：Jump2026!East",
+      "secrets": [
+        "Jump2026!East"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-015",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "https://mail.example.com\n邮箱：pm.team@example.com\n密码：MailPM2026%Q",
+      "secrets": [
+        "MailPM2026%Q"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-016",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：运营邮箱\n账号：pm.ops@example.org\n密码：Inbox2026@ops",
+      "secrets": [
+        "Inbox2026@ops"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "PROD-017",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：API 文档密钥\n密钥：doc_2026_api_A1B2C3",
+      "secrets": [
+        "doc_2026_api_A1B2C3"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "PROD-018",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "接口文档\nhttps://docs.example.com\napi_key: DOCPM2026-9X7Q",
+      "secrets": [
+        "DOCPM2026-9X7Q"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "PROD-019",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：会议室 WiFi\n密码：Meet2026#Guest",
+      "secrets": [
+        "Meet2026#Guest"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "PROD-020",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "前台 WiFi：FrontDesk2026，欢迎来访！\n备用 WiFi：FrontDesk2026，欢迎来访？",
+      "secrets": [
+        "FrontDesk2026，欢迎来访！"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "PROD-021",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：Figma 试用授权\n序列号：FIG-PM26-8K2H-1A9Q",
+      "secrets": [
+        "FIG-PM26-8K2H-1A9Q"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "PROD-022",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "软件许可\nhttps://license.example.net\ncode=SlidePM2026-77ZX",
+      "secrets": [
+        "SlidePM2026-77ZX"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "PROD-023",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "连接串：postgres://bi_reader:BIpm2026!ro@bi-ro.example.internal:5432/reporting",
+      "secrets": [
+        "BIpm2026!ro"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "PROD-024",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：财务 BI 只读库\n账号：finance_ro\n密码：FinBI2026#Read",
+      "secrets": [
+        "FinBI2026#Read"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "PROD-025",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "postgres://sales_ro:SalesBI2026，北斗！@bi-sales.example.internal:5432/sales\npostgres://sales_dev:SalesBI2026，北斗？@bi-sales-dev.example.internal:5432/sales",
+      "secrets": [
+        "SalesBI2026，北斗！"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "PROD-026",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：周报导出接口\naccess_key_id：AKPM2026Q9\nsecret_access_key：SKPM2026zeta77",
+      "secrets": [
+        "SKPM2026zeta77"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "PROD-027",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "bucket：s3://sample-bucket-test\naccess_key=sample_view\nsecret=Sample2026$Bucket",
+      "secrets": [
+        "Sample2026$Bucket"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "PROD-028",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "名称：季度报告存档桶\n密钥：Archive2026@Q3",
+      "secrets": [
+        "Archive2026@Q3"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "PROD-029",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "kafka://topic=pm-metrics-view\nusername=pm_kafka\npassword=KafkaPM2026#View",
+      "secrets": [
+        "KafkaPM2026#View"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "PROD-030",
+      "source": "persona200",
+      "persona": "product_manager",
+      "text": "topic=order-stream-qa\n账号：pm_topic\n密码：Kafka2026，订单看板！\n参考：order-stream-prod 只读同组",
+      "secrets": [
+        "Kafka2026，订单看板！"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "DESI-001",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "画格工具台开通邮件\n站点 https://grid.example.com/login\n账号：mila\n密码：GrdBox-2026A1\n请用这个先登录。",
+      "secrets": [
+        "GrdBox-2026A1"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-002",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "主题：栅格工坊 / 线框云 同批开通\n1) 栅格工坊\n账号：iris\n密码：Gri★d-77©\n2) 线框云\n账号：nova\n密码：N0va®2026\n先开栅格工坊这条。",
+      "secrets": [
+        "Gri★d-77©"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-003",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "配色云邀请邮件\nURL: https://color.example.com\n登录名: hana\n临时密码: ColorFlow_26\n我晚点再改。",
+      "secrets": [
+        "ColorFlow_26"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-004",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "线框台账号\n站点 https://frame.example.net\n账号：yoji\n密码：LineKit-8842\n",
+      "secrets": [
+        "LineKit-8842"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-005",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "动效室开通\n地址：https://motion.example.org\n用户名：zara\n密码：Motion@2026\n请尽快改密。",
+      "secrets": [
+        "Motion@2026"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-006",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "稿件台登录信息\nhttps://draft.example.org/admin\n用户：nori\n密码：FrameDeck-19\n",
+      "secrets": [
+        "FrameDeck-19"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-007",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "画库站会员邮件\n站点：https://huaku.example.com\n账号：muse01\n密码：HuaKu#2026\n",
+      "secrets": [
+        "HuaKu#2026"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-008",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "纹理集市开通\nhttps://texture.example.com\n登录：reno\n密码：TextuRe-54\n",
+      "secrets": [
+        "TextuRe-54"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-009",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "素材站批量开通\n1) 纹理集市\n账号：ivy\n密码：Mozaic®2026\n2) 贴纸星球\n账号：leo\n密码：Sticker_88!\n先用纹理集市。",
+      "secrets": [
+        "Mozaic®2026"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-010",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "灵感素材铺登录\nURL https://inspire.example.net\n账号：wen\n密码：Insp!re_63\n",
+      "secrets": [
+        "Insp!re_63"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-011",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "作品集后台邮件\n站点 https://folio.example.com/admin\n账号: kai\n密码: Portfolio-001\n",
+      "secrets": [
+        "Portfolio-001"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-012",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "个人站管理台\n登录页 https://site.example.org\n用户名：nori\n密码：Showcase@7\n",
+      "secrets": [
+        "Showcase@7"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-013",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "主题：站点后台和作品集后台一起发的\n1) 作品集后台\n账号：sue\n密码：Site后台★42\n2) 个人站管理台\n账号：tom\n密码：T0m©2026\n先存作品集后台。",
+      "secrets": [
+        "Site后台★42"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-014",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "协作板邀请\nhttps://collab.example.com\n账号：mina\n密码：Collab-2026\n",
+      "secrets": [
+        "Collab-2026"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-015",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "项目群工具开通\n站点: https://team.example.net\n登录名: ryo\n密码: TeamUp#64\n",
+      "secrets": [
+        "TeamUp#64"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "DESI-016",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "字库授权邮件\n字体：清风宋体 Pro\n授权码：Huaban😊2026\n工号：dz-17\n",
+      "secrets": [
+        "Huaban😊2026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DESI-017",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "字体授权单\n字体包：棱镜黑体\n序列号：FontKey-33\n备注：内网设备可用\n",
+      "secrets": [
+        "FontKey-33"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DESI-018",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "邮件：字形库授权\n1) 字体A：墨点黑\n授权码：紫罗兰★2024\n2) 字体B：砂岩宋\n授权码：Shtype®18\n先记第一条。",
+      "secrets": [
+        "紫罗兰★2024"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DESI-019",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "素材站下载说明\n文件：杂志贴纸包\n提取码：Extract-7A9\n链接：https://clip.example.com\n",
+      "secrets": [
+        "Extract-7A9"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DESI-020",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "图包分享\n站点：https://drop.example.org\n提取码：ClipCode_58\n来自：小组分享邮件\n",
+      "secrets": [
+        "ClipCode_58"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DESI-021",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "办公室 WiFi 备忘\n名称：StudioNet\n密码：WiFi-Blue88\n位置：二楼西侧\n",
+      "secrets": [
+        "WiFi-Blue88"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DESI-022",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "茶水间路由器卡片\nSSID：StudioGuest\n密码：CafeWiFi#27\n别贴给外包看\n",
+      "secrets": [
+        "CafeWiFi#27"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DESI-023",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "云渲染工坊邮件\n1) 渲染农场\n账号：node07\n口令：Render©2026\n2) 备用渲染农场\n账号：node08\n口令：NodeBack_09\n先用 node07。",
+      "secrets": [
+        "Render©2026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DESI-024",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "云算工坊开通\n入口：https://render.example.net\n口令：FarmPass-41\n账号：pix\n",
+      "secrets": [
+        "FarmPass-41"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DESI-025",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "排版软件许可单\n软件：PageMaker X\nLicense：LicenSe_9X\n机器数：2\n",
+      "secrets": [
+        "LicenSe_9X"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "DESI-026",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "云渲染工坊 API 开通\naccess_key_id: AKR-2026-01\nsecret_key: CloudAKSK_01\nregion: cn-test-1\n",
+      "secrets": [
+        "CloudAKSK_01"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "DESI-027",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "CDN 分发账号\naccess_key_id=CDN-77-AX\nsecret_key=EdgeKey_77\n备注=素材分发\n",
+      "secrets": [
+        "EdgeKey_77"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "DESI-028",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "邮件：边缘云和云渲染一起开\n1) 边缘云\naccess_key_id: EDGE-11-A\nsecret_key: Sky©Key★11\n2) 云渲染\naccess_key_id: REND-11-B\nsecret_key: Cloud®Key12\n先录边缘云。",
+      "secrets": [
+        "Sky©Key★11"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "DESI-029",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "素材分发云\naccess_key_id: DIST-204\nsecret_key: MixKey_204\n使用说明见内网\n",
+      "secrets": [
+        "MixKey_204"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "DESI-030",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "素材云桶 开通\nbucket: palette-assets-test\nendpoint: s3.example.com\nsecret_key: BucketSecret-11\n",
+      "secrets": [
+        "BucketSecret-11"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "DESI-031",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "贴纸素材桶\nbucket=sticker-packs-dev\nsecret_key=S3Key@22\nacl=private\n",
+      "secrets": [
+        "S3Key@22"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "DESI-032",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "纹理云桶\nbucket: texture-assets-test\nendpoint: s3.example.com\nsecret_key: TexBox-93\n",
+      "secrets": [
+        "TexBox-93"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "DESI-033",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "作品备份桶说明\nbucket: portfolio-backup\nsecret_key: Backup#Store6\n用于隔夜同步\n",
+      "secrets": [
+        "Backup#Store6"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "DESI-034",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "官网内容库只读账号\npostgres://cms_reader@example.internal\npassword: DBro-ReadOnly8\nschema: public\n",
+      "secrets": [
+        "DBro-ReadOnly8"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "DESI-035",
+      "source": "persona200",
+      "persona": "designer",
+      "text": "设计资产更新通知\nbootstrap_servers: kafka.internal:9092\ntopic: design-assets\nsasl_password: Kafka_Asset-57\n",
+      "secrets": [
+        "Kafka_Asset-57"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "NOVI-001",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "实惠购商城账号是我手机号，登录密码是 Qc9x!Pz2&m4，你帮我盯紧点",
+      "secrets": [
+        "Qc9x!Pz2&m4"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-002",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "省钱小铺：媳妇让我记，账号写的老王媳妇，密码19900101abc",
+      "secrets": [
+        "19900101abc"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-003",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "天天特惠购 账号我手机号 密码 Sj3Ka7$Lp8",
+      "secrets": [
+        "Sj3Ka7$Lp8"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-004",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "你在居家好物网的登录密码就是家和万事兴123你到时候直接输这个就能进去",
+      "secrets": [
+        "家和万事兴123"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-005",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "乐邻社区通 账号是老王 密码 Tu8!Mm4&Ko7",
+      "secrets": [
+        "Tu8!Mm4&Ko7"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-006",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "老友圈密码：Bn5@Vb9#Qw2 账号就是老王本名",
+      "secrets": [
+        "Bn5@Vb9#Qw2"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-007",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "邻里唠嗑网 登录账号手机号 密码 邻里一家亲2025",
+      "secrets": [
+        "邻里一家亲2025"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-008",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "喜乐聚视频 我的账号是老王 密码 Hu6^Kp3&Ng1",
+      "secrets": [
+        "Hu6^Kp3&Ng1"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-009",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "妈你把这条存好了\n我在闪耀点播给你开了会员\n账号就是你手机号\n密码是 🎂🎉🎈520\n别再问我了",
+      "secrets": [
+        "🎂🎉🎈520"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-010",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "嗨剧屋账号老王 密码 幸福快乐每一天",
+      "secrets": [
+        "幸福快乐每一天"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-011",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "小蜜蜂邮箱 账号 laowang@xiaomifeng.example 密码 Yn8!Zm4@Kt2",
+      "secrets": [
+        "Yn8!Zm4@Kt2"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-012",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "云鸽邮的登录密码是团团圆圆一家人这次说的是邮箱别记差成上次那个了",
+      "secrets": [
+        "团团圆圆一家人"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-013",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "市政办事大厅 账号就写老王 密码20010515",
+      "secrets": [
+        "20010515"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-014",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "便民一站办 账号 老王 密码 123123",
+      "secrets": [
+        "123123"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "NOVI-015",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "家里wifi的密码 是 123456",
+      "secrets": [
+        "123456"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-016",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "你看这个我们家客厅路由器改的wifi密码她是 888888 你记一下吧",
+      "secrets": [
+        "888888"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-017",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "客房那个wifi：密码是 Kt3#Wq7&Vb5",
+      "secrets": [
+        "Kt3#Wq7&Vb5"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-018",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "【云速宽带】您的宽带账号为链接开通，初始密码 Xf4@Pk8#Rs2 请及时修改，退订回T",
+      "secrets": [
+        "Xf4@Pk8#Rs2"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-019",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "老王家的宽带缴费密码是 Gw5#Mn8@Ya2",
+      "secrets": [
+        "Gw5#Mn8@Ya2"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-020",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "Qw2$Df4#Gk7",
+      "secrets": [
+        "Qw2$Df4#Gk7"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-021",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "智能门锁管理员密码是 3456@9001Kp",
+      "secrets": [
+        "3456@9001Kp"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-022",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "Tv9$Mj2@Hk6",
+      "secrets": [
+        "Tv9$Mj2@Hk6"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-023",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "老家院子的监控 密码 Abc@5678Xy",
+      "secrets": [
+        "Abc@5678Xy"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-024",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "机顶盒设置密码 Ch4$Rr6#Wn8",
+      "secrets": [
+        "Ch4$Rr6#Wn8"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-025",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "顺风打车会员 密码是 Iw6@Xk9#Qd4",
+      "secrets": [
+        "Iw6@Xk9#Qd4"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-026",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "馋嘴外卖会员号密码 Hn2$Qs7@Mb3",
+      "secrets": [
+        "Hn2$Qs7@Mb3"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-027",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "彩虹健身App登录码 Jk8$Yu3@Wv6",
+      "secrets": [
+        "Jk8$Yu3@Wv6"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-028",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "Sw6$Tr4@Zv1",
+      "secrets": [
+        "Sw6$Tr4@Zv1"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-029",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "舞队的购买码你们看好是这个 → 🐍🐯🐰123456 到时候买队服用",
+      "secrets": [
+        "🐍🐯🐰123456"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "NOVI-030",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "家庭账本数据库建好了账号admin密码 Db2$Vf8@Mx5",
+      "secrets": [
+        "Db2$Vf8@Mx5"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "NOVI-031",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "买菜账数据库 账号laowang 密码 菜篮子记个账",
+      "secrets": [
+        "菜篮子记个账"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "NOVI-032",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "数据库的root密码你们自己连 是 Kx9@Tr2$Vn4 别外传",
+      "secrets": [
+        "Kx9@Tr2$Vn4"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "NOVI-033",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "爸\n这是公司redis的密码\nCk4$Mj8@Wq2\n你帮我存到密码本里别给外人",
+      "secrets": [
+        "Ck4$Mj8@Wq2"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "NOVI-034",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "redis哨兵密码更新了新的是 Sb7!Lm3@Yt9 俺老板让赶紧记下来别弄错",
+      "secrets": [
+        "Sb7!Lm3@Yt9"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "NOVI-035",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "redis集群密码给你 收好 别弄丢\nRr3@Kd6!Zs7",
+      "secrets": [
+        "Rr3@Kd6!Zs7"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "NOVI-036",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "照片全家福都在s3上\n账号照片备份专用\n密码是 Ph0t0@Fam#88\n你记好这个就行",
+      "secrets": [
+        "Ph0t0@Fam#88"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "NOVI-037",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "老照片备份的访问账号：photo-archive老照片备份的访问秘钥：Bk2@Vp9#Tm6 其它不用管",
+      "secrets": [
+        "Bk2@Vp9#Tm6"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "NOVI-038",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "爸这是kafka死信队列的密码 您代管一下\nXy6!Kk2@Qz4",
+      "secrets": [
+        "Xy6!Kk2@Qz4"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "NOVI-039",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "爸我把云服务器的ak和sk发你了\nAccess Key 是 FAM-2024-7K9Q\nSecret Key 是 La8$We3@Kj6\n你给收好",
+      "secrets": [
+        "La8$We3@Kj6"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "NOVI-040",
+      "source": "persona200",
+      "persona": "novice",
+      "text": "对象存储的Secret Key你帮我记一下 是这个 Zo5$Rv2@Mb7",
+      "secrets": [
+        "Zo5$Rv2@Mb7"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "ADMI-001",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "云章OA 账户开通通知\n\n系统地址：https://oawz.example.com/login\n登录账号：admin_yunzhang\n初始密码：LQ2026-OA-yz16\n\n请妥善保管，首次登录后IT会另行通知修改。",
+      "secrets": [
+        "LQ2026-OA-yz16"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-002",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "蓝桥协同办公平台 开通通知\n\n访问地址：http://xtoa.internal\n用户名：financial01\n初始密码：LQ2026-XT-zb78\n备用说明：仅限内网访问。",
+      "secrets": [
+        "LQ2026-XT-zb78"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-003",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "行政后勤OA 账号开通通知\n\n地址：https://xz.hr.example.com\n账号：xzadmin\n初始密码：LQ2026-XZ-gov41，首次登录后必须立即修改为新密码，否则账号会被锁定。\n通知下发后24小时内请联系IT核对权限范围。",
+      "secrets": [
+        "LQ2026-XZ-gov41"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-004",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "票易报 报销系统 账户开通通知\n\n系统地址：https://piaoyibao.example.net\n登录账号：piaowu_caiwu\n初始密码：LQ2026-BX-pw02\n\n恭喜开通，请勿把账号外借。",
+      "secrets": [
+        "LQ2026-BX-pw02"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-005",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "快报云 报销系统开通通知\n\n网址：https://kuaibaoyun.example.org\n账号：kjb01\n初始密码：LQ2026-BX-kb19\n\n另附：发票库只读账号 im-001，口令 LQ2026-FP-cw33，仅供查验红字发票，勿改动数据。",
+      "secrets": [
+        "LQ2026-BX-kb19"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-006",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "考勤精灵 开通通知\n\n访问地址：https://kqjl.example.com\n登录账号：kq_hr_zhang\n初始密码：LQ2026-KQ-jl05\n\n仅供人事核对考勤数据使用。",
+      "secrets": [
+        "LQ2026-KQ-jl05"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-007",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "考勤统计系统 公共账号开通通知\n\n地址：http://kqtj.internal\n账号：kq_gonggong\n初始密码：LQ2026-KQ-gg12\n\n该账号为公共账号，全部门共用，请勿外传，首次登录后建议在页面上自行修改。",
+      "secrets": [
+        "LQ2026-KQ-gg12"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-008",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "税易通 电子申报系统 开通通知\n\n申报地址：https://sytsb.example.com\n纳税人账号：sw_agent_03\n初始密码：LQ2026-SW-ty27\n\n请于申报期前完成首次登录设置密保，密保问题答案请自行记录。",
+      "secrets": [
+        "LQ2026-SW-ty27"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-009",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "社保申报平台 开通通知\n\n网址：https://sbb.internal/pc\n单位编号：unit803\n申报账号：sbjh_daiban\n初始密码：LQ2026-SB-jh9!\n\n重要：账号仅限本单位申报员使用，离职需交还。",
+      "secrets": [
+        "LQ2026-SB-jh9!"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-010",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "个人所得税汇算申报账号 开通通知\n\n入口地址：https://geshui.example.org/login\n登录账号：gssb_admin\n初始密码：LQ2026-GS-hs64\n\n该账号为办税公共账号，密码修改需经财务负责人审批。",
+      "secrets": [
+        "LQ2026-GS-hs64"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-011",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "蓝桥企业邮箱 账号开通通知\n\n邮箱地址：gwy01@lanqiao.example.com\n网页登录：https://mailqt.example.com\n初始密码：LQ2026-ML-gw25（首次登录将强制要求修改，请在修改前先记好此密码）\n\n如需申请新邮箱请提交OA流程。",
+      "secrets": [
+        "LQ2026-ML-gw25"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-012",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "财务共享邮箱 开通通知\n\n邮箱：cwgx@lanqiao.example.net\n登录地址：https://mailcw.example.net\n初始密码：LQ2026-ML-cw31\n\n本邮箱为部门公共邮箱，勿外传密码。",
+      "secrets": [
+        "LQ2026-ML-cw31"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-013",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "行政共享网盘 开通通知\n\n访问地址：https://panxz.example.com\n共享账号：xzb_gonggong\n初始密码：LQ2026-PAN-xz08\n\n上传下载都走此账号，公共账号，勿外传。",
+      "secrets": [
+        "LQ2026-PAN-xz08"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-014",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "财务共享网盘 开通通知\n\n网址：https://pancw.example.com/share\n账号：cwkj_pub\n初始密码：LQ2026-PAN-cw29\n\n仅限财务部人员使用。",
+      "secrets": [
+        "LQ2026-PAN-cw29"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "ADMI-015",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "打印机管理后台 信息\n\n网址：http://printer-admin.test\n管理账号：admin\n管理密码：LQ2026-PRT-adm16\n\n该后台为行政部公共账号，勿外传。",
+      "secrets": [
+        "LQ2026-PRT-adm16"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "ADMI-016",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "二楼打印机管理页密码：LQ2026-PRT-2f77\n（页面地址 http://prt2.internal/web 账号 admin）\n\n另：三楼同型号打印机走同一个后台，未单独开账号。",
+      "secrets": [
+        "LQ2026-PRT-2f77"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "ADMI-017",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "会议室预约系统 管理端信息\n\n后台网址：https://hys.internal/console\n管理员账号：meeting_mgr\n后台密码：LQ2026-MTG-10ky\n\n管理端仅供行政人员使用。",
+      "secrets": [
+        "LQ2026-MTG-10ky"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "ADMI-018",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "大会议室预约 公共账号开通通知\n\n入口：https://room.example.com\n账号：room_public\n密码：LQ2026-MTG-gg40\n\n公共账号，勿外传，仅用于前台代约大会议室。",
+      "secrets": [
+        "LQ2026-MTG-gg40"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "ADMI-019",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "门禁管理后台 交接说明\n\n门禁后台地址：http://mj.internal/admin\n超级管理员：mj_admin\n登录密码：LQ2026-MJ-bk31\n\n首次登录后请修改并同步给物业方留档。",
+      "secrets": [
+        "LQ2026-MJ-bk31"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "ADMI-020",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "办公室访客WiFi\n\n网络名：LQ-Guest\n密码：LQ2026-WIFI-ph64\n\n行政部工位旁张贴的也是这个密码。",
+      "secrets": [
+        "LQ2026-WIFI-ph64"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "ADMI-021",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "工资核算数据库 只读账号开通通知\n\n数据库类型：MySQL\n主机：gwdb.internal:3306\n数据库：wage2026\n只读账号：ro_wage\n初始密码：LQ2026-DB-wg21\n\n仅限工资核算使用，只读。",
+      "secrets": [
+        "LQ2026-DB-wg21"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "ADMI-022",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "发票数据库 只读连接信息\n\n数据库类型：PostgreSQL\n主机：fpdb.internal:5432\n数据库名：invoice2026\n只读账号：fp_ro_02\n密码：LQ2026-DB-fp06\n\n只读权限，请勿开启写入通道。",
+      "secrets": [
+        "LQ2026-DB-fp06"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "ADMI-023",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "财务凭证扫描件归档桶 开通通知\n\n存储类型：S3 兼容\nEndpoint：https://oss.archive.example.net\nBucket：voucher-archive-2026\n只读账号：voucher_ro\n桶访问密码：LQ2026-S3-vz13\n\n仅归档财务凭证扫描件。",
+      "secrets": [
+        "LQ2026-S3-vz13"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "ADMI-024",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "财务消息推送服务 账号开通通知\n\n服务类型：Kafka\nBootstrap 地址：kfk.internal:9092\nTopic：fin-notify-2026\n生产账号：fin_publisher\n密码：LQ2026-KFK-fn18\n\n仅限财务对账消息生产使用。",
+      "secrets": [
+        "LQ2026-KFK-fn18"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "ADMI-025",
+      "source": "persona200",
+      "persona": "admin",
+      "text": "电子签章平台 AccessKey 开通通知\n\n访问地址：https://esign.example.com/console\n专属 AccessKey：LQ-AK-2026-0815\n对应 SecretKey：LQ-SK-2026-0b3f9ae2bb11，请勿泄露，如泄露请立即作废并重新下发，作废同时原密钥即告失效。\n\n密钥用于调用签章接口，公钥证书由CA另行邮件发送。",
+      "secrets": [
+        "LQ-SK-2026-0b3f9ae2bb11"
+      ],
+      "template": "aksk"
+    },
+    {
+      "id": "FIFTY-redis-uri-prod",
+      "source": "fifty",
+      "text": "redis://default:RedisProd#2026@redis-prod.internal:6379/0 env=prod service=order-cache",
+      "secrets": [
+        "RedisProd#2026"
+      ],
+      "template": "redis",
+      "cluster": "cacheCredential"
+    },
+    {
+      "id": "FIFTY-redis-kv-stage",
+      "source": "fifty",
+      "text": "host=redis-stage.internal port=6380 db=2 username=default password=RedisStage!2026 env=staging service=session-cache",
+      "secrets": [
+        "RedisStage!2026"
+      ],
+      "template": "redis",
+      "cluster": "cacheCredential"
+    },
+    {
+      "id": "FIFTY-redis-cli-auth",
+      "source": "fifty",
+      "text": "REDISCLI_AUTH=RedisCliOnly#2026 redis-cli -h redis-ops.internal -p 6379 -n 5 env=ops",
+      "secrets": [
+        "RedisCliOnly#2026"
+      ],
+      "template": "redis",
+      "cluster": "cacheCredential"
+    },
+    {
+      "id": "FIFTY-redis-url-inline",
+      "source": "fifty",
+      "text": "redis_url=redis://cache-user:CacheSecret#2026@redis-cache.internal:6379/4 label=payments-cache env=prod",
+      "secrets": [
+        "CacheSecret#2026"
+      ],
+      "template": "redis",
+      "cluster": "cacheCredential"
+    },
+    {
+      "id": "FIFTY-redis-config-note",
+      "source": "fifty",
+      "text": "redis host=cache-east.internal port=6379 database=9 password=CacheEast#2026 service=feed-cache region=cn-shanghai",
+      "secrets": [
+        "CacheEast#2026"
+      ],
+      "template": "redis",
+      "cluster": "cacheCredential"
+    },
+    {
+      "id": "FIFTY-postgres-database-url",
+      "source": "fifty",
+      "text": "DATABASE_URL=postgresql://billing_admin:PgBilling%232026@billing-db.internal:5432/billing env=prod service=reconciliation",
+      "secrets": [
+        "PgBilling#2026"
+      ],
+      "template": "database",
+      "cluster": "relationalDBCredential"
+    },
+    {
+      "id": "FIFTY-postgres-kv",
+      "source": "fifty",
+      "text": "host=db.github.internal port=5432 dbname=accounts user=liuhanze password=P@ssw0rd! engine=postgres env=prod",
+      "secrets": [
+        "P@ssw0rd!"
+      ],
+      "template": "database",
+      "cluster": "relationalDBCredential"
+    },
+    {
+      "id": "FIFTY-mysql-uri",
+      "source": "fifty",
+      "text": "mysql://app_user:MySQLApp!2026@mysql-prod.internal:3306/orders?charset=utf8mb4 env=prod service=order-api",
+      "secrets": [
+        "MySQLApp!2026"
+      ],
+      "template": "database",
+      "cluster": "relationalDBCredential"
+    },
+    {
+      "id": "FIFTY-clickhouse-uri",
+      "source": "fifty",
+      "text": "clickhouse://analytics:CHAnalytics#2026@clickhouse-01.internal:8123/events env=prod service=warehouse",
+      "secrets": [
+        "CHAnalytics#2026"
+      ],
+      "template": "database",
+      "cluster": "relationalDBCredential"
+    },
+    {
+      "id": "FIFTY-mongodb-uri",
+      "source": "fifty",
+      "text": "mongodb://report_user:MongoReport%402026@mongo-01.internal:27017/reports?replicaSet=rs0 env=prod team=data",
+      "secrets": [
+        "MongoReport@2026"
+      ],
+      "template": "database",
+      "cluster": "relationalDBCredential"
+    },
+    {
+      "id": "FIFTY-mariadb-kv",
+      "source": "fifty",
+      "text": "engine=mariadb host=mariadb-01.internal port=3306 database=ops user=ops_admin password=MariaOps#2026 env=prod",
+      "secrets": [
+        "MariaOps#2026"
+      ],
+      "template": "database",
+      "cluster": "relationalDBCredential"
+    },
+    {
+      "id": "FIFTY-postgres-service-note",
+      "source": "fifty",
+      "text": "engine=postgres host=ledger-db.internal port=5432 database=ledger username=ledger_rw password=LedgerRW#2026 label=ledger-prod",
+      "secrets": [
+        "LedgerRW#2026"
+      ],
+      "template": "database",
+      "cluster": "relationalDBCredential"
+    },
+    {
+      "id": "FIFTY-mysql-reporting",
+      "source": "fifty",
+      "text": "database=reporting host=mysql-report.internal port=3306 user=reporting password=Reporting#2026 engine=mysql service=bi",
+      "secrets": [
+        "Reporting#2026"
+      ],
+      "template": "database",
+      "cluster": "relationalDBCredential"
+    },
+    {
+      "id": "FIFTY-mongodb-kv",
+      "source": "fifty",
+      "text": "engine=mongodb host=mongo-bi.internal port=27017 database=analytics username=bi_reader password=MongoBI#2026 env=stage",
+      "secrets": [
+        "MongoBI#2026"
+      ],
+      "template": "database",
+      "cluster": "relationalDBCredential"
+    },
+    {
+      "id": "FIFTY-clickhouse-kv",
+      "source": "fifty",
+      "text": "engine=clickhouse host=ch-metrics.internal port=9000 database=metrics user=metrics_ro password=Metrics#2026 env=prod",
+      "secrets": [
+        "Metrics#2026"
+      ],
+      "template": "database",
+      "cluster": "relationalDBCredential"
+    },
+    {
+      "id": "FIFTY-aws-s3-env",
+      "source": "fifty",
+      "text": "AWS_ACCESS_KEY_ID=AKIAOPS123 AWS_SECRET_ACCESS_KEY=S3SecretOps! AWS_DEFAULT_REGION=ap-east-1 S3_ENDPOINT=https://s3.internal.example.com bucket=artifacts-release",
+      "secrets": [
+        "S3SecretOps!"
+      ],
+      "template": "s3",
+      "cluster": "objectStorageCredential"
+    },
+    {
+      "id": "FIFTY-minio-kv",
+      "source": "fifty",
+      "text": "access_key=deploy-artifacts-ak secret_key=DeploySecret#2026 endpoint=https://minio.internal bucket=build-cache region=cn-east-1",
+      "secrets": [
+        "DeploySecret#2026"
+      ],
+      "template": "s3",
+      "cluster": "objectStorageCredential"
+    },
+    {
+      "id": "FIFTY-oss-provider",
+      "source": "fifty",
+      "text": "provider=aws access_key=AKIADEPLOY01 secret_key=DeployAWS#2026 endpoint=https://s3-us.internal bucket=release-assets region=us-east-1",
+      "secrets": [
+        "DeployAWS#2026"
+      ],
+      "template": "s3",
+      "cluster": "objectStorageCredential"
+    },
+    {
+      "id": "FIFTY-s3-endpoint-host",
+      "source": "fifty",
+      "text": "bucket=infra-backups s3_endpoint=https://minio-prod.internal aws_access_key_id=MINIODEPLOY aws_secret_access_key=MinioDeploy!2026 aws_default_region=cn-hangzhou",
+      "secrets": [
+        "MinioDeploy!2026"
+      ],
+      "template": "s3",
+      "cluster": "objectStorageCredential"
+    },
+    {
+      "id": "FIFTY-storage-note",
+      "source": "fifty",
+      "text": "endpoint=https://oss.internal.example.com bucket=media-prod access_key=oss-media-ak secret_key=OssMedia#2026 provider=aliyun region=cn-shanghai",
+      "secrets": [
+        "OssMedia#2026"
+      ],
+      "template": "s3",
+      "cluster": "objectStorageCredential"
+    },
+    {
+      "id": "FIFTY-kafka-sasl",
+      "source": "fifty",
+      "text": "brokers=kafka-1.internal:9092,kafka-2.internal:9092 sasl.username=\"audit_pipeline\" sasl.password=\"KafkaAudit!2026\" mechanism=SCRAM-SHA-512 topic=audit.events env=prod",
+      "secrets": [
+        "KafkaAudit!2026"
+      ],
+      "template": "kafka",
+      "cluster": "messageQueueCredential"
+    },
+    {
+      "id": "FIFTY-kafka-bootstrap",
+      "source": "fifty",
+      "text": "bootstrap_servers=broker-a.internal:9092,broker-b.internal:9092 username=etl_consumer sasl_password=ETLConsumer#2026 topic=etl.jobs kafka cluster=prod",
+      "secrets": [
+        "ETLConsumer#2026"
+      ],
+      "template": "kafka",
+      "cluster": "messageQueueCredential"
+    },
+    {
+      "id": "FIFTY-kafka-plain",
+      "source": "fifty",
+      "text": "kafka brokers=stream-a.internal:9092,stream-b.internal:9092 username=stream_ro password=StreamRO#2026 mechanism=PLAIN topic=stream.events env=prod",
+      "secrets": [
+        "StreamRO#2026"
+      ],
+      "template": "kafka",
+      "cluster": "messageQueueCredential"
+    },
+    {
+      "id": "FIFTY-kafka-stage",
+      "source": "fifty",
+      "text": "brokers=stage-kafka.internal:9092 sasl_username=stage_consumer sasl_password=StageKafka#2026 mechanism=SCRAM-SHA-256 topic=metrics.ingest env=staging",
+      "secrets": [
+        "StageKafka#2026"
+      ],
+      "template": "kafka",
+      "cluster": "messageQueueCredential"
+    },
+    {
+      "id": "FIFTY-kafka-bootstrap-short",
+      "source": "fifty",
+      "text": "bootstrap=ops-kafka.internal:9092 user=ops_ro password=OpsKafka#2026 topic=ops.audit kafka env=ops",
+      "secrets": [
+        "OpsKafka#2026"
+      ],
+      "template": "kafka",
+      "cluster": "messageQueueCredential"
+    },
+    {
+      "id": "FIFTY-github-account",
+      "source": "fifty",
+      "text": "service=GitHub username=ops-bot@example.com password=GhOpsBot@2026 url=https://github.com env=prod",
+      "secrets": [
+        "GhOpsBot@2026"
+      ],
+      "template": "account",
+      "cluster": "humanAccountLogin"
+    },
+    {
+      "id": "FIFTY-gitlab-account",
+      "source": "fifty",
+      "text": "account=gitlab-ci-bot email=ci-bot@example.com passwd=GitLabCI!2026 service=GitLab url=https://gitlab.example.com",
+      "secrets": [
+        "GitLabCI!2026"
+      ],
+      "template": "account",
+      "cluster": "humanAccountLogin"
+    },
+    {
+      "id": "FIFTY-harbor-robot",
+      "source": "fifty",
+      "text": "service=Harbor username=robot$deploy password=HarborRobot#2026 url=https://harbor.internal project=release-images",
+      "secrets": [
+        "HarborRobot#2026"
+      ],
+      "template": "account",
+      "cluster": "humanAccountLogin"
+    },
+    {
+      "id": "FIFTY-jenkins-login",
+      "source": "fifty",
+      "text": "service=Jenkins username=builder-bot password=JenkinsBot#2026 url=https://jenkins.internal env=prod",
+      "secrets": [
+        "JenkinsBot#2026"
+      ],
+      "template": "account",
+      "cluster": "humanAccountLogin"
+    },
+    {
+      "id": "FIFTY-grafana-login",
+      "source": "fifty",
+      "text": "service=Grafana account=ops-oncall email=ops-oncall@example.com password=GrafanaOncall#2026 url=https://grafana.internal env=prod",
+      "secrets": [
+        "GrafanaOncall#2026"
+      ],
+      "template": "account",
+      "cluster": "humanAccountLogin"
+    },
+    {
+      "id": "FIFTY-argocd-login",
+      "source": "fifty",
+      "text": "service=ArgoCD account=deploy-bot password=ArgoDeploy#2026 url=https://argocd.internal env=prod",
+      "secrets": [
+        "ArgoDeploy#2026"
+      ],
+      "template": "account",
+      "cluster": "humanAccountLogin"
+    },
+    {
+      "id": "FIFTY-sonarqube-login",
+      "source": "fifty",
+      "text": "service=SonarQube username=quality-bot password=SonarBot#2026 url=https://sonar.internal env=staging",
+      "secrets": [
+        "SonarBot#2026"
+      ],
+      "template": "account",
+      "cluster": "humanAccountLogin"
+    },
+    {
+      "id": "FIFTY-jira-login",
+      "source": "fifty",
+      "text": "service=Jira username=ops-admin password=JiraAdmin#2026 url=https://jira.internal env=prod",
+      "secrets": [
+        "JiraAdmin#2026"
+      ],
+      "template": "account",
+      "cluster": "humanAccountLogin"
+    },
+    {
+      "id": "FIFTY-gitea-login",
+      "source": "fifty",
+      "text": "service=Gitea account=mirror-bot email=mirror@example.com password=GiteaMirror#2026 url=https://gitea.internal",
+      "secrets": [
+        "GiteaMirror#2026"
+      ],
+      "template": "account",
+      "cluster": "humanAccountLogin"
+    },
+    {
+      "id": "FIFTY-slack-login",
+      "source": "fifty",
+      "text": "service=Slack account=ops.workspace@example.com password=SlackOps#2026 url=https://workspace.slack.com env=prod",
+      "secrets": [
+        "SlackOps#2026"
+      ],
+      "template": "account",
+      "cluster": "humanAccountLogin"
+    },
+    {
+      "id": "FIFTY-aliyun-aksk",
+      "source": "fifty",
+      "text": "provider=aliyun ak=LTAI5TEXAMPLE sk=AliyunSK#2026 scope=oss-prod region=cn-shanghai",
+      "secrets": [
+        "AliyunSK#2026"
+      ],
+      "template": "aksk",
+      "cluster": "cloudAccessPair"
+    },
+    {
+      "id": "FIFTY-tencent-aksk",
+      "source": "fifty",
+      "text": "provider=tencent access_key=TCloudAK001 secret_key=TCloudSecret!2026 project=cos-backup region=ap-shanghai",
+      "secrets": [
+        "TCloudSecret!2026"
+      ],
+      "template": "aksk",
+      "cluster": "cloudAccessPair"
+    },
+    {
+      "id": "FIFTY-aws-aksk",
+      "source": "fifty",
+      "text": "provider=aws access_key=AKIAOPS987 secret_key=AwsOpsSecret#2026 scope=iam-ops region=us-west-2",
+      "secrets": [
+        "AwsOpsSecret#2026"
+      ],
+      "template": "aksk",
+      "cluster": "cloudAccessPair"
+    },
+    {
+      "id": "FIFTY-gcp-aksk",
+      "source": "fifty",
+      "text": "provider=gcp ak=GCPAK0001 sk=GCPSK#2026 scope=artifact-registry region=asia-east1",
+      "secrets": [
+        "GCPSK#2026"
+      ],
+      "template": "aksk",
+      "cluster": "cloudAccessPair"
+    },
+    {
+      "id": "FIFTY-azure-aksk",
+      "source": "fifty",
+      "text": "provider=azure access_key=AZUREOPS01 secret_key=AzureOps#2026 project=blob-backup region=eastasia",
+      "secrets": [
+        "AzureOps#2026"
+      ],
+      "template": "aksk",
+      "cluster": "cloudAccessPair"
+    },
+    {
+      "id": "FIFTY-amqp-uri-payments",
+      "source": "fifty",
+      "text": "amqp://rabbit_user:RabbitMQ!2026@mq-prod.internal:5672/prod-vhost service=payments queue=settlement env=prod",
+      "secrets": [
+        "RabbitMQ!2026"
+      ],
+      "template": "custom",
+      "cluster": "messageQueueCredential"
+    },
+    {
+      "id": "FIFTY-rabbitmq-kv-stage",
+      "source": "fifty",
+      "text": "host=mq-stage.internal port=5672 username=ops password=RabbitStage#2026 vhost=stage engine=rabbitmq queue=jobs env=stage",
+      "secrets": [
+        "RabbitStage#2026"
+      ],
+      "template": "custom",
+      "cluster": "messageQueueCredential"
+    },
+    {
+      "id": "FIFTY-rabbitmq-inline",
+      "source": "fifty",
+      "text": "rabbitmq username=alerts password=RabbitAlert#2026 host=mq-alerts.internal port=5672 vhost=alerts queue=notify env=prod",
+      "secrets": [
+        "RabbitAlert#2026"
+      ],
+      "template": "custom",
+      "cluster": "messageQueueCredential"
+    },
+    {
+      "id": "FIFTY-amqp-orders",
+      "source": "fifty",
+      "text": "amqp://order_user:OrderMQ#2026@mq-orders.internal:5672/orders-vhost service=orders queue=order.created env=prod",
+      "secrets": [
+        "OrderMQ#2026"
+      ],
+      "template": "custom",
+      "cluster": "messageQueueCredential"
+    },
+    {
+      "id": "FIFTY-rabbitmq-billing",
+      "source": "fifty",
+      "text": "engine=rabbitmq host=mq-billing.internal port=5672 username=billing password=BillingMQ#2026 vhost=billing queue=invoice.generated env=prod",
+      "secrets": [
+        "BillingMQ#2026"
+      ],
+      "template": "custom",
+      "cluster": "messageQueueCredential"
+    },
+    {
+      "id": "FIFTY-service-endpoint-token",
+      "source": "fifty",
+      "text": "endpoint=https://vault.internal username=ops-bot token=VaultToken#2026 provider=internal env=prod",
+      "secrets": [
+        "VaultToken#2026"
+      ],
+      "template": "custom",
+      "cluster": "serviceEndpointSecret"
+    },
+    {
+      "id": "FIFTY-service-endpoint-password",
+      "source": "fifty",
+      "text": "host=api.internal username=automation password=ApiAutomation#2026 provider=platform env=prod",
+      "secrets": [
+        "ApiAutomation#2026"
+      ],
+      "template": "custom",
+      "cluster": "serviceEndpointSecret"
+    },
+    {
+      "id": "FIFTY-service-endpoint-url",
+      "source": "fifty",
+      "text": "url=https://registry.internal username=robot password=RegistryRobot#2026 provider=harbor env=prod",
+      "secrets": [
+        "RegistryRobot#2026"
+      ],
+      "template": "custom",
+      "cluster": "serviceEndpointSecret"
+    },
+    {
+      "id": "FIFTY-service-endpoint-login",
+      "source": "fifty",
+      "text": "endpoint=https://nexus.internal login=artifact-ro secret=NexusRO#2026 service=nexus env=prod",
+      "secrets": [
+        "NexusRO#2026"
+      ],
+      "template": "account",
+      "cluster": "serviceEndpointSecret"
+    },
+    {
+      "id": "FIFTY-service-endpoint-api",
+      "source": "fifty",
+      "text": "host=consul.internal user=ops password=ConsulOps#2026 service=consul env=prod",
+      "secrets": [
+        "ConsulOps#2026"
+      ],
+      "template": "account",
+      "cluster": "serviceEndpointSecret"
+    },
+    {
+      "id": "X-01-multi-secret-paste",
+      "source": "authored",
+      "text": "账号: ops-bot\n密码: Growth2026\nAK: LTAI5TEXAMPLEKEY\nSK: FlXe9s2QwErT7uIo\n支付密码: 739281",
+      "secrets": [
+        "Growth2026",
+        "FlXe9s2QwErT7uIo",
+        "739281"
+      ],
+      "template": "account",
+      "cluster": null
+    },
+    {
+      "id": "X-02-redis-uri-percent-encoded-password",
+      "source": "authored",
+      "text": "redis://default:R3dis%40Prod@redis-prod.internal:6379/0 env=prod",
+      "secrets": [
+        "R3dis@Prod"
+      ],
+      "template": "redis",
+      "cluster": "cacheCredential"
+    },
+    {
+      "id": "X-03-env-block-with-several-secrets",
+      "source": "authored",
+      "text": "DATABASE_URL=postgresql://app:MainPass%401@db.internal:5432/app\nSTRIPE_KEY=sk_live_51ExampleExample\nREDIS_AUTH=CachePass2026",
+      "secrets": [
+        "MainPass@1",
+        "sk_live_51ExampleExample",
+        "CachePass2026"
+      ],
+      "template": "database",
+      "cluster": null
+    },
+    {
+      "id": "X-04-natural-language-handoff",
+      "source": "authored",
+      "text": "账号是 pm_growth 密码是 Growth2026 邮箱密钥是 MailKey9q7x 支付密码 739281",
+      "secrets": [
+        "Growth2026",
+        "MailKey9q7x",
+        "739281"
+      ],
+      "template": "account",
+      "cluster": null
+    },
+    {
+      "id": "X-05-jdbc-url-with-password-parameter",
+      "source": "authored",
+      "text": "jdbc:postgresql://pg.internal:5432/order_db?user=order_app&password=JdbcPw%237788&ssl=true",
+      "secrets": [
+        "JdbcPw#7788"
+      ],
+      "template": "database",
+      "cluster": null
+    },
+    {
+      "id": "X-06-glued-code-and-next-line-secret",
+      "source": "authored",
+      "text": "购物密码20010515\n登录密码\nXf4@Pk8#Rs2",
+      "secrets": [
+        "Xf4@Pk8#Rs2",
+        "20010515"
+      ],
+      "template": "custom",
+      "cluster": null
+    },
+    {
+      "id": "X-07-bare-password",
+      "source": "authored",
+      "text": "hg_6688@2026",
+      "secrets": [
+        "hg_6688@2026"
+      ],
+      "template": "custom",
+      "cluster": null
+    },
+    {
+      "id": "X-08-two-word-site-and-credential",
+      "source": "authored",
+      "text": "商城名 hg_6688@2026",
+      "secrets": [
+        "hg_6688@2026"
+      ],
+      "template": "custom",
+      "cluster": null
+    },
+    {
+      "id": "X-09-keyword-then-next-line-secret",
+      "source": "authored",
+      "text": "密码\nXf4@Pk8#Rs2",
+      "secrets": [
+        "Xf4@Pk8#Rs2"
+      ],
+      "template": "custom",
+      "cluster": null
+    },
+    {
+      "id": "X-10-zh-labels-fullwidth-colon",
+      "source": "authored",
+      "text": "账号：pm_growth\n密码：Growth2026",
+      "secrets": [
+        "Growth2026"
+      ],
+      "template": "account",
+      "cluster": null
+    },
+    {
+      "id": "X-11-aws-env-key-id-and-secret",
+      "source": "authored",
+      "text": "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nAWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI7example\nAWS_DEFAULT_REGION=us-east-1",
+      "secrets": [
+        "wJalrXUtnFEMI7example"
+      ],
+      "template": "s3",
+      "cluster": "objectStorageCredential"
+    },
+    {
+      "id": "X-12-secret-under-an-unusual-label",
+      "source": "authored",
+      "text": "主机：10.0.0.5\nclient_secret：8oKj2-qR9tLm3\n备注：内网",
+      "secrets": [
+        "8oKj2-qR9tLm3"
+      ],
+      "template": "custom",
+      "cluster": null
+    },
+    {
+      "id": "X-13-secondary-secret-next-to-primary",
+      "source": "authored",
+      "text": "host=redis.internal\npassword=Primary#1\nREDIS_AUTH=Secondary#2",
+      "secrets": [
+        "Primary#1",
+        "Secondary#2"
+      ],
+      "template": "redis",
+      "cluster": null
+    }
+  ]
+}

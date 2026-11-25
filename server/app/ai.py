@@ -15,8 +15,11 @@ from .redaction import (
     AI_METADATA_FIELD_KEYS,
     REDACTED,
     is_secret_key,
+    redact_cli_secret_flags,
     redact_known_secrets,
+    redact_uri_params,
     strip_uri_credentials,
+    uri_spans,
 )
 from .schemas import VaultFieldPayload, fields_from_json
 from .security import decrypt_password, summarize_password_shape
@@ -94,6 +97,14 @@ class AIService:
         re.compile(r"(?:passw(?:ord)?|passwd|pwd|密码|口令|密碼|购买码|授权码|激活码|提取码|兑换码|卡密)\s+(?:她|他|它)?(?:是|为)?\s*" + NL_SECRET_VALUE, re.IGNORECASE),
         # glued value with no separator at all ("密码20010515", "账号admin")
         re.compile(r"(?:passw(?:ord)?|passwd|pwd|密码|口令|密碼|购买码|授权码|激活码|提取码|兑换码|卡密)([A-Za-z0-9][A-Za-z0-9@#$%^&*!?+_\-=]{3,})"),
+    )
+    # The same phrases, built for redaction rather than extraction. The glued
+    # form's `passw(?:ord)?` backtracks: on `password=[REDACTED]` it gives up
+    # "ord" and reads "ord=" as the value, chewing half the keyword off on
+    # every pass. `password|passw(?!ord)` cannot.
+    NL_REDACT_PATTERNS = tuple(
+        re.compile(pattern.pattern.replace("passw(?:ord)?", "password|passw(?!ord)"), pattern.flags)
+        for pattern in NL_SECRET_PATTERNS
     )
     # Values that are really instructions to the reader, not passwords
     # ("密码给你 收好" must not store "给你").
@@ -203,21 +214,39 @@ class AIService:
     def redact_secret_values(self, text: str) -> str:
         """Blank the value of every secret-class `key: value` pair (ASCII and
         Chinese keys, half- and full-width separators) and of every
-        natural-language secret phrase ("密码是 xxx", "密码20010515")."""
+        natural-language secret phrase ("密码是 xxx", "密码20010515").
+
+        Idempotent by construction: startup maintenance and the AI boundary
+        both scrub text that was already scrubbed once, so a second pass must
+        leave the text alone."""
         if not text:
             return text
+        # URIs and command-line flags carry secrets in shapes the plain
+        # `key: value` scan cannot see.
+        text = redact_uri_params(text)
+        text = redact_cli_secret_flags(text)
+        uris = uri_spans(text)
+
+        def inside_uri(position: int) -> bool:
+            return any(start <= position < end for start, end in uris)
+
         spans: list[tuple[int, int]] = []
         for match in self.KV_PAIR_RE.finditer(text):
+            # Everything inside a URI was handled above; read as prose, the
+            # scheme would become the key and the rest of the URI its value.
+            if inside_uri(match.start()):
+                continue
             if is_secret_key(self._canonical_key(match.group(1))) or is_secret_key(match.group(1)):
                 spans.append(match.span(2))
-        for pattern in self.NL_SECRET_PATTERNS:
-            # A natural-language pattern can stop on a lone separator
-            # ("password = x" yields "="); only spans carrying a value count.
-            spans.extend(
-                match.span(1)
-                for match in pattern.finditer(text)
-                if any(character.isalnum() for character in match.group(1))
-            )
+        for pattern in self.NL_REDACT_PATTERNS:
+            for match in pattern.finditer(text):
+                if inside_uri(match.start()):
+                    continue
+                value = match.group(1)
+                # A natural-language pattern can stop on a lone separator
+                # ("password = x" yields "="); only spans carrying a value count.
+                if any(character.isalnum() for character in value):
+                    spans.append(match.span(1))
         if not spans:
             return text
 
