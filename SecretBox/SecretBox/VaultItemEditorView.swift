@@ -60,13 +60,16 @@ struct VaultItemEditorView: View {
                     .frame(minHeight: 150)
                     #endif
 
+                    // Least privilege: opening a record to AI *reading* grants
+                    // metadata only. Clipboard tools for agents are a separate,
+                    // explicit choice in the item's permissions.
                     Toggle(isOn: Binding(
                         get: { model.recordPermissions.aiAccess != .none },
-                        set: { model.recordPermissions.aiAccess = $0 ? .metadataAndTools : .none }
+                        set: { model.recordPermissions.aiAccess = $0 ? .metadata : .none }
                     )) {
                         Text("Open to AI reading")
                             .font(.callout.weight(.medium))
-                        Text("Once enabled, the MCP agent (Claude Code / OpenCode / Codex) can query the metadata of this record and copy its password via the clipboard. Disabled by default.")
+                        Text("Once enabled, the MCP agent (Claude Code / OpenCode / Codex) can look up this record's redacted metadata. It cannot copy the password. Disabled by default.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }

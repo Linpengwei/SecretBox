@@ -647,11 +647,9 @@ final class SecretBoxAppModel: ObservableObject {
                 notes: recordNote.isEmpty ? draftClassification.defaultNotes : recordNote,
                 tags: payload.tags + ["local"],
                 fields: payload.fields,
-                passwordHash: "local-hash",
-                passwordFingerprint: "local-fingerprint",
                 primarySecret: recordPassword,
                 matchReason: isEditingRecord ? "updated locally for testing" : "saved locally for testing",
-                aiReadable: recordPermissions.aiAccess != .none,
+                aiReadable: recordPermissions.aiAccess == .metadataAndTools,
                 totp: resolvedTOTP,
                 permissions: recordPermissions
             )
@@ -733,11 +731,9 @@ final class SecretBoxAppModel: ObservableObject {
                     notes: "Captured from an otpauth:// URI",
                     tags: ["account", "local"],
                     fields: [],
-                    passwordHash: "local-hash",
-                    passwordFingerprint: "local-fingerprint",
                     primarySecret: nil,
                     matchReason: "saved locally from pasted TOTP URI",
-                    aiReadable: recordPermissions.aiAccess != .none,
+                    aiReadable: recordPermissions.aiAccess == .metadataAndTools,
                     totp: totp,
                     permissions: recordPermissions
                 )
@@ -768,11 +764,9 @@ final class SecretBoxAppModel: ObservableObject {
                 notes: effectiveNote.isEmpty ? parsed.notes : effectiveNote,
                 tags: Array(Set(parsed.tags + [effectiveType])),
                 fields: effectiveFields,
-                passwordHash: "local-hash",
-                passwordFingerprint: "local-fingerprint",
                 primarySecret: parsed.primarySecret,
                 matchReason: "saved locally from pasted text",
-                aiReadable: recordPermissions.aiAccess != .none,
+                aiReadable: recordPermissions.aiAccess == .metadataAndTools,
                 totp: capturedTOTP?.totp,
                 permissions: recordPermissions
             )
@@ -847,7 +841,10 @@ final class SecretBoxAppModel: ObservableObject {
         }
 
         if shouldSkipServerCalls {
-            let source = localRecords.isEmpty ? seededRecords : localRecords
+            // The demo records are UI-test and snapshot fixtures. A real user
+            // with an empty vault gets an empty result, never a fake "Prod S3
+            // Bucket" whose placeholder secret could be copied by mistake.
+            let source = localRecords.isEmpty && isUITesting ? seededRecords : localRecords
             let results = rankedLocalResults(for: searchQuery, source: source)
             searchResults = results
             selectedSearchRecord = results.first
@@ -886,6 +883,7 @@ final class SecretBoxAppModel: ObservableObject {
 
         let name = localRecords[index].name
         localRecords.remove(at: index)
+        concealSecrets(ofRecord: id)
         persistLocalRecords()
         searchResults.removeAll { $0.id == id }
         if selectedSearchRecord?.id == id {
@@ -906,9 +904,10 @@ final class SecretBoxAppModel: ObservableObject {
         var permissions = localRecords[index].effectivePermissions
         permissions.aiAccess = level
         localRecords[index].permissions = permissions
-        // Legacy boolean mirror so pre-matrix MCP builds keep reading the
-        // opt-in correctly; `false` (not nil) stays the explicit disabled state.
-        localRecords[index].aiReadable = level != .none
+        // Legacy boolean mirror for pre-matrix MCP builds, fail-closed: those
+        // builds read `true` as full tool access, so it may only be set for
+        // the level that actually grants it — never for metadata-only.
+        localRecords[index].aiReadable = level == .metadataAndTools
         persistLocalRecords()
 
         if let updated = localRecords.first(where: { $0.id == id }) {
@@ -939,13 +938,16 @@ final class SecretBoxAppModel: ObservableObject {
         setAIAccess(id: id, level: allowed ? .metadataAndTools : .none)
     }
 
+    /// Copies a password. It leaves the clipboard again on its own
+    /// (`PlatformClipboard.secretClearDelay`).
     func copyPassword(_ password: String) {
-        PlatformClipboard.copy(password)
+        PlatformClipboard.copySecret(password)
         statusMessage = "Password copied"
     }
 
+    /// Copies a verification code, with the same self-clearing clipboard write.
     func copyTOTPCode(_ code: String) {
-        PlatformClipboard.copy(code)
+        PlatformClipboard.copySecret(code)
         statusMessage = "Verification code copied"
     }
 
@@ -969,6 +971,50 @@ final class SecretBoxAppModel: ObservableObject {
     func copyAIReference(for record: VaultRecord) {
         PlatformClipboard.copy(record.aiAgentReference)
         statusMessage = "AI reference copied for \(record.name)"
+    }
+
+    // MARK: - Reveal on demand (detail pane)
+
+    /// Shown in place of a secret-class value until the user reveals it. A
+    /// fixed length, so it gives nothing about the real value away.
+    static let secretMask = String(repeating: "•", count: 12)
+
+    /// Secret-class values the user currently sees in the clear, keyed by
+    /// `"<record id>::<key>"`. Empty means everything is masked.
+    @Published private(set) var revealedSecretKeys: Set<String> = []
+
+    private static func secretStorageKey(_ record: VaultRecord, _ key: String) -> String {
+        "\(record.id)::\(key)"
+    }
+
+    func isSecretRevealed(_ record: VaultRecord, key: String) -> Bool {
+        !record.effectivePermissions.hideSecret && revealedSecretKeys.contains(Self.secretStorageKey(record, key))
+    }
+
+    /// What the detail pane shows for a secret-class value (the password, or a
+    /// field flagged hidden): the value while revealed, the mask otherwise.
+    func displayedSecret(_ record: VaultRecord, key: String, value: String) -> String {
+        isSecretRevealed(record, key: key) ? value : Self.secretMask
+    }
+
+    /// Reveals or masks a secret-class value. Revealing is a secret use: a
+    /// record carrying the re-auth permission asks for Touch ID first. A record
+    /// with the hide-secret permission is never displayed.
+    func toggleSecretReveal(_ record: VaultRecord, key: String, label: String) async {
+        guard !record.effectivePermissions.hideSecret else { return }
+        let storageKey = Self.secretStorageKey(record, key)
+        if revealedSecretKeys.contains(storageKey) {
+            revealedSecretKeys.remove(storageKey)
+            return
+        }
+        guard await requestSecretUse(for: record, action: "reveal \(label.lowercased())") else { return }
+        revealedSecretKeys.insert(storageKey)
+    }
+
+    /// Masks a record's secrets again — whenever its content changes or it
+    /// goes away, so an edited password is not simply shown in the clear.
+    func concealSecrets(ofRecord id: String) {
+        revealedSecretKeys = revealedSecretKeys.filter { !$0.hasPrefix("\(id)::") }
     }
 
     // MARK: - Menu bar quick access
@@ -995,10 +1041,10 @@ final class SecretBoxAppModel: ObservableObject {
         return preview.hasSecret || preview.hasTOTP
     }
 
-    /// Same source as the main-window local search: the user's records, with
-    /// the demo seeds only when the vault is completely empty.
+    /// Same source as the main-window local search: the user's records. The
+    /// demo seeds appear only in UI tests, and only when the vault is empty.
     private var quickAccessSource: [VaultRecord] {
-        localRecords.isEmpty ? seededRecords : localRecords
+        localRecords.isEmpty && isUITesting ? seededRecords : localRecords
     }
 
     /// Remembers a quick-access use, most recent first and capped. Ids only —
@@ -1113,7 +1159,14 @@ final class SecretBoxAppModel: ObservableObject {
     }
 
     private var isUITesting: Bool {
-        environment["SECRETBOX_UI_TEST"] == "1"
+        // Compiled out of release builds. The hooks behind this flag reset
+        // vault and preference state, so no environment variable may ever
+        // reach them in a shipped app.
+        #if DEBUG
+        return environment["SECRETBOX_UI_TEST"] == "1"
+        #else
+        return false
+        #endif
     }
 
     private var shouldSkipServerCalls: Bool {
@@ -1129,19 +1182,17 @@ final class SecretBoxAppModel: ObservableObject {
                 name: "Prod S3 Bucket",
                 subtitle: "ops-bot",
                 notes: "Production S3 access key for artifact bucket",
-                tags: ["s3", "prod", "artifact"],
-                fields: [
-                    VaultField(key: "username", label: "Username", value: "ops-bot", valueType: "text", semantic: "username", hidden: false, section: "Auth", order: 0),
-                    VaultField(key: "endpoint", label: "Endpoint", value: "s3.internal.example.com", valueType: "url", semantic: "endpoint", hidden: false, section: "Connection", order: 1),
-                    VaultField(key: "bucket", label: "Bucket", value: "artifacts-prod", valueType: "text", semantic: "bucket", hidden: false, section: "Connection", order: 2),
-                    VaultField(key: "access_key", label: "Access Key", value: "ops-artifact-ak", valueType: "text", semantic: "access_key", hidden: false, section: "Auth", order: 3),
-                    VaultField(key: "region", label: "Region", value: "ap-east-1", valueType: "text", semantic: "region", hidden: false, section: "Connection", order: 4),
-                ],
-                passwordHash: "seed-hash-1",
-                passwordFingerprint: "seed-fingerprint-1",
-                primarySecret: "seed-secret-s3",
-                matchReason: "seed data"
-            ),
+                    tags: ["s3", "prod", "artifact"],
+                    fields: [
+                        VaultField(key: "username", label: "Username", value: "ops-bot", valueType: "text", semantic: "username", hidden: false, section: "Auth", order: 0),
+                        VaultField(key: "endpoint", label: "Endpoint", value: "s3.internal.example.com", valueType: "url", semantic: "endpoint", hidden: false, section: "Connection", order: 1),
+                        VaultField(key: "bucket", label: "Bucket", value: "artifacts-prod", valueType: "text", semantic: "bucket", hidden: false, section: "Connection", order: 2),
+                        VaultField(key: "access_key", label: "Access Key", value: "ops-artifact-ak", valueType: "text", semantic: "access_key", hidden: false, section: "Auth", order: 3),
+                        VaultField(key: "region", label: "Region", value: "ap-east-1", valueType: "text", semantic: "region", hidden: false, section: "Connection", order: 4),
+                    ],
+                    primarySecret: "seed-secret-s3",
+                    matchReason: "seed data"
+                ),
             VaultRecord(
                 id: "seed-db",
                 itemType: "secret",
@@ -1155,15 +1206,13 @@ final class SecretBoxAppModel: ObservableObject {
                     VaultField(key: "engine", label: "Engine", value: "postgres", valueType: "text", semantic: "engine", hidden: false, section: "Connection", order: 1),
                     VaultField(key: "host", label: "Host", value: "billing-db.internal", valueType: "text", semantic: "host", hidden: false, section: "Connection", order: 2),
                     VaultField(key: "port", label: "Port", value: "5432", valueType: "number", semantic: "port", hidden: false, section: "Connection", order: 3),
-                    VaultField(key: "database", label: "Database", value: "billing", valueType: "text", semantic: "database", hidden: false, section: "Connection", order: 4),
-                ],
-                passwordHash: "seed-hash-2",
-                passwordFingerprint: "seed-fingerprint-2",
-                primarySecret: "seed-secret-db",
-                matchReason: "seed data"
-            ),
-        ]
-    }
+                        VaultField(key: "database", label: "Database", value: "billing", valueType: "text", semantic: "database", hidden: false, section: "Connection", order: 4),
+                    ],
+                    primarySecret: "seed-secret-db",
+                    matchReason: "seed data"
+                ),
+            ]
+        }
 
     private func configureLaunchState() {
         guard isUITesting else {
@@ -1175,9 +1224,21 @@ final class SecretBoxAppModel: ObservableObject {
             return
         }
 
+        // Hermetic start for UI tests: whatever a previous run left behind
+        // (in the private test suite, see SecretBoxApp) must not leak in.
         localRecords = []
         recordStore.clear()
-        defaults.removeObject(forKey: Self.localRecordsKey)
+        for key in [
+            Self.localRecordsKey, Self.serverEnabledKey, Self.useServerAIKey,
+            Self.organizationLastRunKey, Self.organizationThresholdBucketKey,
+            Self.organizationSummaryKey, Self.organizationIntervalDaysKey,
+            Self.recentQuickAccessKey,
+        ] {
+            defaults.removeObject(forKey: key)
+        }
+        serverEnabled = false
+        useServerAI = false
+        recentQuickAccessIDs = []
         providerConfigured = true
         isAuthenticated = environment["SECRETBOX_UI_TEST_AUTH"] != "logged_out"
         searchResults = seededRecords
@@ -1351,6 +1412,8 @@ final class SecretBoxAppModel: ObservableObject {
     }
 
     private func upsertLocalRecord(_ record: VaultRecord) {
+        // New content: anything the user had revealed is masked again.
+        concealSecrets(ofRecord: record.id)
         latestSavedRecord = record
         selectedSearchRecord = record
         if let localIndex = localRecords.firstIndex(where: { $0.id == record.id }) {
@@ -2069,13 +2132,33 @@ final class SecretBoxAppModel: ObservableObject {
         if has("access_key", in: .principal) { add(.cloudAccessPair, 20, "access-key") }
         if has("scope", in: .resource) || has("project", in: .resource) { add(.cloudAccessPair, 15, "scope") }
 
-        let best = scores.max(by: { lhs, rhs in lhs.value < rhs.value })
-        let bestCluster = best?.key ?? .genericSecretNote
-        let bestScore = best?.value ?? 0
+        // Deterministic choice: the highest score wins and ties go to the more
+        // specific cluster, in a fixed order. `Dictionary` iteration order is
+        // randomized per process launch and must never decide where a record
+        // is filed — it used to, so the same paste landed in a different
+        // cluster on different launches.
+        var bestCluster = CredentialClusterID.genericSecretNote
+        var bestScore = 0
+        for cluster in Self.clusterTieBreakOrder {
+            let score = scores[cluster, default: 0]
+            if score > bestScore {
+                bestScore = score
+                bestCluster = cluster
+            }
+        }
+        // No cluster scored: the paste carried no recognizable signal, so the
+        // record stays unclassified rather than being filed at random.
         let confidence = min(0.99, max(0.2, Double(bestScore) / 90.0))
         let finalReasons = reasons[bestCluster, default: []]
         return ClusterDecision(clusterID: bestCluster, confidence: confidence, reasons: Array(finalReasons.prefix(4)))
     }
+
+    /// Most specific cluster first; `genericSecretNote` is last so it only
+    /// wins when nothing else scored.
+    private static let clusterTieBreakOrder: [CredentialClusterID] = [
+        .cacheCredential, .relationalDBCredential, .messageQueueCredential, .objectStorageCredential,
+        .cloudAccessPair, .humanAccountLogin, .serviceEndpointSecret, .genericSecretNote,
+    ]
 
     private func deriveTemplateType(from clusterDecision: ClusterDecision, text: String, keyValues: [String: String]) -> String {
         let lowered = text.lowercased()
@@ -2643,8 +2726,10 @@ final class SecretBoxAppModel: ObservableObject {
         for field in fields {
             seen[field.key] = field
         }
+        // `key` breaks remaining ties: `Dictionary.values` order is randomized
+        // per process launch and must not decide the stored field order.
         return seen.values.sorted { lhs, rhs in
-            (lhs.section ?? "", lhs.order, lhs.label) < (rhs.section ?? "", rhs.order, rhs.label)
+            (lhs.section ?? "", lhs.order, lhs.label, lhs.key) < (rhs.section ?? "", rhs.order, rhs.label, rhs.key)
         }
     }
 

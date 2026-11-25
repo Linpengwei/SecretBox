@@ -23,6 +23,16 @@ final class SecretBoxUITests: XCTestCase {
         #endif
     }
 
+    /// Three flows drive the iPhone navigation: a pushed detail with a back
+    /// button, and swipe gestures to scroll. The macOS layout keeps the detail
+    /// pane inline, so they are skipped there until they are adapted — they
+    /// run in scripts/test-ios.sh.
+    private func skipUnlessIOS() throws {
+        #if os(macOS)
+        throw XCTSkip("iPhone navigation flow; the macOS layout has no pushed detail to go back from")
+        #endif
+    }
+
     private func launchApp(auth: String = "logged_in",
                            query: String? = nil,
                            extraEnvironment: [String: String] = [:]) -> XCUIApplication {
@@ -162,7 +172,11 @@ final class SecretBoxUITests: XCTestCase {
         let detailTitle = app.staticTexts["detail.title"]
         XCTAssertTrue(detailTitle.waitForExistence(timeout: 5))
 
-        let predicate = NSPredicate(format: "value == %@", "REDIS")
+        // A credential-less redis URI is titled after its host (see
+        // `deriveRecordName`). The expectation used to say "REDIS" here, which
+        // the parser has not produced for a long time — the test then failed
+        // on every run and was written off as flaky.
+        let predicate = NSPredicate(format: "value == %@", "REDIS cache.internal")
         expectation(for: predicate, evaluatedWith: detailTitle)
         waitForExpectations(timeout: 5)
     }
@@ -358,6 +372,7 @@ final class SecretBoxUITests: XCTestCase {
     /// Roadmap phase-1 acceptance flow: paste capture → save → search →
     /// detail → copy password, end to end on a compact-width device.
     func testCaptureSaveSearchDetailCopyFlow() throws {
+        try skipUnlessIOS()
         let app = launchApp()
         defer { app.terminate() }
 
@@ -409,6 +424,7 @@ final class SecretBoxUITests: XCTestCase {
     /// Phase-MP chain: pasting credentials with an `otpauth://` URI captures
     /// the TOTP seed, and the detail page renders the live verification code.
     func testCaptureWithOTPAuthShowsLiveCodeAndCopies() throws {
+        try skipUnlessIOS()
         let app = launchApp()
         defer { app.terminate() }
 
@@ -441,6 +457,7 @@ final class SecretBoxUITests: XCTestCase {
     /// Permission matrix in the editor: enabling read-only locks editing and
     /// deletion from the detail page.
     func testReadOnlyPermissionLocksEditing() throws {
+        try skipUnlessIOS()
         let app = launchApp()
         defer { app.terminate() }
 

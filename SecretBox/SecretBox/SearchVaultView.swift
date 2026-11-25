@@ -504,8 +504,10 @@ struct SearchVaultView: View {
     /// Copies a redacted `<secretbox-credential>` reference (record id +
     /// metadata, never the plaintext) for pasting into an AI agent chat; the
     /// agent resolves it through the SecretBox MCP server. Records that are
-    /// not yet AI-readable get a confirmation dialog first — pasting a
-    /// reference the agent cannot see would silently fail.
+    /// not yet AI-visible get a confirmation dialog first — pasting a
+    /// reference the agent cannot see would silently fail. The dialog grants
+    /// the least access that makes the reference resolvable (metadata only);
+    /// clipboard tools for agents stay off until the user asks for them.
     @ViewBuilder
     private var copyAIRefButton: some View {
         if let record = model.selectedSearchRecord ?? model.filteredResults.first, record.password != nil {
@@ -526,8 +528,8 @@ struct SearchVaultView: View {
                 ),
                 titleVisibility: .visible
             ) {
-                Button("Enable AI access and copy reference") {
-                    model.setAIReadable(id: record.id, allowed: true)
+                Button("Share metadata only and copy reference") {
+                    model.setAIAccess(id: record.id, level: .metadata)
                     model.copyAIReference(for: record)
                     recordPendingAIReference = nil
                 }
@@ -535,7 +537,7 @@ struct SearchVaultView: View {
                     recordPendingAIReference = nil
                 }
             } message: {
-                Text("Records not shared with AI are invisible to the MCP agent — a pasted reference would not resolve. Once shared, the agent resolves the record id directly; plaintext never enters the conversation.")
+                Text("Agents will be able to look up this record's redacted metadata — hosts, usernames, tags — so the reference resolves. They will not be able to copy its password. Records not shared with AI are invisible to the MCP agent, and plaintext never enters the conversation.")
             }
         }
     }
@@ -615,7 +617,11 @@ struct SearchVaultView: View {
                     itemSection(title: group.title) {
                         ForEach(group.fields) { field in
                             if !field.value.isEmpty, field.key != "username", !detailSuppressedFieldKeys.contains(field.key) {
-                                detailRow(field.label, field.value, monospaced: field.hidden)
+                                if field.hidden {
+                                    concealableRow(record, key: "field.\(field.key)", label: field.label, value: field.value)
+                                } else {
+                                    detailRow(field.label, field.value)
+                                }
                             }
                         }
                     }
@@ -631,7 +637,7 @@ struct SearchVaultView: View {
                                     .foregroundStyle(.secondary)
                             }
                         } else {
-                            detailRow("Password", password, monospaced: true)
+                            concealableRow(record, key: "password", label: "Password", value: password)
                         }
                     }
                 }
@@ -774,6 +780,24 @@ struct SearchVaultView: View {
                     .textSelection(.enabled)
             }
             Spacer()
+        }
+    }
+
+    /// A secret-class value — the password, or a field flagged hidden — stays
+    /// masked until the user asks to see it, so a shared screen or a passing
+    /// glance shows nothing. The masking and its re-auth gate live in the model
+    /// (`toggleSecretReveal`), where they are unit-tested.
+    private func concealableRow(_ record: VaultRecord, key: String, label: String, value: String) -> some View {
+        let revealed = model.isSecretRevealed(record, key: key)
+        return HStack(alignment: .firstTextBaseline, spacing: 12) {
+            detailRow(label, model.displayedSecret(record, key: key, value: value), monospaced: true)
+            Button(revealed ? "Hide" : "Show") {
+                Task {
+                    await model.toggleSecretReveal(record, key: key, label: label)
+                }
+            }
+            .buttonStyle(.bordered)
+            .accessibilityIdentifier("detail.reveal.\(key)")
         }
     }
 

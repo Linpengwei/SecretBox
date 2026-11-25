@@ -12,15 +12,28 @@ import os
 @main
 struct SecretBoxApp: App {
     private static let isRunningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    // UI tests launch the real app bundle with SECRETBOX_UI_TEST=1: same bundle
+    // id, same Keychain item and same UserDefaults domain as the installed app.
+    private static let isUITestLaunch = ProcessInfo.processInfo.environment["SECRETBOX_UI_TEST"] == "1"
 
     // The test host must never touch the real Keychain: unit tests inject their
     // own stores, but the host app instance would otherwise hit a keychain ACL
     // prompt at launch (the vault item belongs to the installed Release app)
     // and hang the runner.
+    // A UI-test launch gets the same treatment: an in-memory vault and a
+    // private preferences suite, so the test hooks (which reset state) can
+    // only ever clear test data — never the user's vault or settings.
     @StateObject private var model = SecretBoxAppModel(
-        recordStore: isRunningTests ? InMemoryRecordStore() : KeychainRecordStore()
+        defaults: isUITestLaunch ? Self.uiTestDefaults : .standard,
+        recordStore: isRunningTests || isUITestLaunch ? InMemoryRecordStore() : KeychainRecordStore()
     )
-    private let isUITestRun = Self.isRunningTests
+    // No menu-bar panel in a test host or a UI-test launch: tests drive the
+    // main window, and a live extra would only add a second surface.
+    private let isUITestRun = Self.isRunningTests || Self.isUITestLaunch
+
+    private static var uiTestDefaults: UserDefaults {
+        UserDefaults(suiteName: "Hendrix.SecretBox.uitests") ?? .standard
+    }
 
     init() {
         Self.reapFrozenSiblingInstances()
@@ -32,6 +45,7 @@ struct SecretBoxApp: App {
             ContentView(model: model)
         }
 
+        // The real menu-bar panel is not instantiated under test.
         MenuBarExtra("SecretBox", systemImage: "key.fill") {
             if isUITestRun {
                 EmptyView()

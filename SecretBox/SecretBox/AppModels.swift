@@ -295,8 +295,6 @@ struct VaultRecord: Codable, Identifiable, Hashable {
     var notes: String
     var tags: [String]
     var fields: [VaultField]
-    var passwordHash: String
-    var passwordFingerprint: String
     var primarySecret: String?
     var matchReason: String?
     /// Opt-in flag: when true the record may be surfaced to AI agents (MCP).

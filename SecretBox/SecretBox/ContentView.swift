@@ -4,8 +4,14 @@ struct ContentView: View {
     @ObservedObject var model: SecretBoxAppModel
     private let environment = ProcessInfo.processInfo.environment
 
+    // Test-only layout hook, compiled out of release builds like every other
+    // SECRETBOX_UI_TEST* switch.
     private var showsMenuBarTestPanel: Bool {
-        environment["SECRETBOX_UI_TEST_MENU_BAR"] == "1"
+        #if DEBUG
+        return environment["SECRETBOX_UI_TEST_MENU_BAR"] == "1"
+        #else
+        return false
+        #endif
     }
 
     var body: some View {

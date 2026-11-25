@@ -146,8 +146,6 @@ final class SecretBoxAppModelTests: XCTestCase {
             notes: "stored by an older build",
             tags: [],
             fields: [],
-            passwordHash: "hash",
-            passwordFingerprint: "fp",
             primarySecret: "secret",
             matchReason: nil
         )
@@ -276,8 +274,6 @@ final class SecretBoxAppModelTests: XCTestCase {
             notes: "",
             tags: [],
             fields: [],
-            passwordHash: "hash",
-            passwordFingerprint: "fp",
             primarySecret: "super-secret-value",
             matchReason: nil
         )
@@ -446,8 +442,6 @@ final class SecretBoxAppModelTests: XCTestCase {
                 VaultField(key: "host", label: "Host", value: "mq-prod.internal", valueType: "text", semantic: "host", hidden: false, section: "Connection", order: 0),
                 VaultField(key: "vhost", label: "VHost", value: "prod-vhost", valueType: "text", semantic: "vhost", hidden: false, section: "Connection", order: 1)
             ],
-            passwordHash: "hash",
-            passwordFingerprint: "fp",
             primarySecret: "secret",
             matchReason: nil
         )
@@ -911,8 +905,6 @@ final class SecretBoxAppModelTests: XCTestCase {
                 VaultField(key: "vhost", label: "VHost", value: "prod-vhost", valueType: "text", semantic: "vhost", hidden: false, section: "Connection", order: 1),
                 VaultField(key: "queue", label: "Queue", value: "settlement", valueType: "text", semantic: "queue", hidden: false, section: "Connection", order: 2),
             ],
-            passwordHash: "hash",
-            passwordFingerprint: "fingerprint",
             primarySecret: "RabbitMQ!2026",
             matchReason: nil
         )
@@ -947,8 +939,6 @@ final class SecretBoxAppModelTests: XCTestCase {
                 VaultField(key: "account", label: "Account", value: "ops-bot@example.com", valueType: "text", semantic: "account", hidden: false, section: "Login", order: 1),
                 VaultField(key: "url", label: "URL", value: "https://github.com", valueType: "url", semantic: "uri", hidden: false, section: "Login", order: 2),
             ],
-            passwordHash: "hash",
-            passwordFingerprint: "fingerprint",
             primarySecret: "GhOpsBot@2026",
             matchReason: nil
         )
@@ -1127,14 +1117,31 @@ final class SecretBoxAppModelTests: XCTestCase {
     func testEffectivePermissionsMapsLegacyAIReadableFlag() {
         var legacy = VaultRecord(
             id: "legacy", itemType: "secret", templateType: nil, name: "Legacy",
-            subtitle: nil, notes: "", tags: [], fields: [],
-            passwordHash: "h", passwordFingerprint: "f", primarySecret: "s", matchReason: nil
+            subtitle: nil, notes: "", tags: [], fields: [], primarySecret: "s"
         )
         legacy.aiReadable = true
         XCTAssertEqual(legacy.effectivePermissions.aiAccess, .metadataAndTools)
 
         legacy.aiReadable = nil
         XCTAssertEqual(legacy.effectivePermissions.aiAccess, .none, "nil legacy flag denies by default")
+    }
+
+    func testVaultBlobsFromOlderBuildsStillDecode() throws {
+        // Blobs written before the client dropped the server-side hash and
+        // fingerprint carry those keys; they must decode, not wipe the vault.
+        let json = """
+        [{"id": "old-1", "itemType": "secret", "templateType": "redis", "name": "Old Redis",
+          "notes": "", "tags": [], "fields": [], "passwordHash": "local-hash",
+          "passwordFingerprint": "local-fingerprint", "primarySecret": "old-secret",
+          "aiReadable": true}]
+        """
+
+        let records = try JSONDecoder().decode([VaultRecord].self, from: Data(json.utf8))
+
+        XCTAssertEqual(records.count, 1)
+        XCTAssertEqual(records.first?.id, "old-1")
+        XCTAssertEqual(records.first?.primarySecret, "old-secret")
+        XCTAssertEqual(records.first?.effectivePermissions.aiAccess, .metadataAndTools)
     }
 
     func testSavedPermissionsPersistThroughKeychainRoundTrip() async throws {
@@ -1152,7 +1159,9 @@ final class SecretBoxAppModelTests: XCTestCase {
         XCTAssertEqual(saved.effectivePermissions.hideSecret, true)
         XCTAssertEqual(saved.effectivePermissions.requireReauth, true)
         XCTAssertEqual(saved.effectivePermissions.aiAccess, .metadata)
-        XCTAssertEqual(saved.aiReadable, true, "legacy boolean mirrors any non-none level")
+        // Fail-closed mirror: pre-matrix MCP builds read `true` as full tool
+        // access, so metadata-only must not set it.
+        XCTAssertEqual(saved.aiReadable, false, "the legacy boolean is only set for the level that grants tools")
 
         let reloaded = SecretBoxAppModel(defaults: defaults, recordStore: InMemoryRecordStore(data: store.loadData()))
         XCTAssertEqual(reloaded.localRecords.first?.effectivePermissions.aiAccess, .metadata)
@@ -1230,7 +1239,12 @@ final class SecretBoxAppModelTests: XCTestCase {
         model.setAIAccess(id: record.id, level: .metadata)
         var updated = try XCTUnwrap(model.localRecords.first)
         XCTAssertEqual(updated.permissions?.aiAccess, .metadata)
-        XCTAssertEqual(updated.aiReadable, true)
+        XCTAssertEqual(updated.aiReadable, false, "metadata-only must not read as tool access on older MCP builds")
+
+        model.setAIAccess(id: record.id, level: .metadataAndTools)
+        updated = try XCTUnwrap(model.localRecords.first)
+        XCTAssertEqual(updated.permissions?.aiAccess, .metadataAndTools)
+        XCTAssertEqual(updated.aiReadable, true, "the level that grants tools does set the legacy flag")
 
         model.setAIAccess(id: record.id, level: .none)
         updated = try XCTUnwrap(model.localRecords.first)
@@ -1398,5 +1412,140 @@ final class SecretBoxAppModelTests: XCTestCase {
         XCTAssertNil(model.selectedClusterBrowserID)
         XCTAssertEqual(model.searchResults.map(\.id), [record.id])
         XCTAssertEqual(model.selectedSearchRecord?.id, record.id)
+    }
+
+    // MARK: - Phase 0 hardening
+
+    func testEmptyVaultNeverSurfacesDemoRecordsOutsideUITests() async {
+        let model = SecretBoxAppModel(
+            environment: ["SECRETBOX_SKIP_NETWORK": "1"],
+            defaults: defaults,
+            recordStore: InMemoryRecordStore()
+        )
+
+        model.searchQuery = "billing"
+        await model.searchPasswords()
+
+        XCTAssertTrue(model.searchResults.isEmpty, "a real user with an empty vault must not be handed demo records")
+        XCTAssertTrue(model.quickAccessResults(for: "prod").isEmpty, "nor from the menu bar")
+        XCTAssertTrue(model.recentQuickAccessRecords.isEmpty)
+    }
+
+    func testClusterDecisionIsStableForZeroSignalAndTiedPastes() async {
+        let model = makeOfflineModel()
+
+        // No recognizable signal at all: the record is unclassified, not filed
+        // into whichever cluster happened to come first in a dictionary.
+        model.pastedText = "hg_6688@2026"
+        await model.saveFromPastedText()
+        XCTAssertEqual(model.latestSavedRecord?.clusterID, CredentialClusterID.genericSecretNote.rawValue)
+        XCTAssertEqual(model.latestSavedRecord?.templateType, "custom")
+
+        // redis kv without db/service: the cache and service-endpoint clusters
+        // tie on score, so the more specific one has to win — every launch.
+        model.pastedText = "host=redis-prod.internal port=6379 password=RedisProdSecret1 username=default"
+        await model.saveFromPastedText()
+        XCTAssertEqual(model.latestSavedRecord?.clusterID, CredentialClusterID.cacheCredential.rawValue)
+    }
+
+    func testCopiedSecretsAreConcealedAndClearThemselves() async throws {
+        #if canImport(AppKit)
+        let pasteboard = NSPasteboard.general
+        let concealed = NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType")
+        let transient = NSPasteboard.PasteboardType("org.nspasteboard.TransientType")
+
+        PlatformClipboard.copySecret("654321", clearAfter: .milliseconds(150))
+        XCTAssertEqual(PlatformClipboard.string, "654321", "the secret is on the clipboard for pasting")
+        XCTAssertTrue(pasteboard.types?.contains(concealed) == true, "clipboard managers must skip it")
+        XCTAssertTrue(pasteboard.types?.contains(transient) == true, "it must not be kept in clipboard history")
+
+        try await Task.sleep(for: .milliseconds(700))
+        XCTAssertNil(PlatformClipboard.string, "the secret leaves the clipboard on its own")
+
+        PlatformClipboard.copy("<secretbox-credential id=\"x\">")
+        XCTAssertEqual(PlatformClipboard.string, "<secretbox-credential id=\"x\">")
+        XCTAssertTrue(pasteboard.types?.contains(concealed) == false, "an AI reference is not a secret")
+        PlatformClipboard.clear()
+        #endif
+    }
+
+    func testClipboardAutoClearNeverClobbersALaterCopy() async throws {
+        #if canImport(AppKit)
+        PlatformClipboard.copySecret("FirstSecret#1", clearAfter: .milliseconds(150))
+        PlatformClipboard.copy("something the user copied afterwards")
+
+        try await Task.sleep(for: .milliseconds(700))
+        XCTAssertEqual(PlatformClipboard.string, "something the user copied afterwards")
+        PlatformClipboard.clear()
+        #endif
+    }
+
+    func testSecretsAreMaskedUntilRevealed() async throws {
+        let gate = StubReauthGate(nextResult: true)
+        let model = makeOfflineModel(reauthGate: gate)
+        model.recordPassword = "Visible#Secret1"
+        await model.saveRecord()
+        let record = try XCTUnwrap(model.latestSavedRecord)
+        let password = try XCTUnwrap(record.password)
+
+        XCTAssertEqual(model.displayedSecret(record, key: "password", value: password), SecretBoxAppModel.secretMask, "masked by default")
+        XCTAssertFalse(model.isSecretRevealed(record, key: "password"))
+
+        await model.toggleSecretReveal(record, key: "password", label: "Password")
+        XCTAssertEqual(model.displayedSecret(record, key: "password", value: password), password)
+        XCTAssertEqual(gate.challengeCount, 0, "the record carries no re-auth permission, so there is nothing to ask")
+
+        await model.toggleSecretReveal(record, key: "password", label: "Password")
+        XCTAssertEqual(model.displayedSecret(record, key: "password", value: password), SecretBoxAppModel.secretMask, "toggling again masks it")
+    }
+
+    func testRevealingASecretOnAReauthRecordNeedsTheGate() async throws {
+        let denied = StubReauthGate(nextResult: false)
+        let model = makeOfflineModel(reauthGate: denied)
+        model.recordPassword = "Gated#Secret1"
+        model.recordPermissions.requireReauth = true
+        await model.saveRecord()
+        let record = try XCTUnwrap(model.latestSavedRecord)
+
+        await model.toggleSecretReveal(record, key: "password", label: "Password")
+
+        XCTAssertEqual(model.displayedSecret(record, key: "password", value: "Gated#Secret1"), SecretBoxAppModel.secretMask, "a denied gate leaves it masked")
+        XCTAssertEqual(denied.challengeCount, 1)
+        XCTAssertEqual(model.statusMessage, "Authentication required to reveal password")
+    }
+
+    func testHiddenSecretRecordsAreNeverDisplayed() async throws {
+        let gate = StubReauthGate(nextResult: true)
+        let model = makeOfflineModel(reauthGate: gate)
+        model.recordPassword = "Hidden#Secret1"
+        model.recordPermissions.hideSecret = true
+        await model.saveRecord()
+        let record = try XCTUnwrap(model.latestSavedRecord)
+
+        await model.toggleSecretReveal(record, key: "password", label: "Password")
+
+        XCTAssertEqual(model.displayedSecret(record, key: "password", value: "Hidden#Secret1"), SecretBoxAppModel.secretMask)
+        XCTAssertEqual(gate.challengeCount, 0, "a hide-secret record is not even asked")
+    }
+
+    func testEditingOrDeletingARecordMasksItsSecretsAgain() async throws {
+        let model = makeOfflineModel()
+        model.recordPassword = "First#Secret1"
+        await model.saveRecord()
+        let record = try XCTUnwrap(model.latestSavedRecord)
+        await model.toggleSecretReveal(record, key: "password", label: "Password")
+        XCTAssertTrue(model.isSecretRevealed(record, key: "password"))
+
+        // Saving replaces the record: the reveal must not carry over to the
+        // new content.
+        model.beginEditing(record)
+        model.recordPassword = "Second#Secret2"
+        await model.saveRecord()
+        let edited = try XCTUnwrap(model.latestSavedRecord)
+        XCTAssertEqual(model.displayedSecret(edited, key: "password", value: "Second#Secret2"), SecretBoxAppModel.secretMask)
+
+        await model.toggleSecretReveal(edited, key: "password", label: "Password")
+        model.deleteRecord(id: edited.id)
+        XCTAssertTrue(model.revealedSecretKeys.isEmpty)
     }
 }

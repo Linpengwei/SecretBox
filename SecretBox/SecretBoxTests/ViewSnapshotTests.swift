@@ -87,6 +87,26 @@ final class ViewSnapshotTests: XCTestCase {
         )
     }
 
+    /// The detail pane's Secret section, taller than `search-seeded` so the
+    /// password row is in frame: masked, with the Show control beside it. The
+    /// pixel tolerance makes this a layout check only; the masking itself is
+    /// asserted by the model tests (`displayedSecret`, `toggleSecretReveal`).
+    func testDetailSecretSectionSnapshot() async {
+        let model = SecretBoxAppModel(
+            environment: ["SECRETBOX_UI_TEST": "1", "SECRETBOX_UI_TEST_AUTH": "logged_in"],
+            defaults: freshDefaults(),
+            recordStore: InMemoryRecordStore()
+        )
+        model.searchQuery = "billing"
+        await model.searchPasswords()
+
+        assertViewSnapshot(
+            of: SearchVaultView(model: model),
+            size: CGSize(width: 1180, height: 1120),
+            named: "detail-secret-masked"
+        )
+    }
+
     func testVaultEditorCaptureSheetSnapshot() {
         let model = SecretBoxAppModel(
             environment: ["SECRETBOX_UI_TEST": "1", "SECRETBOX_UI_TEST_AUTH": "logged_in"],
