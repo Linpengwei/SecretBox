@@ -154,7 +154,9 @@ docker compose up --build    # http://127.0.0.1:8000 —— 运维看板在 /das
 python3 scripts/seed_demo.py # 可选：灌入演示数据
 ```
 
-或裸跑：`pip install -r requirements.txt && python3 -m uvicorn app.main:app`。首次启动自动建库迁移。
+或裸跑：`pip install -r requirements.txt && SECRETBOX_DEV=1 python3 -m uvicorn app.main:app`。首次启动自动建库迁移。`SECRETBOX_DEV=1` 表示接受内置的开发密钥；不带它，服务器会拒绝在开发密钥上启动。
+
+服务器只发布在 `127.0.0.1`。它目前还没有认证，请让它留在那里。
 
 ### MCP 服务器
 
@@ -163,21 +165,25 @@ python3 scripts/seed_demo.py # 可选：灌入演示数据
 ## 测试
 
 ```bash
-./scripts/test.sh            # macOS 应用测试 + 服务器 pytest
-./scripts/test-macos.sh      # macOS 全量（单元 + 50 样本回归 + UI 冒烟）
+./scripts/test.sh            # macOS 应用测试、Python lint、服务器与 MCP pytest、persona-200 下限
+./scripts/test-macos.sh      # macOS 全量（单元 + 50 样本回归 + 快照 + 全部 UI 测试）
 ./scripts/test-ios.sh        # iOS 模拟器（单元 + 50 样本回归 + 7 条 UI 冒烟链路）
 ```
 
-服务器：`cd server && python3 -m pytest tests`；MCP：`cd mcp-server && python3 -m pytest test_secretbox_mcp.py`。详见 `TESTING.md`。
+服务器：`cd server && python3 -m pytest tests`（一次性数据库——绝不是你自己的）；MCP：`cd mcp-server && python3 -m pytest test_secretbox_mcp.py`；Lint：`ruff check .`。每次 push 时 CI 会跑服务器、MCP 与 macOS 单元套件。详见 [TESTING.zh-CN.md](TESTING.zh-CN.md)。
 
 ## 安全模型（改动前必读）
 
-完整定义见 `server/README.md`，要点：
+完整定义见 [server/README.zh-CN.md](server/README.zh-CN.md)，要点：
 
-- 密码三重存储：`encrypted_password`（Fernet 密文）/ `password_hash`（Argon2id）/ `password_fingerprint`（keyed HMAC，供精确搜索）
+- **AI 看到的是白名单，不是脱敏。** 模型只会收到显式允许清单（与 MCP 服务器共用）上的元数据字段，外加清洗过的名称、备注和标签。原始粘贴文本绝不进入 prompt；模型的输出在写回前按同样规则过滤
+- 为搜索保留的自由文本在入库前会被清洗：去掉 URI 凭据，抹掉机密级 `key: value` 与自然语句短语的取值，移除已知密钥的各种编码形态
+- 搜索绝不兜底返回无关记录；URL 类字段绝不携带凭据
+- 密码三重存储：`encrypted_password`（Fernet 密文）/ `password_hash`（Argon2id）/ `password_fingerprint`（keyed HMAC，供精确搜索）；API 视图绝不返回 hash 与指纹
 - 明文密码与 TOTP 种子**绝不**进入 AI 上下文、fields、MCP 输出；种子服务器端仅存 `totp_encrypted` 密文
 - 验证码生成只在客户端；`pasted_text` 中的 `otpauth://` 在服务端强制清洗并路由到加密列
-- ⚠️ **当前为开发态**：服务器无认证、`ENCRYPTION_KEY`/`FINGERPRINT_KEY` 为开发默认值——请勿直接公网部署，路线图阶段 2/3 解决（见 `ROADMAP.md`）
+- 应用里密码在你主动显示前始终遮蔽；复制出的密码或验证码 30 秒后会自动离开剪贴板
+- ⚠️ **当前为开发态**：服务器无认证。它只绑定回环地址，且在没设置 `SECRETBOX_DEV=1` 时拒绝使用开发密钥——请勿把它暴露到网络上（路线图阶段 3、4 解决，见 `ROADMAP.zh-CN.md`）
 
 ## 目录结构
 
@@ -188,14 +194,16 @@ SecretBox/            # SwiftUI 应用（Xcode 工程，macOS + iOS）
   SecretBoxUITests/   #   UI 冒烟
 server/               # FastAPI + SQLAlchemy + SQLite —— API、运维看板、审计轨迹、AI 网关
 mcp-server/           # 零依赖 stdio MCP 服务器
+MAUI/                 # 实验性的 Windows/Android 客户端——已冻结，见其 README
 scripts/              # 测试/注册脚本
-testsets/             # persona-200 场景套件产物
+testsets/             # persona-200 场景套件产物与质量下限
 docs/screenshots/     # 由 DocsScreenshotsTests 重新生成
+.github/workflows/    # CI 与仅供参考的每夜任务
 ```
 
 ## 文档
 
-- [ROADMAP.zh-CN.md](ROADMAP.zh-CN.md) — 阶段规划与进度（阶段 0 / MP / 1 / MB 已完成；下一步阶段 2：服务端集成与同步）
+- [ROADMAP.zh-CN.md](ROADMAP.zh-CN.md) — 阶段规划与进度（阶段 0 已完成；下一步阶段 1：统一的捕获引擎）
 - [TESTING.zh-CN.md](TESTING.zh-CN.md) — 测试矩阵与运行方式
 - [BETA_NOTES.zh-CN.md](BETA_NOTES.zh-CN.md) — 内测说明与变更记录
 - [AGENTS.zh-CN.md](AGENTS.zh-CN.md) — 代码贡献约定与安全不变量

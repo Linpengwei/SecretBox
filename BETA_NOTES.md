@@ -62,6 +62,40 @@
 - **Security unchanged**: quick copies gate through `requestSecretUse` (requireReauth → LAContext); `aiAccess=none` records expose no AI-reference action; recents persist ids only.
 - **Tests**: 8 new model unit tests; snapshot baselines `menu-bar-capture` / `menu-bar-search`; 3 new macOS UI chains (search→↩ copy with clipboard assertion, search→⌘↩ reveal, capture→⌘↩ save); docs promo screenshot `menubar-panels.png` (both modes side by side) via the regenerated `DocsScreenshotsTests` (which now seeds its vault after construction — UI-test init wipes the store).
 
+## Phase 0 changes (2026-11-25, security hardening, not yet packaged as a beta)
+
+The first round of the replanned `ROADMAP.md`. No new features; it closes leaks and removes traps.
+
+- **Server is bound to loopback** (`docker-compose.yml` publishes on `127.0.0.1:8000` only) and runs as an unprivileged user. It refuses the development keys unless `SECRETBOX_DEV=1` is set, refuses cross-origin browser reads by default, validates upstream URLs, rate-limits the AI gateway and the audit ingest, and serves the dashboard with a CSP.
+- **AI egress is a whitelist.** The model only receives metadata fields on an allowlist shared with the MCP server. Before this change a multi-secret paste, a percent-encoded URI password or a `.env` block could reach the model and be stored in plaintext.
+- **Search no longer falls back to unrelated records** — a query that matched nothing used to return the first few records with their plaintext passwords.
+- **API item views no longer carry `password_hash` / `password_fingerprint`.**
+- **App: UI tests no longer touch your data.** A UI-test launch used to open and clear the real Keychain vault; it now gets an in-memory vault and private preferences, and the hooks are absent from release builds.
+- **App: passwords are masked until revealed**, and revealing honors the re-auth permission. A copied password or verification code is marked concealed and leaves the clipboard after 30 seconds.
+- **App: deterministic classification.** A paste used to be filed into a cluster chosen by dictionary order; ties now go to the more specific cluster, and a paste with no recognizable signal stays unclassified.
+- **App: least-privilege AI sharing.** "Copy AI reference" and "Open to AI reading" grant metadata only; tool access is a separate choice.
+- **App: no demo records outside UI tests.** An empty vault no longer offers a fake "Prod S3 Bucket" in search or the menu bar.
+
+### Compatibility
+
+- A client built before this change cannot talk to a server built after it: item views no longer include `password_hash` / `password_fingerprint`, which the old client required when decoding. A new client with an old server is fine. Update both together if you use server mode.
+- Running the server bare now needs `SECRETBOX_DEV=1` (or real keys).
+- An existing `data/` directory keeps working; on first start the server re-applies the current field scrub to stored records.
+- Local vaults keep working: blobs written by older builds decode unchanged.
+- `scripts/test-macos.sh` now runs every UI test, and several fail — see below and `TESTING.md`.
+
+### Test status (2026-11-25)
+
+| Suite | Result |
+|---|---|
+| Server pytest | 124/124 |
+| MCP pytest | 34/34 |
+| persona-200 with floors | pass (semantic 166/200, equal to the previous run) |
+| macOS unit tests (model + TOTP) | 86/86 |
+| View snapshots | 8/8 |
+| macOS UI tests | 4 of 11 pass; the other 7 fail identically on the commit before this round — needs a run from a normal Terminal; 3 iPhone flows skipped |
+| iOS simulator | not run in this round |
+
 ## Rollback
 
 `git stash && git clean -fd beta/` returns to the initial state (removes untracked files — use with care).
