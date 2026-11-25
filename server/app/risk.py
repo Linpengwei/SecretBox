@@ -45,7 +45,7 @@ def _has_run(lowered: str, runs: tuple[str, ...] | list[str], min_len: int = 4) 
 
 def _sequential_chars(password: str, min_len: int = 4) -> bool:
     ascending = descending = 1
-    for previous, current in zip(password, password[1:]):
+    for previous, current in zip(password, password[1:], strict=False):  # adjacent pairs, by design uneven
         if ord(current) - ord(previous) == 1:
             ascending += 1
             descending = 1
@@ -201,14 +201,14 @@ def audit_vault(records: list[VaultRecord], *, stale_days: int = 180) -> dict:
         group = reuse_groups.setdefault(record.password_fingerprint, [])
         group.append(identity)
 
-        stale = False
-        if record.updated_at is not None and record.updated_at.replace(tzinfo=None) < stale_cutoff:
-            stale = True
-            entry["stale"] = True
+        entry["stale"] = bool(
+            record.updated_at is not None and record.updated_at.replace(tzinfo=None) < stale_cutoff
+        )
+        if entry["stale"]:
             entry["stale_days"] = (datetime.utcnow() - record.updated_at.replace(tzinfo=None)).days
 
     reused_records = 0
-    for fingerprints, members in reuse_groups.items():
+    for members in reuse_groups.values():
         if len(members) > 1:
             reused_records += len(members)
             for entry in per_record:

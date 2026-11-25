@@ -2,11 +2,20 @@ services:
   api:
     build:
       context: .
+    # Loopback only. The server has no authentication yet (that is the auth
+    # phase), and /api/search returns plaintext: bound to 0.0.0.0 it is
+    # reachable from the whole LAN. To expose it on purpose, change the host
+    # IP here and read the security section of README.md first.
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     environment:
       DATABASE_URL: sqlite:////app/data/secretbox.db
+      # Development keys for the local demo stack. Records are bound to the
+      # key they were written with, so do not change these on an existing
+      # data/ directory. A real deployment sets its own keys and drops
+      # SECRETBOX_DEV.
       ENCRYPTION_KEY: 8KOOjt0dP7xEx0_o5oIxUOGx2IkG4j9vV8u3suP2h5Q=
       FINGERPRINT_KEY: local-dev-fingerprint-key
+      SECRETBOX_DEV: "1"
     volumes:
       - ./data:/app/data

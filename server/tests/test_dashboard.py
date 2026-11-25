@@ -6,14 +6,13 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import httpx
-from fastapi.testclient import TestClient
-from sqlalchemy import select
-
 from app.ai import ai_service
 from app.database import SessionLocal
 from app.main import app
 from app.models import AuditEvent, ProviderConfig, VaultRecord
 from app.security import protect_password
+from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 client = TestClient(app)
 client.__enter__()
@@ -64,7 +63,10 @@ def test_root_redirects_and_dashboard_html_is_served():
     page = client.get("/dashboard")
     assert page.status_code == 200
     assert "SecretBox Server Dashboard" in page.text
-    assert "Agent Audit" in page.text and "AI Gateway" in page.text
+    # Assert the sections by tab key: the redesign renamed the labels, and a
+    # wording change must not be able to hide a section going missing.
+    for tab in ("overview", "records", "security", "audit", "ai"):
+        assert f'data-tab="{tab}"' in page.text
 
 
 # --- records inventory + permissions ------------------------------------------

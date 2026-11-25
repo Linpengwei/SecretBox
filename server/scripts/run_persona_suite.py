@@ -16,7 +16,14 @@ The app runs against a throwaway SQLite database (DATABASE_URL env override) so
 the developer's secretbox.db is never touched, and with no AI provider configured
 so the deterministic heuristic paths are what get exercised.
 
-Usage: python3 server/scripts/run_persona_suite.py [--suite FILE] [--out-dir DIR]
+Unless `--no-floors` is given, the run fails when any headline metric drops
+below its recorded floor in `testsets/persona200/floors.json`. Parser and
+search changes are measured against this suite for a reason: removing the
+free-text excerpt, for instance, looked harmless and took semantic recall from
+166 to 85. Raise a floor when a change improves a metric; never lower one to
+make a regression pass.
+
+Usage: python3 server/scripts/run_persona_suite.py [--suite FILE] [--out-dir DIR] [--no-floors]
 """
 from __future__ import annotations
 
@@ -36,6 +43,19 @@ SERVER_DIR = REPO_ROOT / "server"
 
 PERSONA_ORDER = ["sre", "developer", "product_manager", "designer", "novice", "admin"]
 CHECKS = ["create", "secret_roundtrip", "template_type", "exact_search", "semantic_search"]
+FLOORS_PATH = REPO_ROOT / "testsets/persona200/floors.json"
+
+
+def metrics_below_floor(overall: dict, floors_path: Path) -> list[str]:
+    """Headline metrics that fell below their recorded floor."""
+    if not floors_path.exists():
+        return []
+    floors = json.loads(floors_path.read_text(encoding="utf-8"))
+    return [
+        f"{name}: {overall.get(name, 0)} is below the floor of {floor}"
+        for name, floor in floors.items()
+        if isinstance(floor, int) and overall.get(name, 0) < floor
+    ]
 
 
 def percentile(values: list[float], pct: float) -> float:
@@ -51,6 +71,7 @@ def main() -> int:
     ap.add_argument("--suite", default=str(REPO_ROOT / "testsets/persona200/scenarios_200.json"))
     ap.add_argument("--out-dir", default=str(REPO_ROOT / "testsets/persona200"))
     ap.add_argument("--db", default=None, help="optional sqlite path (default: throwaway file in out-dir)")
+    ap.add_argument("--no-floors", action="store_true", help="do not fail the run when a metric drops below its floor")
     args = ap.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -60,11 +81,13 @@ def main() -> int:
         db_path.unlink()
     # Must be set before app modules import: settings reads DATABASE_URL at import time.
     os.environ["DATABASE_URL"] = f"sqlite:///{db_path}"
+    # A development script by definition: it boots the server on whatever keys
+    # the environment provides, the built-in ones included.
+    os.environ.setdefault("SECRETBOX_DEV", "1")
     sys.path.insert(0, str(SERVER_DIR))
 
-    from fastapi.testclient import TestClient  # noqa: E402
-
     from app.main import app  # noqa: E402
+    from fastapi.testclient import TestClient  # noqa: E402
 
     suite = json.loads(Path(args.suite).read_text(encoding="utf-8"))
     scenarios = suite["scenarios"] if isinstance(suite, dict) else suite
@@ -126,7 +149,7 @@ def main() -> int:
             rows.append(row)
 
         # Phase B: retrieval checks against the populated vault.
-        for row, sc in zip(rows, scenarios):
+        for row, sc in zip(rows, scenarios, strict=True):
             if row["record_id"] is None:
                 continue
             secret = sc["expect"]["primary_secret"]
@@ -312,7 +335,19 @@ def main() -> int:
     print(f"结果: {results_path}\n报告: {report_path}")
     print(
         "总览: " + ", ".join(f"{c}={overall[c]}/{overall['count']}" for c in CHECKS)
+        + f", paste_parse={overall['paste_parse']}/{overall['count']}"
     )
+
+    if args.no_floors:
+        return 0
+    regressions = metrics_below_floor(overall, FLOORS_PATH)
+    if regressions:
+        print(f"\n回归: 以下指标低于 {FLOORS_PATH.relative_to(REPO_ROOT)} 记录的下限:")
+        for regression in regressions:
+            print(f"  - {regression}")
+        print("只有在确实改进了指标时才上调下限；不要为了让回归通过而下调。")
+        return 1
+    print(f"下限检查通过 ({FLOORS_PATH.relative_to(REPO_ROOT)})")
     return 0
 
 

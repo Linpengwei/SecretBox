@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
@@ -11,8 +13,21 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from .ai import ai_service
-from .audit import event_view, list_events, log_event, stats as audit_stats
+from .audit import event_view, list_events, log_event
+from .audit import stats as audit_stats
+from .config import settings
 from .database import Base, engine, get_db, migrate_sqlite
+from .hardening import (
+    MAX_REQUEST_BYTES,
+    BodySizeLimitMiddleware,
+    SecurityHeadersMiddleware,
+    assert_production_keys,
+    assert_safe_upstream_url,
+    audit_ingest_rate_limit,
+    dashboard_content_security_policy,
+    gateway_rate_limit,
+)
+from .maintenance import rescrub_stored_fields
 from .models import ProviderConfig, VaultRecord
 from .risk import audit_vault, organization_report, password_strength
 from .schemas import (
@@ -27,6 +42,7 @@ from .schemas import (
     VaultFieldPayload,
     VaultItemCreateRequest,
     VaultItemView,
+    fields_from_json,
 )
 from .security import (
     decrypt_password,
@@ -38,23 +54,46 @@ from .security import (
 )
 from .storage import storage_catalog
 
-app = FastAPI(title="SecretBox Server", version="0.3.0")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+logger = logging.getLogger("secretbox.server")
 
 _DASHBOARD_HTML = (Path(__file__).resolve().parent / "static" / "dashboard.html").read_text(encoding="utf-8")
 
 
-@app.on_event("startup")
-def on_startup() -> None:
+@asynccontextmanager
+async def lifespan(_: FastAPI) -> None:
+    # Fail fast on the development keys before any table is touched.
+    assert_production_keys()
     Base.metadata.create_all(bind=engine)
     migrate_sqlite()
+    rescrub_stored_fields()
     storage_catalog.ensure_structures()
+    logger.info("SecretBox server ready")
+    yield
+
+
+app = FastAPI(title="SecretBox Server", version="0.4.0", lifespan=lifespan)
+if settings.cors_origins:
+    # No wildcard: with `allow_origins=["*"]` any web page the operator opens
+    # could read this server's responses (search returns plaintext) through
+    # the browser. Cross-origin callers must be listed explicitly.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(settings.cors_origins),
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "PUT"],
+        allow_headers=["Content-Type", "X-SecretBox-Actor"],
+    )
+app.add_middleware(BodySizeLimitMiddleware, max_bytes=MAX_REQUEST_BYTES)
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    headers={
+        "Content-Security-Policy": dashboard_content_security_policy(_DASHBOARD_HTML),
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "Referrer-Policy": "no-referrer",
+        "Cache-Control": "no-store",
+    },
+)
 
 
 @app.get("/health")
@@ -87,7 +126,7 @@ def ai_status(db: Session = Depends(get_db)) -> AIGatewayStatusView:
     return AIGatewayStatusView(enabled=True, model=provider.model, base_url=provider.base_url)
 
 
-@app.post("/ai/v1/chat/completions")
+@app.post("/ai/v1/chat/completions", dependencies=[Depends(gateway_rate_limit)])
 async def ai_gateway_chat_completions(request: Request, db: Session = Depends(get_db)) -> dict:
     actor = (request.headers.get("x-secretbox-actor") or "client")[:255]
     provider = db.get(ProviderConfig, 1)
@@ -100,11 +139,22 @@ async def ai_gateway_chat_completions(request: Request, db: Session = Depends(ge
             status_code=503,
             detail="AI gateway is not configured. Set the provider via PUT /api/provider or the dashboard AI tab.",
         )
+    # Belt and braces: the row was validated when it was stored, but a row
+    # written by hand must not turn into a request to a metadata service.
+    try:
+        assert_safe_upstream_url(provider.base_url, resolve=False)
+    except ValueError as error:
+        log_event(
+            db, action="ai_chat", actor=actor, actor_type="client", allowed=False,
+            detail={"reason": "unsafe upstream", "error_type": "UnsafeUpstream"},
+        )
+        raise HTTPException(status_code=502, detail=str(error)) from error
 
     try:
         body = await request.json()
     except Exception:
-        raise HTTPException(status_code=400, detail="Request body must be JSON.")
+        # A malformed body is the client's error; the parser traceback is noise.
+        raise HTTPException(status_code=400, detail="Request body must be JSON.") from None
     if not isinstance(body, dict) or not isinstance(body.get("messages"), list):
         raise HTTPException(status_code=400, detail="OpenAI-compatible body with a `messages` array is required.")
     if body.get("stream"):
@@ -121,13 +171,13 @@ async def ai_gateway_chat_completions(request: Request, db: Session = Depends(ge
             db, action="ai_chat", actor=actor, actor_type="client", allowed=False,
             detail={"reason": "upstream error", "status": error.response.status_code},
         )
-        raise HTTPException(status_code=502, detail=f"Upstream AI provider returned {error.response.status_code}.")
+        raise HTTPException(status_code=502, detail=f"Upstream AI provider returned {error.response.status_code}.") from error
     except httpx.HTTPError as error:
         log_event(
             db, action="ai_chat", actor=actor, actor_type="client", allowed=False,
             detail={"reason": "upstream unreachable", "error_type": type(error).__name__},
         )
-        raise HTTPException(status_code=504, detail="Upstream AI provider could not be reached.")
+        raise HTTPException(status_code=504, detail="Upstream AI provider could not be reached.") from error
 
     usage = (result.get("usage") or {}) if isinstance(result, dict) else {}
     log_event(
@@ -171,7 +221,7 @@ def audit_stats_endpoint(db: Session = Depends(get_db)) -> dict:
     return audit_stats(db)
 
 
-@app.post("/api/audit", status_code=202)
+@app.post("/api/audit", status_code=202, dependencies=[Depends(audit_ingest_rate_limit)])
 def ingest_audit_event(payload: AuditEventIngest, db: Session = Depends(get_db)) -> dict:
     event = log_event(
         db,
@@ -295,6 +345,13 @@ def get_provider(db: Session = Depends(get_db)) -> ProviderSettingsView:
 
 @app.put("/api/provider", response_model=ProviderSettingsView)
 def put_provider(payload: ProviderSettingsPayload, db: Session = Depends(get_db)) -> ProviderSettingsView:
+    # The base URL is stored and later requested with the API key attached;
+    # refuse anything that is not a plausible model endpoint before storing.
+    try:
+        assert_safe_upstream_url(payload.base_url)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
     provider = db.get(ProviderConfig, 1)
     if provider is None:
         provider = ProviderConfig(id=1, base_url=payload.base_url, api_key=payload.api_key, model=payload.model)
@@ -304,6 +361,7 @@ def put_provider(payload: ProviderSettingsPayload, db: Session = Depends(get_db)
         provider.api_key = payload.api_key
         provider.model = payload.model
     db.commit()
+    log_event(db, action="provider_update", actor="api", allowed=True, detail={"model": provider.model})
     return ProviderSettingsView(configured=True, base_url=provider.base_url, model=provider.model)
 
 
@@ -327,7 +385,6 @@ async def create_record(payload: VaultItemCreateRequest, db: Session = Depends(g
         template_type=payload.template_type or parsed.template_type,
         name=payload.name or parsed.name,
         primary_secret=primary_secret,
-        pasted_text=parsed.redacted_excerpt or pasted_text,
         notes=payload.notes or parsed.notes,
         tags=payload.tags or parsed.tags,
         fields=merged_fields,
@@ -384,7 +441,6 @@ async def update_record(record_id: str, payload: VaultItemCreateRequest, db: Ses
         template_type=payload.template_type or parsed.template_type,
         name=payload.name or parsed.name,
         primary_secret=primary_secret,
-        pasted_text=parsed.redacted_excerpt or pasted_text,
         notes=payload.notes or parsed.notes,
         tags=payload.tags or parsed.tags,
         fields=merged_fields,
@@ -440,6 +496,8 @@ async def search_records(payload: SearchRequest, db: Session = Depends(get_db)) 
             ]
         )
 
+    # `%` and `_` are LIKE wildcards: unescaped, a query of "%" would match the
+    # whole vault. They only ever match themselves.
     searchable_columns = (
         VaultRecord.description,
         VaultRecord.title,
@@ -448,14 +506,14 @@ async def search_records(payload: SearchRequest, db: Session = Depends(get_db)) 
         VaultRecord.fields_json,
     )
     statements = [
-        select(VaultRecord).where(or_(*(column.ilike(f"%{payload.query}%") for column in searchable_columns)))
+        select(VaultRecord).where(or_(*(column.ilike(f"%{_escape_like(payload.query)}%", escape="\\") for column in searchable_columns)))
     ]
     # Natural-language queries ("增长后台的登录密码") rarely appear verbatim in a
     # record, so recall per query token as well; ranking stays in rerank_candidates.
-    tokens = ai_service._query_tokens(payload.query)[:24]
+    tokens = [_escape_like(token) for token in ai_service._query_tokens(payload.query)[:24]]
     if tokens:
         statements.append(
-            select(VaultRecord).where(or_(*(column.ilike(f"%{token}%") for token in tokens for column in searchable_columns)))
+            select(VaultRecord).where(or_(*(column.ilike(f"%{token}%", escape="\\") for token in tokens for column in searchable_columns)))
         )
     candidates: list[VaultRecord] = []
     seen_ids: set[str] = set()
@@ -468,7 +526,11 @@ async def search_records(payload: SearchRequest, db: Session = Depends(get_db)) 
                 seen_ids.add(record.id)
                 candidates.append(record)
     if not candidates:
-        candidates = list(db.scalars(select(VaultRecord).limit(payload.limit * 3)))
+        # Nothing matched. There is deliberately no "return something anyway"
+        # fallback: results carry plaintext, so an unrelated record must never
+        # be handed out for a query that did not match it.
+        log_event(db, action="search", actor="api", detail={"mode": "semantic", "results": 0})
+        return SearchResponse(results=[])
     provider = db.get(ProviderConfig, 1)
     ranked = await ai_service.rerank_candidates(provider=provider, query=payload.query, candidates=candidates)
     candidates_by_id = {candidate.id: candidate for candidate in candidates}
@@ -487,13 +549,19 @@ async def search_records(payload: SearchRequest, db: Session = Depends(get_db)) 
     return SearchResponse(results=ordered_results)
 
 
+def _escape_like(text: str) -> str:
+    """Escape SQL LIKE wildcards (and the escape character) so user input can
+    only match itself."""
+    return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def build_item_view(
     record: VaultRecord,
     *,
     include_secret: bool = False,
     match_reason: str | None = None,
 ) -> VaultItemView:
-    template_type, fields = unpack_fields(record.fields_json)
+    template_type, fields = fields_from_json(record.fields_json)
     totp = None
     if include_secret and record.totp_encrypted:
         totp_data = decrypt_totp(record.totp_encrypted)
@@ -514,44 +582,12 @@ def build_item_view(
         notes=record.description,
         tags=json.loads(record.tags or "[]"),
         fields=fields,
-        password_hash=record.password_hash,
-        password_fingerprint=record.password_fingerprint,
         primary_secret=decrypt_password(record.encrypted_password) if include_secret else None,
         totp=totp,
         permissions=permissions,
         created_at=record.created_at,
         match_reason=match_reason,
     )
-
-
-def unpack_fields(raw_fields: str | None) -> tuple[str | None, list[VaultFieldPayload]]:
-    if not raw_fields:
-        return None, []
-
-    parsed = json.loads(raw_fields)
-    if isinstance(parsed, dict) and "fields" in parsed:
-        return parsed.get("template_type"), [VaultFieldPayload(**field) for field in parsed.get("fields", [])]
-
-    if isinstance(parsed, dict):
-        legacy_fields = []
-        for order, (key, value) in enumerate(parsed.items()):
-            if key in {"password_shape", "source_excerpt"}:
-                continue
-            legacy_fields.append(
-                VaultFieldPayload(
-                    key=key,
-                    label=key.replace("_", " ").title(),
-                    value=str(value),
-                    value_type="text",
-                    semantic=key,
-                    hidden=False,
-                    section="Details",
-                    order=order,
-                )
-            )
-        return None, legacy_fields
-
-    return None, []
 
 
 def field_value(fields: list[VaultFieldPayload], key: str) -> str | None:

@@ -1,0 +1,8 @@
+{
+  "note": "Headline metrics of testsets/persona200 that server/scripts/run_persona_suite.py must not fall below. Raise a floor when a change improves a metric; never lower one to make a regression pass.",
+  "paste_parse": 186,
+  "secret_roundtrip": 194,
+  "template_type": 183,
+  "exact_search": 194,
+  "semantic_search": 166
+}

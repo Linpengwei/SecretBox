@@ -22,6 +22,7 @@
 - `validate_merge.py` — 校验（schema/去重/虚构域名/密码卫生）并合并为 `scenarios_200.json`
 - `scenarios_200.json` — 最终测试集（200 条可执行场景）
 - `results_200.json` / `report.md` — 最近一次执行的结果与稳定性报告（由执行器产出）
+- `floors.json` — 各头条指标不得跌破的下限（CI 与 `./scripts/test.sh` 强制检查）
 
 ## 场景 schema
 
@@ -52,8 +53,8 @@
 # 2. 校验合并
 python3 testsets/persona200/validate_merge.py
 
-# 3. 执行 200 场景套件并产出报告
-python3 server/scripts/run_persona_suite.py
+# 3. 执行 200 场景套件并产出报告；任一头条指标低于 floors.json 的下限则以非零退出
+python3 server/scripts/run_persona_suite.py            # 加 --no-floors 可跳过下限检查
 ```
 
 执行器以进程内 TestClient 运行服务端应用，使用一次性 SQLite 库（不触碰 `secretbox.db`），
@@ -61,7 +62,29 @@ python3 server/scripts/run_persona_suite.py
 注：claude CLI 走的第三方网关对默认模型映射当前返回 400，`generate.sh` 已改用
 `--model deepseek-v4-flash-0731`（`~/.claude/settings.json` 中可用的映射）。
 
-## 最近一次实测结果（2026-09-07，启发式路径，两轮运行数字完全一致）
+## 质量下限（`floors.json`）
+
+`floors.json` 记录各头条指标不得跌破的下限；CI 与 `./scripts/test.sh` 都会执行这项检查。
+解析器与搜索的改动必须用这套语料来度量——删掉自由文本摘要看起来无害，
+实测却让语义检索命中从 166 掉到 85。指标有改进时就上调下限；绝不要为了让回归通过而下调。
+
+## 最近一次实测结果（2026-11-25，启发式路径，阶段 0 止血之后）
+
+| 维度 | 结果 | 说明 |
+| --- | --- | --- |
+| create | 200/200 | 全部入库（含手动补密码重试路径） |
+| 粘贴即存 | 186/200 | 纯粘贴一次成功 |
+| secret_roundtrip | 194/200 | 存入的密码与用户以为的一致 |
+| template_type | 183/200 | |
+| exact_search | 194/200 | 此前记录为 195：多出的那一条（NOVI-001）是"无命中兜底返回前几条"造成的假阳性，兜底已移除 |
+| semantic_search | 166/200 | 无 AI provider 的离线启发式下 83%；更严格的摘要脱敏没有造成召回损失 |
+
+已知解析失败类别（纯粘贴下取不到或取错密码，待统一的捕获引擎阶段解决）：取值在全角逗号后粘住整句后续
+（`初始密码：LQ2026-…，首次登录后…`）、自然语句取值在 ASCII `!`/`?` 处截断、未识别的密钥标签
+（`redis_auth`、`SCRIPT_PASSPHRASE`、`pass`、`序列号`、`code`、`secret_access_key`、`License`）、
+中文密码与后文粘连。
+
+## 历史结果（2026-09-07，启发式路径，两轮运行数字完全一致）
 
 | 维度 | 结果 | 说明 |
 | --- | --- | --- |

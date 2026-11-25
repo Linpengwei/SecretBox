@@ -1,18 +1,16 @@
 import json
 import sqlite3
-
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import delete, select
 from unittest.mock import patch
 
+import pytest
 from app.ai import ai_service
 from app.config import settings
 from app.database import SessionLocal
 from app.main import app
 from app.models import ProviderConfig, VaultRecord
 from app.security import decrypt_totp, protect_password
-from sqlalchemy import create_engine
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, delete, select
 
 client = TestClient(app)
 # Requests made outside a `with` block don't drive the ASGI lifespan, so the

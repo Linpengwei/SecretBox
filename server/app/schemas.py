@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import json
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
@@ -80,6 +81,10 @@ class VaultItemCreateRequest(BaseModel):
 
 
 class VaultItemView(BaseModel):
+    # Deliberately no `password_hash` / `password_fingerprint`: clients never
+    # verify or match passwords, so the Argon2 verifier and the keyed
+    # fingerprint stay server-side (fingerprint only powers reuse detection
+    # and exact-match search).
     id: str
     item_type: str
     template_type: str | None = None
@@ -88,13 +93,43 @@ class VaultItemView(BaseModel):
     notes: str
     tags: list[str]
     fields: list[VaultFieldPayload]
-    password_hash: str
-    password_fingerprint: str
     primary_secret: str | None = None
     totp: TOTPPayload | None = None
     permissions: RecordPermissionsPayload | None = None
     created_at: datetime | None = None
     match_reason: str | None = None
+
+
+def fields_from_json(raw_fields: str | None) -> tuple[str | None, list[VaultFieldPayload]]:
+    """Decode a stored `fields_json` cell into `(template_type, fields)`,
+    reading the pre-template legacy dict shape as a plain field list."""
+    if not raw_fields:
+        return None, []
+
+    parsed = json.loads(raw_fields)
+    if isinstance(parsed, dict) and "fields" in parsed:
+        return parsed.get("template_type"), [VaultFieldPayload(**field) for field in parsed.get("fields", [])]
+
+    if isinstance(parsed, dict):
+        legacy_fields = []
+        for order, (key, value) in enumerate(parsed.items()):
+            if key in {"password_shape", "source_excerpt"}:
+                continue
+            legacy_fields.append(
+                VaultFieldPayload(
+                    key=key,
+                    label=key.replace("_", " ").title(),
+                    value=str(value),
+                    value_type="text",
+                    semantic=key,
+                    hidden=False,
+                    section="Details",
+                    order=order,
+                )
+            )
+        return None, legacy_fields
+
+    return None, []
 
 
 class SearchRequest(BaseModel):

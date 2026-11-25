@@ -1,16 +1,27 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from dataclasses import dataclass
 from urllib.parse import unquote, urlparse
 
 import httpx
+from pydantic import ValidationError
 
 from .config import settings
 from .models import ProviderConfig, VaultRecord
-from .schemas import VaultFieldPayload
-from .security import summarize_password_shape
+from .redaction import (
+    AI_METADATA_FIELD_KEYS,
+    REDACTED,
+    is_secret_key,
+    redact_known_secrets,
+    strip_uri_credentials,
+)
+from .schemas import VaultFieldPayload, fields_from_json
+from .security import decrypt_password, summarize_password_shape
+
+logger = logging.getLogger("secretbox.ai")
 
 
 @dataclass(slots=True)
@@ -110,7 +121,6 @@ class AIService:
         template_type: str | None,
         name: str | None,
         primary_secret: str,
-        pasted_text: str | None,
         notes: str | None,
         tags: list[str],
         fields: list[VaultFieldPayload],
@@ -120,7 +130,6 @@ class AIService:
             template_type=template_type,
             name=name,
             primary_secret=primary_secret,
-            pasted_text=pasted_text,
             notes=notes,
             tags=tags,
             fields=fields,
@@ -128,14 +137,16 @@ class AIService:
         if provider is None:
             return heuristic
 
+        # The model only ever sees the whitelist projection: metadata fields
+        # that survive `sanitize_fields`, plus scrubbed name/notes/tags. Raw
+        # paste text and `source_excerpt` never enter a prompt.
         payload = {
             "item_type": item_type,
             "template_type": template_type,
-            "name": name,
-            "notes": notes,
-            "tags": tags,
-            "fields": [field.model_dump(mode="json") for field in fields],
-            "pasted_text": pasted_text,
+            "name": self.sanitize_free_text(name, primary_secret),
+            "notes": self.sanitize_free_text(notes, primary_secret),
+            "tags": [self.sanitize_free_text(str(tag), primary_secret) for tag in tags],
+            "fields": self._ai_fields(fields, primary_secret),
             "secret_shape": summarize_password_shape(primary_secret),
         }
         try:
@@ -152,20 +163,104 @@ class AIService:
                 ),
             )
             parsed = json.loads(response)
+            if not isinstance(parsed, dict):
+                return heuristic
+            # Model output is untrusted too: secret-class field keys are
+            # dropped and every free-text value is scrubbed before storage.
             merged_fields = self._merge_fields(
                 heuristic.fields,
-                [VaultFieldPayload(**item) for item in parsed.get("fields", [])],
+                self._llm_fields(parsed.get("fields"), primary_secret),
             )
             return EnrichedItem(
-                item_type=parsed.get("item_type") or heuristic.item_type,
+                item_type=str(parsed.get("item_type") or heuristic.item_type),
                 template_type=parsed.get("template_type") or heuristic.template_type,
-                name=parsed.get("name") or heuristic.name,
-                notes=parsed.get("notes") or heuristic.notes,
-                tags=[str(tag) for tag in parsed.get("tags", heuristic.tags)],
+                name=self.sanitize_free_text(str(parsed.get("name") or heuristic.name), primary_secret),
+                notes=self.sanitize_free_text(str(parsed.get("notes") or heuristic.notes), primary_secret),
+                tags=[
+                    scrubbed
+                    for tag in (parsed.get("tags") if isinstance(parsed.get("tags"), list) else heuristic.tags)
+                    if (scrubbed := self.sanitize_free_text(str(tag), primary_secret))
+                ],
                 fields=merged_fields,
             )
-        except Exception:
+        except Exception as error:
+            # Type name only: exception messages can quote prompt or response text.
+            logger.warning("AI enrichment failed, using heuristics: %s", type(error).__name__)
             return heuristic
+
+    def sanitize_free_text(self, text: str | None, *secrets: str | None) -> str:
+        """Secret scrub of free text: URI credentials go first (structural),
+        then secret-class `key: value` pairs and natural-language secret phrases
+        lose their value, then any known secret is removed in every encoded
+        form. Used for everything derived from a paste (excerpts, derived notes)
+        and again at the AI boundary on name / notes / tags."""
+        if not text or not isinstance(text, str):
+            return ""
+        scrubbed = strip_uri_credentials(text)
+        scrubbed = self.redact_secret_values(scrubbed)
+        return redact_known_secrets(scrubbed, *secrets)
+
+    def redact_secret_values(self, text: str) -> str:
+        """Blank the value of every secret-class `key: value` pair (ASCII and
+        Chinese keys, half- and full-width separators) and of every
+        natural-language secret phrase ("密码是 xxx", "密码20010515")."""
+        if not text:
+            return text
+        spans: list[tuple[int, int]] = []
+        for match in self.KV_PAIR_RE.finditer(text):
+            if is_secret_key(self._canonical_key(match.group(1))) or is_secret_key(match.group(1)):
+                spans.append(match.span(2))
+        for pattern in self.NL_SECRET_PATTERNS:
+            # A natural-language pattern can stop on a lone separator
+            # ("password = x" yields "="); only spans carrying a value count.
+            spans.extend(
+                match.span(1)
+                for match in pattern.finditer(text)
+                if any(character.isalnum() for character in match.group(1))
+            )
+        if not spans:
+            return text
+
+        merged: list[list[int]] = []
+        for start, end in sorted(spans):
+            if merged and start <= merged[-1][1]:
+                merged[-1][1] = max(merged[-1][1], end)
+            else:
+                merged.append([start, end])
+        for start, end in reversed(merged):
+            text = text[:start] + REDACTED + text[end:]
+        return text
+
+    def _ai_fields(self, fields: list[VaultFieldPayload], *secrets: str | None) -> list[dict[str, str]]:
+        """Whitelist projection of record fields for AI context: metadata keys
+        only, values scrubbed. This is the hard boundary — a field under any
+        other key is dropped even when its value looks harmless."""
+        projected: list[dict[str, str]] = []
+        for field in fields:
+            key = (field.key or "").strip().lower()
+            if key not in AI_METADATA_FIELD_KEYS or is_secret_key(key):
+                continue
+            value = self.sanitize_free_text(field.value, *secrets)
+            if value:
+                projected.append({"key": key, "value": value})
+        return projected
+
+    def _llm_fields(self, raw_fields: object, primary_secret: str) -> list[VaultFieldPayload]:
+        """Fields proposed by the model: secret-class keys are refused outright,
+        the rest keep their shape but never carry a known secret."""
+        if not isinstance(raw_fields, list):
+            return []
+        accepted: list[VaultFieldPayload] = []
+        for item in raw_fields:
+            if not isinstance(item, dict) or is_secret_key(str(item.get("key"))) or is_secret_key(item.get("semantic")):
+                continue
+            try:
+                field = VaultFieldPayload(**item)
+            except (ValidationError, TypeError):
+                continue
+            field.value = self.sanitize_free_text(field.value, primary_secret)
+            accepted.append(field)
+        return accepted
 
     def parse_pasted_secret(self, pasted_text: str | None) -> ParsedPastedSecret:
         raw = (pasted_text or "").strip()
@@ -228,12 +323,20 @@ class AIService:
         )
 
     def sanitize_fields(self, fields: list[VaultFieldPayload], primary_secret: str | None) -> list[VaultFieldPayload]:
-        if not primary_secret:
-            return fields
-
+        """Strip secret material from client- or parser-supplied fields before
+        anything is stored or forwarded: URL-style fields never carry
+        credentials, no field echoes the primary secret in any encoded form,
+        free-text excerpts get the full scrub, and a secret-class key marks the
+        field `hidden` so clients conceal it and the AI whitelist drops it."""
         sanitized: list[VaultFieldPayload] = []
         for field in fields:
-            value = field.value.replace(primary_secret, "[REDACTED]") if field.value else field.value
+            value = field.value or ""
+            if field.key == "source_excerpt":
+                value = self.sanitize_free_text(value, primary_secret)
+            elif field.value_type == "url" or field.key in self.URL_KEYS:
+                value = strip_uri_credentials(value)
+            if primary_secret:
+                value = redact_known_secrets(value, primary_secret)
             sanitized.append(
                 VaultFieldPayload(
                     key=field.key,
@@ -241,7 +344,7 @@ class AIService:
                     value=value,
                     value_type=field.value_type,
                     semantic=field.semantic,
-                    hidden=field.hidden,
+                    hidden=field.hidden or is_secret_key(field.key) or is_secret_key(field.semantic),
                     section=field.section,
                     order=field.order,
                 )
@@ -260,17 +363,14 @@ class AIService:
         if provider is None:
             return self._heuristic_rerank(query, candidates)
 
-        rendered = [
-            {
-                "id": candidate.id,
-                "item_type": candidate.record_type,
-                "name": candidate.title,
-                "notes": candidate.description,
-                "tags": candidate.tags,
-                "fields_json": candidate.fields_json,
-            }
-            for candidate in candidates
-        ]
+        # A pasted password that did not match a fingerprint (typo, or a secret
+        # that simply is not in this vault) falls through to this path. It must
+        # not be handed to a model as "the query": rank locally instead.
+        if self._looks_like_secret(query):
+            return self._heuristic_rerank(query, candidates)
+
+        # Same whitelist projection as enrichment (see `_ai_render`).
+        rendered = [self._ai_render(candidate) for candidate in candidates]
         try:
             response = await self._chat_completion(
                 provider=provider,
@@ -284,8 +384,64 @@ class AIService:
             parsed = json.loads(response)
             items = parsed.get("results", [])
             return [(item["id"], item.get("reason", "AI semantic match")) for item in items]
-        except Exception:
+        except Exception as error:
+            logger.warning("AI rerank failed, using fallback ordering: %s", type(error).__name__)
             return [(candidate.id, "fallback ordering") for candidate in candidates]
+
+    @staticmethod
+    def _looks_like_secret(query: str) -> bool:
+        """Single token, long, mixing at least three character classes — the
+        shape of a pasted credential rather than something a person types to
+        search with. Deliberately biased towards "yes": the only cost is a
+        local ranking instead of a model ranking."""
+        text = query.strip()
+        if not text or any(character.isspace() for character in text):
+            return False
+        classes = sum(
+            (
+                any(character.islower() for character in text),
+                any(character.isupper() for character in text),
+                any(character.isdigit() for character in text),
+                any(not character.isalnum() for character in text),
+            )
+        )
+        return len(text) >= 12 and classes >= 3
+
+    def _ai_render(self, record: VaultRecord) -> dict[str, object]:
+        """Whitelist projection of one stored record for the rerank prompt. The
+        record's own secret is decrypted here only to scrub it (in every
+        encoded form) from the metadata about to be sent."""
+        secret = self._stored_secret(record)
+        tags = []
+        for tag in self._stored_tags(record):
+            scrubbed = self.sanitize_free_text(tag, *secret)
+            if scrubbed:
+                tags.append(scrubbed)
+        return {
+            "id": record.id,
+            "item_type": record.record_type,
+            "name": self.sanitize_free_text(record.title, *secret),
+            "notes": self.sanitize_free_text(record.description, *secret),
+            "tags": tags,
+            "fields": self._ai_fields(fields_from_json(record.fields_json)[1], *secret),
+        }
+
+    @staticmethod
+    def _stored_secret(record: VaultRecord) -> tuple[str | None]:
+        """The record's decrypted secret, or `(None,)` when the current key
+        cannot read it. Only ever used as a scrub input."""
+        try:
+            return (decrypt_password(record.encrypted_password),)
+        except Exception:
+            return (None,)
+
+    @staticmethod
+    def _stored_tags(record: VaultRecord) -> list[str]:
+        try:
+            tags = json.loads(record.tags or "[]")
+        except (TypeError, ValueError):
+            return []
+        return [str(tag) for tag in tags]
 
     def _query_tokens(self, query: str) -> list[str]:
         """Split a search query into matchable tokens: latin/digit words plus
@@ -340,7 +496,7 @@ class AIService:
                 weights[token] = 1.0 + 3.0 * (doc_count - df) / max(doc_count, 1)
 
         scored: list[tuple[float, int, str, str]] = []
-        for index, (candidate, (title, description, meta)) in enumerate(zip(candidates, docs)):
+        for index, (candidate, (title, description, meta)) in enumerate(zip(candidates, docs, strict=True)):
             score = 0.0
             for token in tokens:
                 weight = weights[token]
@@ -399,7 +555,6 @@ class AIService:
         template_type: str | None,
         name: str | None,
         primary_secret: str,
-        pasted_text: str | None,
         notes: str | None,
         tags: list[str],
         fields: list[VaultFieldPayload],
@@ -413,28 +568,15 @@ class AIService:
         summary_bits = [notes, self._field_value(fields, "username"), self._field_value(fields, "host"), self._field_value(fields, "endpoint"), self._field_value(fields, "database")]
         resolved_notes = notes or " | ".join(bit for bit in summary_bits if bit) or "Imported vault item"
 
-        enriched_fields = list(fields)
-        excerpt = (pasted_text or "").strip()
-        if excerpt and not any(field.key == "source_excerpt" for field in enriched_fields):
-            enriched_fields.append(
-                VaultFieldPayload(
-                    key="source_excerpt",
-                    label="Source Excerpt",
-                    value=excerpt[:240],
-                    value_type="text",
-                    semantic="source_excerpt",
-                    hidden=False,
-                    section="Metadata",
-                    order=999,
-                )
-            )
+        # `source_excerpt` belongs to the parser alone: it is the one scrubbed
+        # free-text field, and nothing here re-derives one from raw input.
         return EnrichedItem(
             item_type=item_type.lower(),
             template_type=template_type,
             name=title_value,
             notes=resolved_notes,
             tags=list(dict.fromkeys(merged_tags)),
-            fields=self._merge_fields(enriched_fields, []),
+            fields=self._merge_fields(list(fields), []),
         )
 
     def _merge_fields(
@@ -445,7 +587,9 @@ class AIService:
         merged: dict[str, VaultFieldPayload] = {field.key: field for field in base_fields}
         for field in override_fields:
             merged[field.key] = field
-        return sorted(merged.values(), key=lambda field: (field.section or "", field.order, field.label))
+        # `key` breaks remaining ties: dict order is randomized per process and
+        # must never decide the stored field order.
+        return sorted(merged.values(), key=lambda field: (field.section or "", field.order, field.label, field.key))
 
     def _field_value(self, fields: list[VaultFieldPayload], key: str) -> str | None:
         for field in fields:
@@ -783,13 +927,14 @@ class AIService:
         return None
 
     def _redact_excerpt(self, raw: str, secret: str | None) -> str | None:
+        """Scrubbed excerpt of the paste, kept only for semantic recall. The
+        full `sanitize_free_text` pass applies: URI credentials, secret-class
+        `key: value` pairs, natural-language secret phrases and the primary
+        secret in every encoded form all disappear."""
         excerpt = raw.strip()
         if not excerpt:
             return None
-        if secret:
-            excerpt = excerpt.replace(secret, "[REDACTED]")
-        excerpt = re.sub(r"(?i)(password|passwd|pwd|secret|token|sasl_password|secret_key)\s*[:=]\s*([^\s,;]+)", r"\1=[REDACTED]", excerpt)
-        return excerpt
+        return self.sanitize_free_text(excerpt, secret)
 
     def _field(
         self,
