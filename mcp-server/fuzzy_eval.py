@@ -140,7 +140,6 @@ def main() -> int:
             clipboard = subprocess.run(["pbpaste"], capture_output=True, text=True).stdout
 
             expect = scenario["expect"]
-            shared = next(r for r in TEST_VAULT if r["name"] == expect)
             found = expect in transcript
             not_found = ("0 条" in transcript or "没有找到" in transcript
                          or "找不到" in transcript or "未找到" in transcript)

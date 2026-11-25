@@ -1,0 +1,45 @@
+name: Nightly (full app suites)
+
+# The complete macOS and iOS scripts, including the UI tests, which need a
+# GUI session and are too slow and too automation-sensitive to gate every
+# push. Both jobs are advisory for now: hosted runners may refuse the UI
+# automation session ("Timed out while enabling automation mode"), and a red
+# nightly that is red for that reason must not train anyone to ignore it.
+# Once a job has been green for a stretch, drop its `continue-on-error`.
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # 18:00 UTC, daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: macOS full suite (unit, snapshots, 14 UI tests)
+    runs-on: macos-26
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Show toolchain
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+      - name: Run the macOS regression script
+        run: ./scripts/test-macos.sh
+
+  ios:
+    name: iOS simulator suite
+    runs-on: macos-26
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Show toolchain
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+      - name: Run the iOS regression script
+        run: ./scripts/test-ios.sh

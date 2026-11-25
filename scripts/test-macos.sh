@@ -15,13 +15,38 @@ COMMON_ARGS=(
   -derivedDataPath "$DERIVED_DATA_PATH"
 )
 
+# Every UI test in SecretBoxUITests, spelled out so each one is retried on its
+# own and a test that stops running is visible in review.
 UI_TESTS=(
   "SecretBoxUITests/SecretBoxUITests/testLoginFlowOpensDashboard"
   "SecretBoxUITests/SecretBoxUITests/testSearchFiltersSeededRecords"
   "SecretBoxUITests/SecretBoxUITests/testMenuBarSmokeFlowCanSaveAndOpenDashboard"
+  "SecretBoxUITests/SecretBoxUITests/testMenuBarPreviewCanEditAndSaveLocally"
+  "SecretBoxUITests/SecretBoxUITests/testMenuBarPreviewFieldOverrideCanSaveEditedHost"
+  "SecretBoxUITests/SecretBoxUITests/testMenuBarPreviewFieldsCanExpand"
+  "SecretBoxUITests/SecretBoxUITests/testMenuBarSearchCopiesSeededPasswordOnReturn"
+  "SecretBoxUITests/SecretBoxUITests/testMenuBarSearchOpensRecordInDashboardOnCommandReturn"
+  "SecretBoxUITests/SecretBoxUITests/testMenuBarCaptureSavesWithCommandReturn"
+  "SecretBoxUITests/SecretBoxUITests/testQuickCaptureSheetCanOpen"
+  "SecretBoxUITests/SecretBoxUITests/testCaptureSaveSearchDetailCopyFlow"
+  "SecretBoxUITests/SecretBoxUITests/testCaptureWithOTPAuthShowsLiveCodeAndCopies"
+  "SecretBoxUITests/SecretBoxUITests/testReadOnlyPermissionLocksEditing"
+  "SecretBoxUITests/SecretBoxUITests/testSettingsSheetOpensAndCloses"
 )
 
 SAMPLE_SET_TEST="SecretBoxTests/SecretBoxAppModelTests/testDiverseFiftySampleSetPersistAndClassify"
+
+# UI_TESTS once listed 3 of 14 tests, so most of the suite never ran in the
+# documented regression. Fail fast when the list and the test file disagree.
+assert_every_ui_test_is_listed() {
+  local declared
+  declared="$(grep -cE '^[[:space:]]*func test' "$PROJECT_DIR/SecretBoxUITests/SecretBoxUITests.swift")"
+  if [[ "$declared" -ne "${#UI_TESTS[@]}" ]]; then
+    echo "UI_TESTS lists ${#UI_TESTS[@]} tests but SecretBoxUITests.swift declares $declared."
+    echo "Add every new UI test to UI_TESTS in scripts/test-macos.sh."
+    exit 1
+  fi
+}
 
 run_xcodebuild() {
   local label="$1"
@@ -70,7 +95,7 @@ run_ui_test_with_retry() {
     set +e
     (
       cd "$PROJECT_DIR"
-      DEVELOPER_DIR="$DEVELOPER_DIR_PATH" xcodebuild "${COMMON_ARGS[@]}" test "-only-testing:$test_identifier"
+      DEVELOPER_DIR="$DEVELOPER_DIR_PATH" xcodebuild "${COMMON_ARGS[@]}" test-without-building "-only-testing:$test_identifier"
     ) 2>&1 | tee "$log_file"
     local status=${PIPESTATUS[0]}
     set -e
@@ -103,11 +128,18 @@ run_ui_test_with_retry() {
   done
 }
 
-run_xcodebuild "1/4 Build for testing" build-for-testing
-run_xcodebuild "2/4 Run unit tests" test -only-testing:SecretBoxTests/SecretBoxAppModelTests
-run_xcodebuild "3/4 Run 50-sample classifier regression" test "-only-testing:$SAMPLE_SET_TEST"
+assert_every_ui_test_is_listed
 
-echo "[4/4 Run UI tests]"
+run_xcodebuild "1/4 Build for testing" build-for-testing
+# Unit suites: model (incl. the 50-sample regression), TOTP engine, view
+# snapshots. Everything after the build step runs without rebuilding.
+run_xcodebuild "2/4 Run unit tests" test-without-building \
+  -only-testing:SecretBoxTests/SecretBoxAppModelTests \
+  -only-testing:SecretBoxTests/TOTPEngineTests \
+  -only-testing:SecretBoxTests/ViewSnapshotTests
+run_xcodebuild "3/4 Run 50-sample classifier regression" test-without-building "-only-testing:$SAMPLE_SET_TEST"
+
+echo "[4/4 Run UI tests (${#UI_TESTS[@]})]"
 for test_identifier in "${UI_TESTS[@]}"; do
   run_ui_test_with_retry "$test_identifier"
 done

@@ -43,7 +43,7 @@ def make_records(n: int) -> list[dict]:
             "name": f"Bench Service {i}",
             "subtitle": f"owner-{i}",
             "notes": "benchmark record",
-            "tags": [f"env:bench", f"idx:{i}"],
+            "tags": ["env:bench", f"idx:{i}"],
             "fields": [],
             "passwordHash": "bench-hash",
             "passwordFingerprint": "bench-fp",
@@ -221,7 +221,7 @@ def main() -> int:
         for size in args.sizes:
             keychain_delete()
             run_suite(BENCH_SERVICE, make_records(size), args.iterations,
-                      f"synthetic vault")
+                      "synthetic vault")
     finally:
         if args.sizes:
             keychain_delete()
