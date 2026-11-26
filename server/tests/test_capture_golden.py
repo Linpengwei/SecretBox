@@ -13,6 +13,10 @@ hold absolutely:
   stored excerpt, the derived notes or the name;
 - scrubbing is idempotent — startup maintenance and the AI boundary both scrub
   text that was already scrubbed once.
+
+The corpus also contains negative pastes (`secrets == []`). The server's
+extraction floors are measured over positive cases only: its parser is frozen,
+while the app's capture engine owns the new negative-case requirement.
 """
 import json
 from pathlib import Path
@@ -24,6 +28,8 @@ from app.ai import ai_service
 CORPUS_PATH = Path(__file__).resolve().parents[2] / "testsets" / "capture_golden.json"
 CORPUS = json.loads(CORPUS_PATH.read_text(encoding="utf-8"))
 CASES = CORPUS["cases"]
+POSITIVE_CASES = [case for case in CASES if case["secrets"]]
+NEGATIVE_CASES = [case for case in CASES if not case["secrets"]]
 FLOORS = CORPUS.get("floors", {}).get("server", {})
 
 
@@ -42,10 +48,13 @@ def parse_and_scrub(text: str) -> tuple[list, str, str, str, str | None]:
 
 
 def test_every_corpus_case_has_what_the_tests_need():
-    assert len(CASES) >= 260, "the corpus shrank; build_capture_golden.py should merge 200 + 50 + authored cases"
-    for case in CASES:
-        assert case["secrets"] and case["secrets"][0], case["id"]
+    assert len(CASES) >= 338, "the corpus shrank; build_capture_golden.py should merge persona, fifty, authored and edge cases"
+    assert NEGATIVE_CASES, "the adversarial negative cases must stay in the corpus"
+    for case in POSITIVE_CASES:
+        assert case["secrets"][0], case["id"]
         assert case["template"] in {"redis", "database", "s3", "kafka", "aksk", "account", "custom"}, case["id"]
+    for case in NEGATIVE_CASES:
+        assert case["template"] == "-", case["id"]
 
 
 def test_server_parser_extraction_holds_its_floors():
@@ -53,7 +62,7 @@ def test_server_parser_extraction_holds_its_floors():
     found = primary = template = 0
     missed: list[str] = []
     wrong: list[str] = []
-    for case in CASES:
+    for case in POSITIVE_CASES:
         parsed = ai_service.parse_pasted_secret(case["text"])
         if parsed.primary_secret:
             found += 1
@@ -65,7 +74,7 @@ def test_server_parser_extraction_holds_its_floors():
             wrong.append(case["id"])
         if (parsed.template_type or "custom") == case["template"]:
             template += 1
-    total = len(CASES)
+    total = len(POSITIVE_CASES)
 
     assert primary >= FLOORS["primary"], f"correct secret dropped to {primary}/{total}; wrong: {' '.join(wrong)}"
     assert found >= FLOORS["found"], f"secret found dropped to {found}/{total}; none found: {' '.join(missed)}"

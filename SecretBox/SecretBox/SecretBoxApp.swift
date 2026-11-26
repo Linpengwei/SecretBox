@@ -5,7 +5,11 @@
 //  Created by liu hanze on 2026/4/4.
 //
 
+#if canImport(AppKit)
 import AppKit
+#elseif canImport(UIKit)
+import UIKit
+#endif
 import SwiftUI
 import os
 
@@ -36,7 +40,9 @@ struct SecretBoxApp: App {
     }
 
     init() {
+        #if os(macOS)
         Self.reapFrozenSiblingInstances()
+        #endif
     }
 
     var body: some Scene {
@@ -61,6 +67,7 @@ struct SecretBoxApp: App {
         #endif
     }
 
+    #if os(macOS)
     // A SecretBox instance left traced or stopped by an abandoned Xcode debug
     // session is invisible but still registered with LaunchServices, so opening
     // the app merely "activates" the frozen process and nothing ever appears.
@@ -86,4 +93,5 @@ struct SecretBoxApp: App {
         // SSTOP: process stopped (e.g. SIGSTOP); P_TRACED: held by a debugger.
         return Int32(info.kp_proc.p_stat) == SSTOP || info.kp_proc.p_flag & P_TRACED != 0
     }
+    #endif
 }

@@ -1,6 +1,11 @@
 import Foundation
 
-enum SignalCategory: String, Codable, Hashable {
+// The capture value types are plain data. They are `nonisolated` so the
+// capture engine (`CaptureParser`) can build them off the main actor: under
+// the module's default isolation an unannotated struct is main-actor
+// isolated, and nothing else may construct it.
+
+nonisolated enum SignalCategory: String, Codable, Hashable, Sendable {
     case locator
     case principal
     case resource
@@ -8,7 +13,7 @@ enum SignalCategory: String, Codable, Hashable {
     case secret
 }
 
-struct VaultSignal: Codable, Hashable, Identifiable {
+nonisolated struct VaultSignal: Codable, Hashable, Identifiable, Sendable {
     var id: String { "\(category.rawValue):\(name):\(normalizedValue)" }
     var category: SignalCategory
     var name: String
@@ -16,7 +21,7 @@ struct VaultSignal: Codable, Hashable, Identifiable {
     var normalizedValue: String
 }
 
-enum CredentialClusterID: String, Codable, Hashable, CaseIterable {
+nonisolated enum CredentialClusterID: String, Codable, Hashable, CaseIterable, Sendable {
     case humanAccountLogin = "human_account_login"
     case serviceEndpointSecret = "service_endpoint_secret"
     case relationalDBCredential = "relational_db_credential"
@@ -27,17 +32,17 @@ enum CredentialClusterID: String, Codable, Hashable, CaseIterable {
     case genericSecretNote = "generic_secret_note"
 }
 
-struct ClusterSchemaField: Codable, Hashable {
+nonisolated struct ClusterSchemaField: Codable, Hashable, Sendable {
     var label: String
     var keys: [String]
 }
 
-struct ClusterSchemaDefinition: Codable, Hashable {
+nonisolated struct ClusterSchemaDefinition: Codable, Hashable, Sendable {
     var title: String
     var fields: [ClusterSchemaField]
 }
 
-extension CredentialClusterID {
+nonisolated extension CredentialClusterID {
     var schemaDefinition: ClusterSchemaDefinition {
         switch self {
         case .humanAccountLogin:
@@ -126,7 +131,7 @@ extension CredentialClusterID {
     }
 }
 
-struct ClusterDecision: Codable, Hashable {
+nonisolated struct ClusterDecision: Codable, Hashable, Sendable {
     var clusterID: CredentialClusterID
     var confidence: Double
     var reasons: [String]
@@ -220,7 +225,7 @@ struct ProviderSettingsPayload: Codable {
     var model: String
 }
 
-struct VaultField: Codable, Hashable, Identifiable {
+nonisolated struct VaultField: Codable, Hashable, Identifiable, Sendable {
     var id: String { "\(section ?? "")::\(key)::\(order)" }
     var key: String
     var label: String

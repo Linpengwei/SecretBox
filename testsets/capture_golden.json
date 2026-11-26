@@ -6,14 +6,27 @@
     "primary": "the parser's primary secret equals secrets[0] (for URI-embedded passwords: the percent-decoded one)",
     "template": "the detected template equals `template` ('custom' means none)",
     "secondary": "for cases with more than one secret: every secondary secret is captured as a secret",
-    "leaks": "known secrets (any encoded form) appearing in an ordinary, non-hidden field or in a stored excerpt — must be 0"
+    "leaks": "known secrets (any encoded form) appearing in an ordinary, non-hidden field or in a stored excerpt — must be 0",
+    "negatives": "cases with secrets == [] must not produce a secret in the app capture engine",
+    "false_positives": "a negative case that produced a secret; must be 0 in the app capture engine"
   },
   "floors": {
-    "note": "Hand-maintained, in counts out of the full corpus. Raise a floor when a parser improves; never lower one to make a regression pass.",
+    "note": "Hand-maintained counts. found/primary/template are measured over positive cases (303); negatives are the 38 cases with secrets == []. Raise a floor when a parser improves; never lower one to make a regression pass.",
     "server": {
-      "found": 249,
-      "primary": 243,
-      "template": 243
+      "found": 279,
+      "primary": 267,
+      "template": 291
+    },
+    "swift": {
+      "found": 303,
+      "primary": 303,
+      "template": 302,
+      "secondary_cases": 8,
+      "secondary": 8,
+      "negatives": 38,
+      "false_positives": 0,
+      "leaks": 0,
+      "determinism_runs": 20
     }
   },
   "cases": [
@@ -1245,7 +1258,8 @@
       "secrets": [
         "Render©2026"
       ],
-      "template": "custom"
+      "template": "account",
+      "label_reviewed": "corrected by hand; the scenario generator wrote 'custom'"
     },
     {
       "id": "DESI-024",
@@ -1255,7 +1269,8 @@
       "secrets": [
         "FarmPass-41"
       ],
-      "template": "custom"
+      "template": "account",
+      "label_reviewed": "corrected by hand; the scenario generator wrote 'custom'"
     },
     {
       "id": "DESI-025",
@@ -1545,7 +1560,8 @@
       "secrets": [
         "Xf4@Pk8#Rs2"
       ],
-      "template": "custom"
+      "template": "account",
+      "label_reviewed": "corrected by hand; the scenario generator wrote 'custom'"
     },
     {
       "id": "NOVI-019",
@@ -1635,7 +1651,8 @@
       "secrets": [
         "Jk8$Yu3@Wv6"
       ],
-      "template": "custom"
+      "template": "account",
+      "label_reviewed": "corrected by hand; the scenario generator wrote 'custom'"
     },
     {
       "id": "NOVI-028",
@@ -1915,7 +1932,8 @@
       "secrets": [
         "LQ2026-PRT-adm16"
       ],
-      "template": "custom"
+      "template": "account",
+      "label_reviewed": "corrected by hand; the scenario generator wrote 'custom'"
     },
     {
       "id": "ADMI-016",
@@ -1925,7 +1943,8 @@
       "secrets": [
         "LQ2026-PRT-2f77"
       ],
-      "template": "custom"
+      "template": "account",
+      "label_reviewed": "corrected by hand; the scenario generator wrote 'custom'"
     },
     {
       "id": "ADMI-017",
@@ -1935,7 +1954,8 @@
       "secrets": [
         "LQ2026-MTG-10ky"
       ],
-      "template": "custom"
+      "template": "account",
+      "label_reviewed": "corrected by hand; the scenario generator wrote 'custom'"
     },
     {
       "id": "ADMI-018",
@@ -1945,7 +1965,8 @@
       "secrets": [
         "LQ2026-MTG-gg40"
       ],
-      "template": "custom"
+      "template": "account",
+      "label_reviewed": "corrected by hand; the scenario generator wrote 'custom'"
     },
     {
       "id": "ADMI-019",
@@ -1955,7 +1976,8 @@
       "secrets": [
         "LQ2026-MJ-bk31"
       ],
-      "template": "custom"
+      "template": "account",
+      "label_reviewed": "corrected by hand; the scenario generator wrote 'custom'"
     },
     {
       "id": "ADMI-020",
@@ -2526,7 +2548,7 @@
         "FlXe9s2QwErT7uIo",
         "739281"
       ],
-      "template": "account",
+      "template": "aksk",
       "cluster": null
     },
     {
@@ -2581,7 +2603,7 @@
         "Xf4@Pk8#Rs2",
         "20010515"
       ],
-      "template": "custom",
+      "template": "account",
       "cluster": null
     },
     {
@@ -2654,6 +2676,636 @@
       ],
       "template": "redis",
       "cluster": null
+    },
+    {
+      "id": "H-01-mongodb-srv-uri",
+      "source": "heldout",
+      "text": "mongodb+srv://app_user:S3cureAtlas%21@cluster0.abc12.mongodb.net/mydb?retryWrites=true&w=majority",
+      "secrets": [
+        "S3cureAtlas!"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "H-02-jdbc-mysql-uri",
+      "source": "heldout",
+      "text": "jdbc:mysql://reporting:R3port%23Dev@mysql.internal:3306/analytics?useSSL=false",
+      "secrets": [
+        "R3port#Dev"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "H-03-kafka-jaas-password",
+      "source": "heldout",
+      "text": "kafka-console-producer --bootstrap-server kafka1.internal:9092 --topic payments --producer-property 'sasl.jaas.config=ScramLoginModule required username=\"prod\" password=\"KafkaScram#9\";'",
+      "secrets": [
+        "KafkaScram#9"
+      ],
+      "template": "kafka"
+    },
+    {
+      "id": "H-04-rediss-uri",
+      "source": "heldout",
+      "text": "rediss://default:TlsRedis%402026@cache.internal:6380",
+      "secrets": [
+        "TlsRedis@2026"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "H-05-docker-login",
+      "source": "heldout",
+      "text": "docker login registry.internal -u deploy -p 'Reg!Deploy2026'",
+      "secrets": [
+        "Reg!Deploy2026"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "H-06-pgpass-line",
+      "source": "heldout",
+      "text": "pg.internal:5432:orders:app:OrdersPg_2026",
+      "secrets": [
+        "OrdersPg_2026"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "H-07-kubernetes-stringdata",
+      "source": "heldout",
+      "text": "kind: Secret\nmetadata:\n  name: db-credentials\nstringData:\n  username: app\n  password: Yaml%Pass9",
+      "secrets": [
+        "Yaml%Pass9"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "H-08-spring-properties",
+      "source": "heldout",
+      "text": "spring.datasource.url=jdbc:postgresql://pg.internal:5432/orders\nspring.datasource.username=app\nspring.datasource.password=MySql%40Spring2026",
+      "secrets": [
+        "MySql%40Spring2026"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "H-09-netrc",
+      "source": "heldout",
+      "text": "machine gitlab.internal login ci-bot password GlPat%2026ci",
+      "secrets": [
+        "GlPat%2026ci"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "H-10-aws-credentials-file",
+      "source": "heldout",
+      "text": "[default]\naws_access_key_id = AKIAEXAMPLE123\naws_secret_access_key = wJalrExampleSecretKey/9",
+      "secrets": [
+        "wJalrExampleSecretKey/9"
+      ],
+      "template": "s3"
+    },
+    {
+      "id": "H-11-json-object",
+      "source": "heldout",
+      "text": "{\"username\": \"app\", \"password\": \"Json%40Pass2026\"}",
+      "secrets": [
+        "Json%40Pass2026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "H-12-service-account-json",
+      "source": "heldout",
+      "text": "{\"type\": \"service_account\", \"project_id\": \"billing-prod\", \"private_key_id\": \"9f2c\", \"private_key\": \"-----BEGIN PRIVATE KEY----- MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7example -----END PRIVATE KEY-----\", \"client_email\": \"billing-svc@billing-prod.iam.gserviceaccount.com\"}",
+      "secrets": [
+        "-----BEGIN PRIVATE KEY----- MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7example -----END PRIVATE KEY-----"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "H-13-ini-file",
+      "source": "heldout",
+      "text": "[Database]\nServer=10.0.2.7\nUser=sa\nPassword=Strong%20Pass!",
+      "secrets": [
+        "Strong%20Pass!"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "H-14-https-basic-auth",
+      "source": "heldout",
+      "text": "https://admin:Admin%40Site2026@cms.internal/admin",
+      "secrets": [
+        "Admin@Site2026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "H-15-zh-backoffice",
+      "source": "heldout",
+      "text": "钉钉后台 地址 https://oa.dingtalk.example 管理员账号 admin 密码 Dd%40min2026",
+      "secrets": [
+        "Dd%40min2026"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "H-16-zh-handoff",
+      "source": "heldout",
+      "text": "测试环境\njira.example.com\n账号 test.lead\n密码 Jira%23Lead2026",
+      "secrets": [
+        "Jira%23Lead2026"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "H-17-bank-login-and-pay-pin",
+      "source": "heldout",
+      "text": "招行手机银行 登录密码 Cmb%Pay2026 支付密码 135790",
+      "secrets": [
+        "Cmb%Pay2026",
+        "135790"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "H-18-bare-github-pat",
+      "source": "heldout",
+      "text": "ghp_16AlphanumericExample2026x",
+      "secrets": [
+        "ghp_16AlphanumericExample2026x"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "H-19-bare-slack-bot-token",
+      "source": "heldout",
+      "text": "xoxb-123456789012-ABCDEFGHijkl",
+      "secrets": [
+        "xoxb-123456789012-ABCDEFGHijkl"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "H-20-bare-stripe-key",
+      "source": "heldout",
+      "text": "sk_live_Zx91ExampleReceiptKey",
+      "secrets": [
+        "sk_live_Zx91ExampleReceiptKey"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "H-21-uri-plus-two-more-secrets",
+      "source": "heldout",
+      "text": "postgres://etl:Etl%23Pass2026@dw.internal:5432/warehouse\nSTRIPE_SECRET=sk_live_Zx9Example\nSENTRY_DSN=https://user:SentryKey123@sentry.internal/7",
+      "secrets": [
+        "Etl#Pass2026",
+        "sk_live_Zx9Example",
+        "SentryKey123"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "H-22-gmail-app-password",
+      "source": "heldout",
+      "text": "Gmail 应用专用密码：abcd efgh ijkl mnop",
+      "secrets": [
+        "abcd efgh ijkl mnop"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "H-23-wifi-password",
+      "source": "heldout",
+      "text": "WiFi 密码：HomeWifi%5G2026",
+      "secrets": [
+        "HomeWifi%5G2026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "H-24-email-then-password",
+      "source": "heldout",
+      "text": "邮箱 test@example.com 密码 Mail%40Pass2026",
+      "secrets": [
+        "Mail%40Pass2026"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "H-25-zh-copula-colon",
+      "source": "heldout",
+      "text": "密码是：Test%40Case2026",
+      "secrets": [
+        "Test%40Case2026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "H-26-psql-pgpassword",
+      "source": "heldout",
+      "text": "PGPASSWORD='Pg%40Cli2026' psql -h pg.internal -U app -d orders",
+      "secrets": [
+        "Pg%40Cli2026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "N-01-zh-keep-it-safe",
+      "source": "heldout",
+      "text": "密码 请妥善保管，不要外传",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-02-en-reset-link",
+      "source": "heldout",
+      "text": "password reset link has been sent to your email",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-03-zh-forgot",
+      "source": "heldout",
+      "text": "如果忘记密码，请联系管理员重置",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-04-zh-policy",
+      "source": "heldout",
+      "text": "密码策略：至少 12 位，包含大小写字母、数字和符号",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-05-en-rotated",
+      "source": "heldout",
+      "text": "The password was rotated last night by the on-call engineer",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-06-zh-account-look-up",
+      "source": "heldout",
+      "text": "地址：https://vpn.example.com 账号：在通讯录里查",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-07-en-env-var",
+      "source": "heldout",
+      "text": "README: set the PASSWORD env var before you run the app",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-08-zh-otp-validity",
+      "source": "heldout",
+      "text": "验证码 5 分钟内有效",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-09-zh-empty-password",
+      "source": "heldout",
+      "text": "Redis 默认端口 6379，密码为空",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-10-zh-key-empty",
+      "source": "heldout",
+      "text": "API key 为空时走默认凭证",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-11-config-without-secret",
+      "source": "heldout",
+      "text": "host=redis.internal\nport=6379\ndb=0\ntls=true",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-13-public-key",
+      "source": "heldout",
+      "text": "PublicKey=ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDexample0123456789",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-14-access-key-id-alone",
+      "source": "heldout",
+      "text": "access_key_id=AKIAIOSFODNN7EXAMPLE",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-15-masked",
+      "source": "heldout",
+      "text": "密码：********",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-16-env-reference",
+      "source": "heldout",
+      "text": "password=${DB_PASSWORD}",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-17-country-and-postal-code",
+      "source": "heldout",
+      "text": "country_code=86\npostal_code=100000",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-18-keynote-passcode",
+      "source": "heldout",
+      "text": "keynote 地址 https://meet.example.com passcode 见邀请邮件",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-19-zh-rotation-note",
+      "source": "heldout",
+      "text": "这是公司redis的密码说明，密码每月轮换",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-20-zh-hint",
+      "source": "heldout",
+      "text": "密码提示：我最喜欢的城市",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-21-zh-pending",
+      "source": "heldout",
+      "text": "密码待定，到时候再发",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-22-en-token-expired",
+      "source": "heldout",
+      "text": "token 过期了，需要重新生成",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-23-zh-same-as-wifi",
+      "source": "heldout",
+      "text": "VPN 密码和 wifi 密码一样",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-24-zh-see-group-notice",
+      "source": "heldout",
+      "text": "口令：见群公告",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-25-zh-same-as-above",
+      "source": "heldout",
+      "text": "密码：同上",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-26-en-keep-out-of-repo",
+      "source": "heldout",
+      "text": "The API key must be kept out of the repository",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-27-zh-person-without-secret",
+      "source": "heldout",
+      "text": "用户名：张三 部门：财务",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "N-28-zh-rotation-reminder",
+      "source": "heldout",
+      "text": "密钥轮换提醒：下周一统一更换",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "K-01-mysql-pwd-env",
+      "source": "heldout2",
+      "text": "MYSQL_PWD='My%40Env2026' mysql -h db.internal -u root",
+      "secrets": [
+        "My%40Env2026"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "K-02-redis-uri-no-username",
+      "source": "heldout2",
+      "text": "redis://:CacheOnly%231@redis.internal:6379/2",
+      "secrets": [
+        "CacheOnly#1"
+      ],
+      "template": "redis"
+    },
+    {
+      "id": "K-03-uri-split-across-lines",
+      "source": "heldout2",
+      "text": "psql \"postgresql://bi:Bi%23Read2026@\\\ndw.internal:5432/reporting\"",
+      "secrets": [
+        "Bi#Read2026"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "K-04-sshpass",
+      "source": "heldout2",
+      "text": "sshpass -p 'Ssh%40Pass2026' ssh ops@10.0.2.7",
+      "secrets": [
+        "Ssh%40Pass2026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "K-05-mysql-glued-short-flag",
+      "source": "heldout2",
+      "text": "mysql -u app -p'My%40Sql2026' -h db.internal",
+      "secrets": [
+        "My%40Sql2026"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "K-06-curl-user-flag",
+      "source": "heldout2",
+      "text": "curl -u admin:CurlAdmin%402026 https://api.internal/v1",
+      "secrets": [
+        "CurlAdmin%402026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "K-07-uri-in-markdown-link",
+      "source": "heldout2",
+      "text": "[grafana](https://viewer:Gra%40fana2026@grafana.internal/d/abc)",
+      "secrets": [
+        "Gra@fana2026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "K-08-authorization-bearer",
+      "source": "heldout2",
+      "text": "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.ExamplePayload2026.c2lnbmF0dXJl",
+      "secrets": [
+        "eyJhbGciOiJIUzI1NiJ9.ExamplePayload2026.c2lnbmF0dXJl"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "K-09-openai-style-key",
+      "source": "heldout2",
+      "text": "OPENAI_API_KEY=sk-proj-AbC123ExampleKey2026xxxxxxxxxxxx",
+      "secrets": [
+        "sk-proj-AbC123ExampleKey2026xxxxxxxxxxxx"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "K-10-npm-token",
+      "source": "heldout2",
+      "text": "NPM_TOKEN=npm_Example2026Token",
+      "secrets": [
+        "npm_Example2026Token"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "K-11-zh-curly-quotes",
+      "source": "heldout2",
+      "text": "“密码”：“Abc%40123456”",
+      "secrets": [
+        "Abc%40123456"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "K-12-cmdkey",
+      "source": "heldout2",
+      "text": "cmdkey /generic:TERMSRV/10.0.2.7 /user:admin /pass:Rdp%40Pass2026",
+      "secrets": [
+        "Rdp%40Pass2026"
+      ],
+      "template": "custom"
+    },
+    {
+      "id": "K-13-systemd-environment",
+      "source": "heldout2",
+      "text": "[Service]\nEnvironment=POSTGRES_PASSWORD=Postgres%40Env2026",
+      "secrets": [
+        "Postgres%40Env2026"
+      ],
+      "template": "database"
+    },
+    {
+      "id": "K-14-zh-prose-two-secrets",
+      "source": "heldout2",
+      "text": "测试账号是 tom 密码是 Tom%23Dev2026 另外 token 是 tok_live_Example2026",
+      "secrets": [
+        "Tom%23Dev2026",
+        "tok_live_Example2026"
+      ],
+      "template": "account"
+    },
+    {
+      "id": "M-01-zh-locked",
+      "source": "heldout2",
+      "text": "密码错误次数过多，账户已锁定",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "M-02-masked-and-ask",
+      "source": "heldout2",
+      "text": "password: ******** (ask IT)",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "M-04-zh-key-held-by-ops",
+      "source": "heldout2",
+      "text": "密钥由运维保管，需要时走审批",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "M-05-token-in-password-manager",
+      "source": "heldout2",
+      "text": "token 在 1Password 里",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "M-06-zh-reset-by-sms",
+      "source": "heldout2",
+      "text": "密码已重置，新密码将通过短信发送",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "M-07-zh-sticker-on-router",
+      "source": "heldout2",
+      "text": "wifi 密码贴在路由器背面",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "M-08-command-substitution",
+      "source": "heldout2",
+      "text": "export TOKEN=$(vault read -field=token secret/app)",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "M-10-see-wiki",
+      "source": "heldout2",
+      "text": "password: see https://wiki.internal/passwords",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "M-11-boolean-flag",
+      "source": "heldout2",
+      "text": "password_protected=true\nrequire_password: yes",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "M-13-password-file-path",
+      "source": "heldout2",
+      "text": "password_file=/etc/secrets/db_pass\ntoken_url=https://sso.internal/oauth2/token\ncredential_helper=cache",
+      "secrets": [],
+      "template": "-"
+    },
+    {
+      "id": "M-14-public-key-line",
+      "source": "heldout2",
+      "text": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleKeyMaterial2026",
+      "secrets": [],
+      "template": "-"
     }
   ]
 }

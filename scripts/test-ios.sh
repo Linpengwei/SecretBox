@@ -52,7 +52,9 @@ UI_SMOKE_TESTS=(
 )
 
 run_xcodebuild "1/4 Build for testing" build-for-testing
-run_xcodebuild "2/4 Run unit tests" test -only-testing:SecretBoxTests/SecretBoxAppModelTests
+run_xcodebuild "2/4 Run unit tests" test \
+  -only-testing:SecretBoxTests/SecretBoxAppModelTests \
+  -only-testing:SecretBoxTests/CaptureParserGoldenTests
 run_xcodebuild "3/4 Run 50-sample classifier regression" test "-only-testing:$SAMPLE_SET_TEST"
 
 echo "[4/4 Run iOS UI smoke tests]"

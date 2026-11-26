@@ -97,7 +97,7 @@ enum PlatformClipboard {
             // if the app is suspended in the meantime.
             UIPasteboard.general.setItems(
                 [[plainTextType: text]],
-                options: [.expirationDate: Date().addingTimeInterval(TimeInterval(secretClearDelay.totalSeconds))]
+                options: [.expirationDate: Date().addingTimeInterval(TimeInterval(secretClearDelay.components.seconds))]
             )
         } else {
             UIPasteboard.general.string = text

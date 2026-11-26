@@ -14,10 +14,18 @@ Sources, merged in this order:
 3. The authored cases below: shapes that leaked or were mis-parsed before the
    capture engine existed — several secrets in one paste, percent-encoded URI
    passwords, natural-language handoffs, values glued to a following sentence.
+4. `capture_edge_cases.json`: held-out and adversarial cases written after the
+   first engine was tuned, including negative pastes that must not produce a
+   secret. These are kept in a separate source file so their provenance stays
+   visible when the corpus is regenerated.
 
 `secrets[0]` is the primary secret; the rest are secondary secrets that a
 parser must keep out of ordinary fields. `floors` is hand-maintained and is
 carried over untouched when this script regenerates the corpus.
+
+A few persona labels were reviewed by hand (REVIEWED_LABELS): the scenario
+generator called some logins 'custom'. A corrected label is marked on its
+case; persona200/scenarios_200.json is left as generated.
 
 Usage: python3 testsets/build_capture_golden.py
 """
@@ -32,6 +40,7 @@ HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parent
 PERSONA = HERE / "persona200" / "scenarios_200.json"
 FIFTY = REPO_ROOT / "server" / "docs" / "diverse_fifty_samples.json"
+EDGE = HERE / "capture_edge_cases.json"
 TARGET = HERE / "capture_golden.json"
 
 ABOUT = (
@@ -40,6 +49,25 @@ ABOUT = (
     "never stored as an ordinary field. template 'custom' means no specific template. Built by "
     "testsets/build_capture_golden.py — edit that script, not this file."
 )
+
+# Persona labels reviewed by hand on 2026-11-25, when the first capture
+# engine was measured against this corpus. Each of these pastes is a login —
+# a web address with an account and a password, or the code an app sends to
+# sign in — that the scenario generator labelled 'custom'. The text says
+# otherwise and both parsers agree, so the corpus carries the corrected
+# label. persona200/scenarios_200.json stays as generated: it is a recorded
+# evaluation, and its template floor already counts these as misses.
+REVIEWED_LABELS = {
+    "ADMI-015": "account",
+    "ADMI-016": "account",
+    "ADMI-017": "account",
+    "ADMI-018": "account",
+    "ADMI-019": "account",
+    "DESI-023": "account",
+    "DESI-024": "account",
+    "NOVI-018": "account",
+    "NOVI-027": "account",
+}
 
 # Where each 50-sample carries its secret: "uri" = the password in the URI's
 # userinfo (percent-decoded); anything else = that key in the text.
@@ -121,7 +149,7 @@ EXTRA_CASES = [
         "X-01-multi-secret-paste",
         "账号: ops-bot\n密码: Growth2026\nAK: LTAI5TEXAMPLEKEY\nSK: FlXe9s2QwErT7uIo\n支付密码: 739281",
         ["Growth2026", "FlXe9s2QwErT7uIo", "739281"],
-        "account",
+        "aksk",
         None,
     ),
     (
@@ -156,7 +184,7 @@ EXTRA_CASES = [
         "X-06-glued-code-and-next-line-secret",
         "购物密码20010515\n登录密码\nXf4@Pk8#Rs2",
         ["Xf4@Pk8#Rs2", "20010515"],
-        "custom",
+        "account",
         None,
     ),
     ("X-07-bare-password", "hg_6688@2026", ["hg_6688@2026"], "custom", None),
@@ -193,16 +221,21 @@ def build() -> dict:
     scenarios = json.loads(PERSONA.read_text(encoding="utf-8"))
     scenarios = scenarios["scenarios"] if isinstance(scenarios, dict) else scenarios
     for scenario in scenarios:
-        cases.append(
-            {
-                "id": scenario["id"],
-                "source": "persona200",
-                "persona": scenario.get("persona"),
-                "text": scenario["create"]["pasted_text"],
-                "secrets": [scenario["expect"]["primary_secret"]],
-                "template": scenario["expect"]["template_type"] or "custom",
-            }
-        )
+        generated = scenario["expect"]["template_type"] or "custom"
+        reviewed = REVIEWED_LABELS.get(scenario["id"])
+        if reviewed == generated:
+            raise SystemExit(f"persona {scenario['id']!r}: REVIEWED_LABELS repeats the generated label")
+        case = {
+            "id": scenario["id"],
+            "source": "persona200",
+            "persona": scenario.get("persona"),
+            "text": scenario["create"]["pasted_text"],
+            "secrets": [scenario["expect"]["primary_secret"]],
+            "template": reviewed or generated,
+        }
+        if reviewed:
+            case["label_reviewed"] = f"corrected by hand; the scenario generator wrote '{generated}'"
+        cases.append(case)
 
     fifty = json.loads(FIFTY.read_text(encoding="utf-8"))
     if {sample["label"] for sample in fifty} != set(FIFTY_SECRET_SOURCE):
@@ -227,6 +260,14 @@ def build() -> dict:
             {"id": case_id, "source": "authored", "text": text, "secrets": secrets, "template": template, "cluster": cluster}
         )
 
+    edge = json.loads(EDGE.read_text(encoding="utf-8"))
+    for case in edge["cases"]:
+        if case["secrets"] and not case["secrets"][0]:
+            raise SystemExit(f"edge case {case['id']!r} has an empty primary secret")
+        if case["template"] != "-" and case["template"] not in {"redis", "database", "s3", "kafka", "aksk", "account", "custom"}:
+            raise SystemExit(f"edge case {case['id']!r} has an unknown template")
+        cases.append(case)
+
     ids = [case["id"] for case in cases]
     if len(set(ids)) != len(ids):
         raise SystemExit("duplicate case ids in the golden corpus")
@@ -241,6 +282,8 @@ def build() -> dict:
             "template": "the detected template equals `template` ('custom' means none)",
             "secondary": "for cases with more than one secret: every secondary secret is captured as a secret",
             "leaks": "known secrets (any encoded form) appearing in an ordinary, non-hidden field or in a stored excerpt — must be 0",
+            "negatives": "cases with secrets == [] must not produce a secret in the app capture engine",
+            "false_positives": "a negative case that produced a secret; must be 0 in the app capture engine",
         },
         "floors": existing.get("floors", {}),
         "cases": cases,

@@ -13,10 +13,14 @@ from .config import settings
 from .models import ProviderConfig, VaultRecord
 from .redaction import (
     AI_METADATA_FIELD_KEYS,
+    PGPASS_LINE_RE,
     REDACTED,
+    cli_user_password_spans,
     is_secret_key,
     redact_cli_secret_flags,
+    redact_json_secret_values,
     redact_known_secrets,
+    redact_pgpass,
     redact_uri_params,
     strip_uri_credentials,
     uri_spans,
@@ -221,8 +225,9 @@ class AIService:
         leave the text alone."""
         if not text:
             return text
-        # URIs and command-line flags carry secrets in shapes the plain
-        # `key: value` scan cannot see.
+        # URIs, command-line flags, pgpass lines and authorization headers
+        # carry secrets in shapes the plain `key: value` scan cannot see.
+        text = redact_pgpass(text)
         text = redact_uri_params(text)
         text = redact_cli_secret_flags(text)
         uris = uri_spans(text)
@@ -238,6 +243,9 @@ class AIService:
                 continue
             if is_secret_key(self._canonical_key(match.group(1))) or is_secret_key(match.group(1)):
                 spans.append(match.span(2))
+        for start, end in redact_json_secret_values(text):
+            if not inside_uri(start):
+                spans.append((start, end))
         for pattern in self.NL_REDACT_PATTERNS:
             for match in pattern.finditer(text):
                 if inside_uri(match.start()):
@@ -366,6 +374,9 @@ class AIService:
                 value = strip_uri_credentials(value)
             if primary_secret:
                 value = redact_known_secrets(value, primary_secret)
+            # Parser-supplied fields are untrusted too: a value can carry a
+            # credential even when its key was not recognized as secret-class.
+            value = self.sanitize_free_text(value, primary_secret)
             sanitized.append(
                 VaultFieldPayload(
                     key=field.key,
@@ -639,8 +650,10 @@ class AIService:
         pairs: dict[str, str] = {}
         for line in re.split(r"[\n;；]+", raw):
             line = line.strip()
-            if not line:
+            if not line or PGPASS_LINE_RE.fullmatch(line):
                 continue
+            blocked_spans = uri_spans(line) + cli_user_password_spans(line)
+
             matches = list(self.KV_PAIR_RE.finditer(line)) or [
                 # chat-record lines like "账号是 pm_growth 密码 Growth2026" rely on
                 # the natural-language form once the kv form misses.
@@ -648,6 +661,8 @@ class AIService:
                 for match in self.NL_KV_RE.finditer(line)
             ]
             for match in matches:
+                if any(start <= match.start() < end for start, end in blocked_spans):
+                    continue
                 key = self._canonical_key(match.group(1))
                 value = match.group(2).strip().strip("'\"")
                 # First occurrence wins so multi-account pastes keep their first
@@ -703,6 +718,11 @@ class AIService:
             value = kv_pairs.get(key)
             if value:
                 return value
+
+        # `.pgpass` has no key names: host:port:database:user:password.
+        pgpass_match = PGPASS_LINE_RE.search(raw)
+        if pgpass_match:
+            return pgpass_match.group(5)
 
         # URI-embedded secrets: allow the empty-username form ("redis://:pwd@host")
         # and percent-decode, since URIs carry the URL-encoded password.

@@ -61,17 +61,18 @@ jobs:
         working-directory: SecretBox
         run: |
           xcodebuild -project SecretBox.xcodeproj -scheme SecretBox \
-            -destination "platform=macOS" -parallel-testing-enabled NO \
+            -destination "platform=macOS,arch=$(uname -m)" -parallel-testing-enabled NO \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" build-for-testing
       - name: Unit tests
         working-directory: SecretBox
-        # The model suite (which includes the 50-sample classifier regression)
-        # and the TOTP engine. View snapshots are not run here: their pixel
-        # baselines were recorded on a developer machine and do not transfer
-        # to hosted runners.
+        # The model suite (which includes the 50-sample classifier regression),
+        # the shared capture corpus, and the TOTP engine. View snapshots are not
+        # run here: their pixel baselines were recorded on a developer machine
+        # and do not transfer to hosted runners.
         run: |
           xcodebuild -project SecretBox.xcodeproj -scheme SecretBox \
-            -destination "platform=macOS" -parallel-testing-enabled NO \
+            -destination "platform=macOS,arch=$(uname -m)" -parallel-testing-enabled NO \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" test-without-building \
             -only-testing:SecretBoxTests/SecretBoxAppModelTests \
+            -only-testing:SecretBoxTests/CaptureParserGoldenTests \
             -only-testing:SecretBoxTests/TOTPEngineTests

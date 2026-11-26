@@ -9,7 +9,7 @@ DEVELOPER_DIR_PATH="/Applications/Xcode.app/Contents/Developer"
 COMMON_ARGS=(
   -project SecretBox.xcodeproj
   -scheme SecretBox
-  -destination "platform=macOS"
+  -destination "platform=macOS,arch=$(uname -m)"
   -parallel-testing-enabled NO
   -maximum-parallel-testing-workers 1
   -derivedDataPath "$DERIVED_DATA_PATH"
@@ -131,10 +131,11 @@ run_ui_test_with_retry() {
 assert_every_ui_test_is_listed
 
 run_xcodebuild "1/4 Build for testing" build-for-testing
-# Unit suites: model (incl. the 50-sample regression), TOTP engine, view
-# snapshots. Everything after the build step runs without rebuilding.
+# Unit suites: model (incl. the 50-sample regression), capture golden corpus,
+# TOTP engine, view snapshots. Everything after the build step runs without rebuilding.
 run_xcodebuild "2/4 Run unit tests" test-without-building \
   -only-testing:SecretBoxTests/SecretBoxAppModelTests \
+  -only-testing:SecretBoxTests/CaptureParserGoldenTests \
   -only-testing:SecretBoxTests/TOTPEngineTests \
   -only-testing:SecretBoxTests/ViewSnapshotTests
 run_xcodebuild "3/4 Run 50-sample classifier regression" test-without-building "-only-testing:$SAMPLE_SET_TEST"

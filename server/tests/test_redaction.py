@@ -323,6 +323,8 @@ def test_ai_metadata_whitelist_matches_mcp_server():
         ("password", True), ("DB_PASSWORD", True), ("支付密码", True), ("secret_key", True), ("STRIPE_KEY", True),
         ("api_key", True), ("private_key", True), ("token", True), ("REDIS_AUTH", True), ("client_secret", True),
         ("sk", True), ("aws_secret_access_key", True), ("passphrase", True), ("密钥", True), ("license_key", True),
+        ("apikey", True), ("Authorization", True), ("ScriptPassphrase", True), ("private_key_id", False),
+        ("password_file", True), ("token_url", True), ("credential_helper", False),
         ("access_key", False), ("aws_access_key_id", False), ("ak", False), ("key_id", False), ("public_key", False),
         ("host", False), ("username", False), ("engine", False), ("mechanism", False), ("sasl_mechanism", False),
     ],

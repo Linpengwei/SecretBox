@@ -45,13 +45,13 @@ AI 原生密码管理器，面向企业与个人——人与 AI agent 之间的�
 
 ## 当前优先级
 
-阶段 0（止血）已完成。下一步是阶段 1：统一的捕获引擎——完整计划及每个阶段必须守住什么见 `ROADMAP.md`。
+阶段 0（止血）与阶段 1（统一捕获引擎）已完成。下一步是阶段 2：锁屏与本地安全基线——完整计划及每个阶段必须守住什么见 `ROADMAP.md`。
 
 ## 约定
 
 - Swift 应用使用单一 xcodeproj，采用文件系统同步分组：保存进 `SecretBox/SecretBox/`（或测试目录）的文件自动属于对应目标——无需再往工程里添加（应用代码不用 SPM）。
 - 服务器为 Python 3.10+，`from __future__ import annotations` 风格，FastAPI 经 `get_db` 依赖注入；Docker 镜像使用 3.12。
-- 分类器夹具：50 样本清单在 `SecretBoxTests/SecretBoxAppModelTests.swift`（macOS 与 iOS 回归）；服务端解析器与搜索由 `testsets/persona200/` 对照 `testsets/persona200/floors.json` 的下限来度量。阶段 1 会把两者替换为一份共享的黄金语料。
+- 捕获夹具：`testsets/capture_golden.json` 是共享语料（341 条：303 条正例、38 条反例），由 `testsets/build_capture_golden.py` 从 persona-200、50 样本、自撰用例和 `capture_edge_cases.json` 生成。`SecretBoxTests/CaptureParserGoldenTests.swift` 测量应用引擎（含脱离主 actor 的 20 次确定性）；`server/tests/test_capture_golden.py` 保持冻结服务端提取下限以及绝对的清洗/不泄漏不变量。搜索质量仍由 `testsets/persona200/` 对照 `testsets/persona200/floors.json` 度量。
 - 绝不要针对你的真实 Keychain account 运行 `mcp-server/fuzzy_eval.py`：它会把真实保险库换成测试保险库，只在 `finally` 里恢复。做评测时请把 `SECRETBOX_KEYCHAIN_ACCOUNT` 指向专用 account。
 - 每份文档都有英文/简体中文对应版本（`.zh-CN.md`），两边都要改。
 - 许可：AGPL-3.0 + 商业双许可（见 `README.md`）。提交贡献即授权项目以 AGPL-3.0 与项目商业许可双重发布。

@@ -348,11 +348,19 @@ struct VaultItemEditorView: View {
 
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 200), spacing: 12)], spacing: 12) {
                 ForEach(group.keys, id: \.self) { key in
-                    TextField(model.humanizedFieldName(key), text: Binding(
-                        get: { model.recordFields[key, default: ""] },
-                        set: { model.updateField(key, value: $0) }
-                    ))
-                    .textFieldStyle(.roundedBorder)
+                    if model.isFieldHidden(key) {
+                        SecureField(model.humanizedFieldName(key), text: Binding(
+                            get: { model.recordFields[key, default: ""] },
+                            set: { model.updateField(key, value: $0) }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                    } else {
+                        TextField(model.humanizedFieldName(key), text: Binding(
+                            get: { model.recordFields[key, default: ""] },
+                            set: { model.updateField(key, value: $0) }
+                        ))
+                        .textFieldStyle(.roundedBorder)
+                    }
                 }
             }
         }

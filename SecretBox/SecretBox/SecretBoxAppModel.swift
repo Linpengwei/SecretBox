@@ -113,6 +113,8 @@ final class SecretBoxAppModel: ObservableObject {
     @Published var pastedNoteOverride = ""
     @Published var pastedFieldOverrides: [String: String] = [:]
     @Published var recordFields: [String: String] = [:]
+    // The value map alone cannot carry VaultField.hidden through an edit.
+    private var recordHiddenFieldKeys: Set<String> = []
     // Editor draft for the permission matrix; `aiAccess` here is the single
     // source of truth at save time (the legacy `recordAIReadable` boolean is
     // only a compatibility mirror on saved records).
@@ -386,12 +388,12 @@ final class SecretBoxAppModel: ObservableObject {
         }
         let parsed = parseLocalPastedSecret(parseableText)
         let effectiveType = pastedTypeOverride.isEmpty ? parsed.templateType : pastedTypeOverride
-        let fields = applyPastedFieldOverrides(to: parsed.fields)
+        let fields = parsed.fields
         let highlights = fields
             .filter { $0.key != "source_excerpt" }
             .prefix(4)
             .map { "\($0.label): \($0.value)" }
-        var previewTags = previewTags(from: parsed.signals, fields: fields, secret: parsed.primarySecret, templateType: effectiveType)
+        var previewTags = CaptureParser.previewTags(signals: parsed.signals, fields: fields, secret: parsed.primarySecret, templateType: effectiveType)
         if capturedTOTP != nil {
             previewTags.append("verification")
         }
@@ -404,7 +406,6 @@ final class SecretBoxAppModel: ObservableObject {
             hasSecret: parsed.primarySecret != nil,
             editableFields: fields
                 .filter { !$0.hidden && $0.key != "source_excerpt" && !$0.value.isEmpty }
-                .prefix(5)
                 .map { PastedPreviewField(key: $0.key, label: $0.label, value: $0.value) },
             hasTOTP: capturedTOTP != nil
         )
@@ -750,7 +751,7 @@ final class SecretBoxAppModel: ObservableObject {
             let effectiveType = pastedTypeOverride.isEmpty ? parsed.templateType : pastedTypeOverride
             let effectiveTitle = pastedTitleOverride.trimmingCharacters(in: .whitespacesAndNewlines)
             let effectiveNote = pastedNoteOverride.trimmingCharacters(in: .whitespacesAndNewlines)
-            let effectiveFields = applyPastedFieldOverrides(to: parsed.fields)
+            let effectiveFields = parsed.fields
             let record = VaultRecord(
                 id: UUID().uuidString,
                 itemType: effectiveType == "account" ? "login" : "secret",
@@ -783,17 +784,25 @@ final class SecretBoxAppModel: ObservableObject {
         defer { isWorking = false }
 
         do {
+            let parsed = parseLocalPastedSecret(parseableText)
+            let effectiveType = pastedTypeOverride.isEmpty ? parsed.templateType : pastedTypeOverride
+            let effectiveTitle = pastedTitleOverride.trimmingCharacters(in: .whitespacesAndNewlines)
+            let effectiveNote = pastedNoteOverride.trimmingCharacters(in: .whitespacesAndNewlines)
+            let structured = !parseableText.isEmpty
             let record = try await api.saveRecord(
                 baseURL: serverURL,
                 payload: VaultItemCreateRequest(
-                    itemType: "secret",
-                    templateType: nil,
-                    name: "",
-                    pastedText: parseableText.isEmpty ? normalized : parseableText,
-                    primarySecret: nil,
-                    notes: "",
-                    tags: [],
-                    fields: [],
+                    itemType: structured ? parsed.itemType : "secret",
+                    templateType: structured ? effectiveType : nil,
+                    name: structured ? (effectiveTitle.isEmpty ? parsed.name : effectiveTitle) : "",
+                    // The capture engine has already read the paste. Do not
+                    // send raw pasted_text a second time; only the TOTP-only
+                    // compatibility path still needs the URI routed server-side.
+                    pastedText: structured ? "" : normalized,
+                    primarySecret: structured ? parsed.primarySecret : nil,
+                    notes: structured ? (effectiveNote.isEmpty ? parsed.notes : effectiveNote) : "",
+                    tags: structured ? [effectiveType] : [],
+                    fields: structured ? parsed.fields : [],
                     totp: capturedTOTP?.totp,
                     permissions: recordPermissions.aiAccess == .none ? nil : recordPermissions
                 )
@@ -1108,6 +1117,10 @@ final class SecretBoxAppModel: ObservableObject {
         recordFields[key] = value
     }
 
+    func isFieldHidden(_ key: String) -> Bool {
+        recordHiddenFieldKeys.contains(key) || CaptureRules.isSecretKey(key)
+    }
+
     func humanizedFieldName(_ key: String) -> String {
         key
             .replacingOccurrences(of: "_", with: " ")
@@ -1330,6 +1343,7 @@ final class SecretBoxAppModel: ObservableObject {
         editingClusterID = nil
         editingClusterConfidence = nil
         recordFields = [:]
+        recordHiddenFieldKeys = []
         syncRecordFieldsWithSelectedType()
     }
 
@@ -1353,6 +1367,7 @@ final class SecretBoxAppModel: ObservableObject {
         editingClusterID = record.clusterID
         editingClusterConfidence = record.clusterConfidence
         recordFields = Dictionary(uniqueKeysWithValues: record.fields.map { ($0.key, $0.value) })
+        recordHiddenFieldKeys = Set(record.fields.filter(\.hidden).map(\.key))
         syncRecordFieldsWithSelectedType()
     }
 
@@ -1360,13 +1375,26 @@ final class SecretBoxAppModel: ObservableObject {
         let keyValues = editorDraftKeyValues()
         let synthesizedText = editorDraftText(from: keyValues)
         let primarySecret = recordPassword.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : recordPassword.trimmingCharacters(in: .whitespacesAndNewlines)
-        let signals = extractSignals(from: synthesizedText, keyValues: keyValues, secret: primarySecret)
-        let clusterDecision = decideCluster(for: signals, text: synthesizedText, keyValues: keyValues)
-        let templateType = deriveTemplateType(from: clusterDecision, text: synthesizedText, keyValues: keyValues)
+        let labels = Set(keyValues.keys)
+        let signals = CaptureClassification.signals(
+            text: synthesizedText,
+            keyValues: keyValues,
+            labels: labels,
+            secret: primarySecret,
+            hasURICredential: false
+        )
+        let clusterDecision = CaptureClassification.decideCluster(for: signals, text: synthesizedText, keyValues: keyValues)
+        let templateType = CaptureClassification.templateType(
+            for: clusterDecision,
+            text: synthesizedText,
+            keyValues: keyValues,
+            labels: labels,
+            secretScheme: nil
+        )
         let fields = makeVaultFields()
-        let redactedExcerpt = redactExcerpt(synthesizedText, secret: primarySecret)
-        let defaultName = deriveRecordName(templateType: templateType, keyValues: keyValues, fields: fields)
-        let defaultNotes = deriveNotes(templateType: templateType, keyValues: keyValues, redactedExcerpt: redactedExcerpt)
+        let redactedExcerpt = CaptureExtraction.scrub(synthesizedText, secret: primarySecret)
+        let defaultName = CaptureClassification.recordName(templateType: templateType, keyValues: keyValues, fields: fields)
+        let defaultNotes = CaptureClassification.notes(templateType: templateType, keyValues: keyValues, fallback: redactedExcerpt)
         let itemType = templateType == "account" ? "login" : "secret"
         let tags = [templateType]
         return (itemType, templateType, clusterDecision, signals, tags, defaultName, defaultNotes)
@@ -1460,19 +1488,7 @@ final class SecretBoxAppModel: ObservableObject {
     }
 
     private func normalizeUnstructuredInput(_ text: String) -> String {
-        var normalized = text
-            .replacingOccurrences(of: #"\\\s*[\r\n]+"#, with: " ", options: .regularExpression)
-            .replacingOccurrences(of: #"[\r\n\t]+"#, with: " ", options: .regularExpression)
-            .replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        if (normalized.hasPrefix("\"") && normalized.hasSuffix("\""))
-            || (normalized.hasPrefix("'") && normalized.hasSuffix("'"))
-            || (normalized.hasPrefix("`") && normalized.hasSuffix("`")) {
-            normalized.removeFirst()
-            normalized.removeLast()
-        }
-        return normalized.trimmingCharacters(in: .whitespacesAndNewlines)
+        CaptureExtraction.normalize(text)
     }
 
     private func runAutomaticOrganizationIfNeeded(trigger: OrganizationTrigger) {
@@ -1600,9 +1616,22 @@ final class SecretBoxAppModel: ObservableObject {
         }
         let synthesizedText = normalizeUnstructuredInput(organizationSourceText(for: record, keyValues: keyValues))
         let secret = record.primarySecret?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let signals = extractSignals(from: synthesizedText, keyValues: keyValues, secret: secret)
-        let clusterDecision = decideCluster(for: signals, text: synthesizedText, keyValues: keyValues)
-        let derivedTemplateType = deriveTemplateType(from: clusterDecision, text: synthesizedText, keyValues: keyValues)
+        let labels = Set(keyValues.keys)
+        let signals = CaptureClassification.signals(
+            text: synthesizedText,
+            keyValues: keyValues,
+            labels: labels,
+            secret: secret,
+            hasURICredential: false
+        )
+        let clusterDecision = CaptureClassification.decideCluster(for: signals, text: synthesizedText, keyValues: keyValues)
+        let derivedTemplateType = CaptureClassification.templateType(
+            for: clusterDecision,
+            text: synthesizedText,
+            keyValues: keyValues,
+            labels: labels,
+            secretScheme: nil
+        )
 
         var next = record
         next.signals = signals
@@ -1636,7 +1665,7 @@ final class SecretBoxAppModel: ObservableObject {
     }
 
     private func aggregateOrganizationDecision(for records: [VaultRecord]) -> (clusterDecision: ClusterDecision, templateType: String, clusterLabel: String) {
-        let mergedSignals = deduplicateSignals(records.flatMap { $0.signals ?? [] })
+        let mergedSignals = CaptureClassification.deduplicated(records.flatMap { $0.signals ?? [] })
         let mergedKeyValues = records.reduce(into: [String: String]()) { partialResult, record in
             for field in record.fields where partialResult[field.key] == nil && !field.value.isEmpty {
                 partialResult[field.key] = field.value
@@ -1645,8 +1674,14 @@ final class SecretBoxAppModel: ObservableObject {
         let mergedText = records
             .map { normalizeUnstructuredInput(organizationSourceText(for: $0, keyValues: $0.fieldMap)) }
             .joined(separator: " ")
-        let clusterDecision = decideCluster(for: mergedSignals, text: mergedText, keyValues: mergedKeyValues)
-        let templateType = deriveTemplateType(from: clusterDecision, text: mergedText, keyValues: mergedKeyValues)
+        let clusterDecision = CaptureClassification.decideCluster(for: mergedSignals, text: mergedText, keyValues: mergedKeyValues)
+        let templateType = CaptureClassification.templateType(
+            for: clusterDecision,
+            text: mergedText,
+            keyValues: mergedKeyValues,
+            labels: Set(mergedKeyValues.keys),
+            secretScheme: nil
+        )
         let clusterLabel = suggestedClusterLabel(for: clusterDecision, signals: mergedSignals, templateType: templateType)
         return (clusterDecision, templateType, clusterLabel)
     }
@@ -1788,433 +1823,23 @@ final class SecretBoxAppModel: ObservableObject {
         return Array(NSOrderedSet(array: next).array as? [String] ?? next)
     }
 
-    private func inferTypeID(from text: String) -> String {
-        let lowered = text.lowercased()
-        if lowered.contains("redis") { return "redis" }
-        if lowered.contains("kafka") || lowered.contains("brokers=") { return "kafka" }
-        if lowered.contains("bucket") || lowered.contains("s3") || lowered.contains("access_key") { return "s3" }
-        if lowered.contains("postgres") || lowered.contains("mysql") || lowered.contains("database") || lowered.contains("jdbc:") { return "database" }
-        if lowered.contains("github") || lowered.contains("account") || lowered.contains("login") { return "account" }
-        return "custom"
-    }
-
     private func parseLocalPastedSecret(_ text: String) -> ParsedLocalSecret {
-        let keyValues = extractKeyValues(from: text)
-        let primarySecret = extractPrimarySecret(from: text, keyValues: keyValues)
-        let signals = extractSignals(from: text, keyValues: keyValues, secret: primarySecret)
-        let clusterDecision = decideCluster(for: signals, text: text, keyValues: keyValues)
-        let templateType = deriveTemplateType(from: clusterDecision, text: text, keyValues: keyValues)
-        let redactedExcerpt = redactExcerpt(text, secret: primarySecret)
-
-        var fields: [VaultField] = []
-        switch templateType {
-        case "redis":
-            fields = parseRedisFields(text, keyValues: keyValues)
-        case "database":
-            fields = parseDatabaseFields(text, keyValues: keyValues)
-        case "s3":
-            fields = parseS3Fields(keyValues: keyValues)
-        case "kafka":
-            fields = parseKafkaFields(keyValues: keyValues)
-        case "aksk":
-            fields = parseAKSKFields(keyValues: keyValues)
-        case "account":
-            fields = parseAccountFields(keyValues: keyValues)
-        case "custom":
-            fields = parseCustomFields(text, keyValues: keyValues)
-        default:
-            fields = parseGenericFields(keyValues: keyValues)
-        }
-
-        fields = enrichContextualFields(fields, text: text, keyValues: keyValues, secret: primarySecret)
-
-        if let username = lookupValue(in: keyValues, keys: ["username", "user", "account", "login", "email", "sasl_username", "aws_access_key_id"]),
-           !fields.contains(where: { $0.key == "username" }) {
-            fields.insert(makeField(key: "username", label: "Username", value: username, semantic: "username", section: "Auth", order: 0), at: 0)
-        }
-
-        if let redactedExcerpt, !redactedExcerpt.isEmpty, !fields.contains(where: { $0.key == "source_excerpt" }) {
-            fields.append(makeField(key: "source_excerpt", label: "Source Excerpt", value: String(redactedExcerpt.prefix(240)), semantic: "source_excerpt", section: "Metadata", order: 999))
-        }
-
-        let name = deriveRecordName(templateType: templateType, keyValues: keyValues, fields: fields)
-        let notes = deriveNotes(templateType: templateType, keyValues: keyValues, redactedExcerpt: redactedExcerpt)
-        let itemType = templateType == "account" ? "login" : "secret"
-        return ParsedLocalSecret(
-            itemType: itemType,
-            templateType: templateType,
-            clusterDecision: clusterDecision,
-            signals: signals,
-            name: name,
-            notes: notes,
-            tags: [templateType, "local"],
-            fields: deduplicateFields(fields),
-            primarySecret: primarySecret
+        let capture = CaptureParser.parse(
+            text,
+            overrides: pastedFieldOverrides,
+            typeOverride: pastedTypeOverride.isEmpty ? nil : pastedTypeOverride
         )
-    }
-
-    private func applyPastedFieldOverrides(to fields: [VaultField]) -> [VaultField] {
-        fields.map { field in
-            guard let override = pastedFieldOverrides[field.key] else { return field }
-            var next = field
-            next.value = override
-            return next
-        }
-    }
-
-    private func previewTags(from signals: [VaultSignal], fields: [VaultField], secret: String?, templateType: String) -> [String] {
-        var tags: [String] = []
-
-        for signal in prioritizedPreviewSignals(from: signals) {
-            if let rendered = renderedSignalTag(signal), !rendered.isEmpty {
-                tags.append(rendered)
-            }
-        }
-
-        let prioritizedKeys = [
-            "url", "endpoint", "host", "brokers",
-            "service", "label", "account",
-            "database", "bucket", "topic", "scope", "project", "vhost",
-            "env", "region", "provider", "engine", "mechanism",
-            "username", "access_key"
-        ]
-
-        for key in prioritizedKeys {
-            if let value = fields.first(where: { $0.key == key })?.value,
-               let rendered = renderedPreviewTag(forKey: key, value: value),
-               !rendered.isEmpty {
-                tags.append(rendered)
-            }
-        }
-
-        let renderedSecret = secret.flatMap(renderedSecretTag)
-        if let renderedSecret {
-            tags.append(renderedSecret)
-        }
-
-        if tags.isEmpty {
-            tags.append("source:\(templateType)")
-        }
-
-        var uniqueTags = Array(NSOrderedSet(array: tags).array as? [String] ?? tags)
-        if let renderedSecret,
-           let secretIndex = uniqueTags.firstIndex(of: renderedSecret),
-           secretIndex >= 7 {
-            uniqueTags.remove(at: secretIndex)
-            if uniqueTags.count >= 7 {
-                uniqueTags[6] = renderedSecret
-            } else {
-                uniqueTags.append(renderedSecret)
-            }
-        }
-        return Array(uniqueTags.prefix(7))
-    }
-
-    private func prioritizedPreviewSignals(from signals: [VaultSignal]) -> [VaultSignal] {
-        let priority: [String: Int] = [
-            "url": 120, "endpoint": 120, "host": 115, "brokers": 110,
-            "label": 105, "service": 105, "account": 95,
-            "database": 90, "bucket": 90, "topic": 90, "scope": 85, "project": 85, "vhost": 85,
-            "env": 80, "region": 75, "provider": 75, "engine": 70, "mechanism": 65,
-            "username": 60, "access_key": 55
-        ]
-        return signals
-            .filter { $0.category != .secret }
-            .sorted { lhs, rhs in
-                let lp = priority[lhs.name, default: 0]
-                let rp = priority[rhs.name, default: 0]
-                if lp != rp { return lp > rp }
-                return lhs.name < rhs.name
-            }
-    }
-
-    private func renderedSignalTag(_ signal: VaultSignal) -> String? {
-        renderedPreviewTag(forKey: signal.name, value: signal.value)
-    }
-
-    private func renderedPreviewTag(forKey key: String, value: String) -> String? {
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-
-        switch key {
-        case "url", "endpoint":
-            if let host = URL(string: trimmed)?.host, !host.isEmpty {
-                return "\(key):\(host)"
-            }
-            if let host = hostFromURLString(trimmed), !host.isEmpty {
-                return "\(key):\(host)"
-            }
-            return "\(key):\(trimmed)"
-        case "host":
-            return "host:\(trimmed)"
-        case "brokers":
-            return "brokers:\(trimmed)"
-        case "label":
-            return "label:\(trimmed)"
-        case "service":
-            return "label:\(trimmed)"
-        case "account":
-            return "account:\(trimmed)"
-        case "database":
-            return "db:\(trimmed)"
-        case "bucket":
-            return "bucket:\(trimmed)"
-        case "topic":
-            return "topic:\(trimmed)"
-        case "scope", "project", "vhost":
-            return "\(key):\(trimmed)"
-        case "env":
-            return "env:\(trimmed)"
-        case "region":
-            return "region:\(trimmed)"
-        case "provider":
-            return "provider:\(trimmed)"
-        case "engine":
-            return "engine:\(trimmed)"
-        case "mechanism":
-            return "auth:\(trimmed)"
-        case "username":
-            return "user:\(trimmed)"
-        case "access_key":
-            return "ak:\(trimmed)"
-        default:
-            return "\(key):\(trimmed)"
-        }
-    }
-
-    private func renderedSecretTag(_ secret: String) -> String? {
-        let trimmed = secret.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return nil }
-        let suffix = String(trimmed.suffix(min(4, trimmed.count)))
-        return "secret:••••\(suffix)"
-    }
-
-    private func extractKeyValues(from text: String) -> [String: String] {
-        let pattern = #"([A-Za-z_][A-Za-z0-9_\-\.]*)\s*[:=]\s*("[^"]+"|'[^']+'|[^\s]+)"#
-        let regex = try? NSRegularExpression(pattern: pattern)
-        let fullRange = NSRange(text.startIndex..<text.endIndex, in: text)
-        var pairs: [String: String] = [:]
-
-        regex?.enumerateMatches(in: text, options: [], range: fullRange) { match, _, _ in
-            guard let match,
-                  let keyRange = Range(match.range(at: 1), in: text),
-                  let valueRange = Range(match.range(at: 2), in: text) else {
-                return
-            }
-            let key = text[keyRange]
-                .lowercased()
-                .replacingOccurrences(of: "-", with: "_")
-                .replacingOccurrences(of: ".", with: "_")
-            let value = text[valueRange].trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
-            if !value.isEmpty {
-                pairs[key] = value
-            }
-        }
-        return pairs
-    }
-
-    private func extractSignals(from text: String, keyValues: [String: String], secret: String?) -> [VaultSignal] {
-        var signals: [VaultSignal] = []
-
-        func append(_ category: SignalCategory, _ name: String, _ value: String?) {
-            guard let value else { return }
-            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { return }
-            let normalized = normalizeSignalValue(name: name, value: trimmed)
-            guard !normalized.isEmpty else { return }
-            signals.append(VaultSignal(category: category, name: name, value: trimmed, normalizedValue: normalized))
-        }
-
-        let explicitURL = lookupValue(in: keyValues, keys: ["url", "uri", "dsn", "site_url", "database_url", "jdbc_url", "redis_url"])
-        let endpointURL = lookupValue(in: keyValues, keys: ["endpoint", "s3_endpoint"])
-        let detectedURL = firstCapture(in: text, pattern: #"((?:https?|redis|postgresql|postgres|mysql|mariadb|clickhouse|mongodb|amqp)://[^\s]+)"#)
-
-        append(.locator, "url", explicitURL ?? detectedURL)
-        append(.locator, "endpoint", endpointURL)
-        append(.locator, "host", lookupValue(in: keyValues, keys: ["host", "hostname"]) ?? hostFromURLString(explicitURL ?? endpointURL ?? detectedURL))
-        append(.locator, "brokers", lookupValue(in: keyValues, keys: ["brokers", "bootstrap_servers", "bootstrap"]))
-        append(.locator, "port", lookupValue(in: keyValues, keys: ["port"]))
-
-        append(.principal, "username", lookupValue(in: keyValues, keys: ["username", "user", "login", "sasl_username"]))
-        append(.principal, "account", lookupValue(in: keyValues, keys: ["account", "email"]))
-        append(.principal, "access_key", lookupValue(in: keyValues, keys: ["access_key", "ak", "aws_access_key_id"]))
-
-        let resourcePath = resourcePathFromURLString(explicitURL ?? detectedURL)
-        append(.resource, "database", lookupValue(in: keyValues, keys: ["database", "dbname", "db"]) ?? resourcePath)
-        append(.resource, "bucket", lookupValue(in: keyValues, keys: ["bucket"]))
-        append(.resource, "topic", lookupValue(in: keyValues, keys: ["topic", "queue"]))
-        append(.resource, "scope", lookupValue(in: keyValues, keys: ["scope", "project", "tenant"]))
-        append(.resource, "project", lookupValue(in: keyValues, keys: ["project"]))
-        append(.resource, "vhost", lookupValue(in: keyValues, keys: ["vhost"]) ?? (lowercasedScheme(in: explicitURL ?? detectedURL) == "amqp" ? resourcePath : nil))
-
-        append(.context, "service", lookupValue(in: keyValues, keys: ["service", "site", "app", "cluster"]))
-        append(.context, "label", lookupValue(in: keyValues, keys: ["label"]))
-        append(.context, "env", lookupValue(in: keyValues, keys: ["env", "environment", "namespace", "stage"]))
-        append(.context, "region", lookupValue(in: keyValues, keys: ["region", "aws_default_region"]))
-        append(.context, "provider", lookupValue(in: keyValues, keys: ["provider", "cloud"]))
-        append(.context, "engine", lookupValue(in: keyValues, keys: ["engine", "driver"]) ?? detectDatabaseEngine(in: text.lowercased()))
-        append(.context, "mechanism", lookupValue(in: keyValues, keys: ["mechanism", "sasl_mechanism"]))
-
-        if let secret, !secret.isEmpty {
-            append(.secret, "secret_present", "true")
-            append(.secret, "secret_carrier", detectSecretCarrier(in: text, keyValues: keyValues))
-            append(.secret, "secret_suffix", String(secret.suffix(min(4, secret.count))))
-        }
-
-        return deduplicateSignals(signals)
-    }
-
-    private func decideCluster(for signals: [VaultSignal], text: String, keyValues: [String: String]) -> ClusterDecision {
-        func has(_ name: String, in category: SignalCategory? = nil) -> Bool {
-            signals.contains { signal in
-                signal.name == name && (category == nil || signal.category == category)
-            }
-        }
-
-        let lowered = text.lowercased()
-        let hasWebURL = lowered.contains("https://") || lowered.contains("http://")
-        let hasDatabaseScheme = lowered.contains("postgresql://")
-            || lowered.contains("postgres://")
-            || lowered.contains("mysql://")
-            || lowered.contains("mariadb://")
-            || lowered.contains("clickhouse://")
-            || lowered.contains("mongodb://")
-        let hasExplicitEndpointKey = keyValues.keys.contains("endpoint")
-            || keyValues.keys.contains("s3_endpoint")
-        let hasExplicitLoginKey = keyValues.keys.contains("login")
-
-        var scores: [CredentialClusterID: Int] = Dictionary(uniqueKeysWithValues: CredentialClusterID.allCases.map { ($0, 0) })
-        var reasons: [CredentialClusterID: [String]] = Dictionary(uniqueKeysWithValues: CredentialClusterID.allCases.map { ($0, []) })
-
-        func add(_ cluster: CredentialClusterID, _ points: Int, _ reason: String) {
-            scores[cluster, default: 0] += points
-            reasons[cluster, default: []].append(reason)
-        }
-
-        if has("account", in: .principal) { add(.humanAccountLogin, 30, "account") }
-        if has("username", in: .principal) { add(.humanAccountLogin, 10, "username") }
-        if hasWebURL { add(.humanAccountLogin, 20, "web-url") }
-        if hasWebURL && (has("service", in: .context) || has("label", in: .context)) { add(.humanAccountLogin, 25, "service") }
-        if hasWebURL && has("account", in: .principal) {
-            add(.humanAccountLogin, 20, "service-url")
-        }
-
-        if has("host", in: .locator) || has("endpoint", in: .locator) { add(.serviceEndpointSecret, 20, "endpoint") }
-        if has("username", in: .principal) { add(.serviceEndpointSecret, 15, "principal") }
-        if has("secret_present", in: .secret) { add(.serviceEndpointSecret, 10, "secret") }
-        if hasExplicitEndpointKey { add(.serviceEndpointSecret, 25, "explicit-endpoint-key") }
-        if hasExplicitLoginKey { add(.serviceEndpointSecret, 20, "explicit-login-key") }
-
-        if has("engine", in: .context) { add(.relationalDBCredential, 25, "engine") }
-        if has("database", in: .resource) { add(.relationalDBCredential, 25, "database") }
-        if has("host", in: .locator) { add(.relationalDBCredential, 15, "host") }
-        if has("username", in: .principal) { add(.relationalDBCredential, 10, "username") }
-        if hasDatabaseScheme { add(.relationalDBCredential, 25, "database-scheme") }
-
-        if lowered.contains("redis://") { add(.cacheCredential, 45, "redis-uri") }
-        else if lowered.contains("redis") { add(.cacheCredential, 35, "redis") }
-        if has("database", in: .resource) { add(.cacheCredential, 10, "db") }
-        if has("host", in: .locator) { add(.cacheCredential, 10, "host") }
-
-        if has("brokers", in: .locator) { add(.messageQueueCredential, 30, "brokers") }
-        if has("topic", in: .resource) || has("vhost", in: .resource) { add(.messageQueueCredential, 25, "resource") }
-        if has("mechanism", in: .context) { add(.messageQueueCredential, 15, "auth-mechanism") }
-        if lowered.contains("amqp://") || lowered.contains("rabbitmq") || keyValues["engine"] == "rabbitmq" { add(.messageQueueCredential, 30, "amqp") }
-
-        if has("bucket", in: .resource) { add(.objectStorageCredential, 30, "bucket") }
-        if has("endpoint", in: .locator) { add(.objectStorageCredential, 20, "endpoint") }
-        if has("access_key", in: .principal) { add(.objectStorageCredential, 20, "access-key") }
-        if has("bucket", in: .resource) && has("access_key", in: .principal) {
-            add(.objectStorageCredential, 30, "bucket-with-access-key")
-        }
-
-        if has("provider", in: .context) { add(.cloudAccessPair, 20, "provider") }
-        if has("access_key", in: .principal) { add(.cloudAccessPair, 20, "access-key") }
-        if has("scope", in: .resource) || has("project", in: .resource) { add(.cloudAccessPair, 15, "scope") }
-
-        // Deterministic choice: the highest score wins and ties go to the more
-        // specific cluster, in a fixed order. `Dictionary` iteration order is
-        // randomized per process launch and must never decide where a record
-        // is filed — it used to, so the same paste landed in a different
-        // cluster on different launches.
-        var bestCluster = CredentialClusterID.genericSecretNote
-        var bestScore = 0
-        for cluster in Self.clusterTieBreakOrder {
-            let score = scores[cluster, default: 0]
-            if score > bestScore {
-                bestScore = score
-                bestCluster = cluster
-            }
-        }
-        // No cluster scored: the paste carried no recognizable signal, so the
-        // record stays unclassified rather than being filed at random.
-        let confidence = min(0.99, max(0.2, Double(bestScore) / 90.0))
-        let finalReasons = reasons[bestCluster, default: []]
-        return ClusterDecision(clusterID: bestCluster, confidence: confidence, reasons: Array(finalReasons.prefix(4)))
-    }
-
-    /// Most specific cluster first; `genericSecretNote` is last so it only
-    /// wins when nothing else scored.
-    private static let clusterTieBreakOrder: [CredentialClusterID] = [
-        .cacheCredential, .relationalDBCredential, .messageQueueCredential, .objectStorageCredential,
-        .cloudAccessPair, .humanAccountLogin, .serviceEndpointSecret, .genericSecretNote,
-    ]
-
-    private func deriveTemplateType(from clusterDecision: ClusterDecision, text: String, keyValues: [String: String]) -> String {
-        let lowered = text.lowercased()
-
-        switch clusterDecision.clusterID {
-        case .humanAccountLogin:
-            return "account"
-        case .relationalDBCredential:
-            return "database"
-        case .cacheCredential:
-            return "redis"
-        case .messageQueueCredential:
-            if lowered.contains("kafka") || keyValues.keys.contains("brokers") || keyValues.keys.contains("bootstrap_servers") {
-                return "kafka"
-            }
-            return "custom"
-        case .objectStorageCredential:
-            return "s3"
-        case .cloudAccessPair:
-            if keyValues.keys.contains("bucket") || keyValues.keys.contains("s3_endpoint") {
-                return "s3"
-            }
-            return "aksk"
-        case .serviceEndpointSecret:
-            return detectTemplateType(in: text, keyValues: keyValues)
-        case .genericSecretNote:
-            return detectTemplateType(in: text, keyValues: keyValues)
-        }
-    }
-
-    private func detectTemplateType(in text: String, keyValues: [String: String]) -> String {
-        let lowered = text.lowercased()
-        let keys = Set(keyValues.keys)
-
-        if lowered.contains("amqp://") || lowered.contains("rabbitmq") || keys.contains("vhost") {
-            return "custom"
-        }
-        if lowered.contains("redis://") || lowered.contains("redis") {
-            return "redis"
-        }
-        if lowered.contains("kafka") || keys.contains("brokers") || keys.contains("bootstrap_servers") || keys.contains("sasl_password") || keys.contains("topic") {
-            return "kafka"
-        }
-        if lowered.contains("s3") || keys.contains("bucket") || (keys.contains("aws_access_key_id") && keys.contains("aws_secret_access_key")) || keys.contains("s3_endpoint") {
-            return "s3"
-        }
-        if lowered.contains("postgresql://") || lowered.contains("postgres://") || lowered.contains("mysql://") || lowered.contains("mariadb://") || lowered.contains("clickhouse://") || lowered.contains("mongodb://") || lowered.contains("jdbc:") || keys.contains("database") || keys.contains("dbname") || (keys.contains("engine") && keyValues["engine"] != "rabbitmq") {
-            return "database"
-        }
-        if (keys.contains("access_key") && keys.contains("secret_key")) || (keys.contains("ak") && keys.contains("sk")) {
-            return "aksk"
-        }
-        if lowered.contains("github") || lowered.contains("gitlab") || lowered.contains("account") || lowered.contains("login") || keys.contains("service") || keys.contains("account") || keys.contains("email") {
-            return "account"
-        }
-        return inferTypeID(from: text)
+        return ParsedLocalSecret(
+            itemType: capture.itemType,
+            templateType: capture.templateType,
+            clusterDecision: capture.clusterDecision,
+            signals: capture.signals,
+            name: capture.name,
+            notes: capture.notes,
+            tags: [capture.templateType, "local"],
+            fields: capture.fields,
+            primarySecret: capture.primarySecret
+        )
     }
 
     private func rankedLocalResults(for query: String, source: [VaultRecord]) -> [VaultRecord] {
@@ -2307,447 +1932,6 @@ final class SecretBoxAppModel: ObservableObject {
         return score
     }
 
-    private func extractPrimarySecret(from text: String, keyValues: [String: String]) -> String? {
-        let secretKeys = [
-            "password", "passwd", "pwd", "secret", "secret_key", "secretkey", "secret-key",
-            "token", "sk", "sasl_password", "api_key", "apikey", "aws_secret_access_key",
-            "rabbitmq_password", "rediscli_auth"
-        ]
-        for key in secretKeys {
-            if let value = keyValues[key], !value.isEmpty {
-                return value
-            }
-        }
-
-        let patterns = [
-            #"redis://(?:(?:[^:@/\s]+):)?([^@/\s]+)@[^/\s]+"#,
-            #"(?:postgresql|postgres|mysql|mariadb|clickhouse|mongodb)://(?:(?:[^:@/\s]+):)?([^@/\s]+)@[^/\s]+"#,
-            #"amqp://(?:(?:[^:@/\s]+):)?([^@/\s]+)@[^/\s]+"#,
-            #"(?:password|secret|token)\s*[:=]\s*([^\s,;]+)"#
-        ]
-        for pattern in patterns {
-            if let match = firstCapture(in: text, pattern: pattern) {
-                return match.trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
-            }
-        }
-        return nil
-    }
-
-    private func parseRedisFields(_ text: String, keyValues: [String: String]) -> [VaultField] {
-        var fields: [VaultField] = []
-        let pattern = #"redis://(?:(?:([^:@/\s]+):)?([^@/\s]+)@)?([^:/\s]+):(\d+)(?:/(\d+))?"#
-        if let match = firstMatchGroups(in: text, pattern: pattern), match.count >= 5 {
-            if let username = match[0], !username.isEmpty {
-                fields.append(makeField(key: "username", label: "Username", value: username, semantic: "username", section: "Auth", order: 0))
-            }
-            if let host = match[2] {
-                fields.append(makeField(key: "host", label: "Host", value: host, semantic: "host", section: "Connection", order: 1))
-            }
-            if let port = match[3] {
-                fields.append(makeField(key: "port", label: "Port", value: port, valueType: "number", semantic: "port", section: "Connection", order: 2))
-            }
-            if let db = match[4], !db.isEmpty {
-                fields.append(makeField(key: "db", label: "Database", value: db, valueType: "number", semantic: "database", section: "Connection", order: 3))
-            }
-            fields.append(makeField(key: "url", label: "URL", value: redactExcerpt(text, secret: extractPrimarySecret(from: text, keyValues: keyValues)) ?? text, valueType: "url", semantic: "uri", section: "Connection", order: 4))
-            return fields
-        }
-
-        if let host = lookupValue(in: keyValues, keys: ["host", "hostname"]) {
-            fields.append(makeField(key: "host", label: "Host", value: host, semantic: "host", section: "Connection", order: 1))
-        }
-        if let port = lookupValue(in: keyValues, keys: ["port"]) {
-            fields.append(makeField(key: "port", label: "Port", value: port, valueType: "number", semantic: "port", section: "Connection", order: 2))
-        }
-        if let db = lookupValue(in: keyValues, keys: ["db", "database"]) {
-            fields.append(makeField(key: "db", label: "Database", value: db, valueType: "number", semantic: "database", section: "Connection", order: 3))
-        }
-        if let url = lookupValue(in: keyValues, keys: ["url", "redis_url"]) {
-            fields.append(makeField(key: "url", label: "URL", value: redactExcerpt(url, secret: extractPrimarySecret(from: text, keyValues: keyValues)) ?? url, valueType: "url", semantic: "uri", section: "Connection", order: 4))
-        }
-        return fields
-    }
-
-    private func parseDatabaseFields(_ text: String, keyValues: [String: String]) -> [VaultField] {
-        var fields: [VaultField] = []
-        let engine = lookupValue(in: keyValues, keys: ["engine", "driver"]) ?? detectDatabaseEngine(in: text.lowercased())
-        if let engine {
-            fields.append(makeField(key: "engine", label: "Engine", value: engine, semantic: "engine", section: "Connection", order: 1))
-        }
-
-        var urlValue = lookupValue(in: keyValues, keys: ["url", "uri", "dsn", "jdbc_url", "database_url", "redis_url", "endpoint", "s3_endpoint"])
-        if urlValue == nil {
-            urlValue = firstCapture(in: text, pattern: #"((?:postgresql|postgres|mysql|mariadb|clickhouse|mongodb)://[^\s]+)"#)
-        }
-
-        if let host = lookupValue(in: keyValues, keys: ["host", "hostname"]) {
-            fields.append(makeField(key: "host", label: "Host", value: host, semantic: "host", section: "Connection", order: 2))
-        }
-        if let port = lookupValue(in: keyValues, keys: ["port"]) {
-            fields.append(makeField(key: "port", label: "Port", value: port, valueType: "number", semantic: "port", section: "Connection", order: 3))
-        }
-        if let database = lookupValue(in: keyValues, keys: ["database", "dbname", "db"]) {
-            fields.append(makeField(key: "database", label: "Database", value: database, semantic: "database", section: "Connection", order: 4))
-        }
-
-        if let urlValue, let components = URLComponents(string: urlValue) {
-            if let host = components.host, !fields.contains(where: { $0.key == "host" }) {
-                fields.append(makeField(key: "host", label: "Host", value: host, semantic: "host", section: "Connection", order: 2))
-            }
-            if let port = components.port, !fields.contains(where: { $0.key == "port" }) {
-                fields.append(makeField(key: "port", label: "Port", value: String(port), valueType: "number", semantic: "port", section: "Connection", order: 3))
-            }
-            let path = components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            if !path.isEmpty, !fields.contains(where: { $0.key == "database" }) {
-                fields.append(makeField(key: "database", label: "Database", value: path, semantic: "database", section: "Connection", order: 4))
-            }
-            if let username = components.user, !fields.contains(where: { $0.key == "username" }) {
-                fields.append(makeField(key: "username", label: "Username", value: username, semantic: "username", section: "Auth", order: 0))
-            }
-        }
-
-        return fields
-    }
-
-    private func parseS3Fields(keyValues: [String: String]) -> [VaultField] {
-        var fields: [VaultField] = []
-        if let endpoint = lookupValue(in: keyValues, keys: ["endpoint", "s3_endpoint", "url", "host"]) {
-            fields.append(makeField(key: "endpoint", label: "Endpoint", value: endpoint, valueType: "url", semantic: "endpoint", section: "Connection", order: 1))
-        }
-        if let bucket = lookupValue(in: keyValues, keys: ["bucket"]) {
-            fields.append(makeField(key: "bucket", label: "Bucket", value: bucket, semantic: "bucket", section: "Connection", order: 2))
-        }
-        if let accessKey = lookupValue(in: keyValues, keys: ["access_key", "ak", "aws_access_key_id"]) {
-            fields.append(makeField(key: "access_key", label: "Access Key", value: accessKey, semantic: "access_key", section: "Auth", order: 3))
-        }
-        if let region = lookupValue(in: keyValues, keys: ["region", "aws_default_region"]) {
-            fields.append(makeField(key: "region", label: "Region", value: region, semantic: "region", section: "Connection", order: 4))
-        }
-        return fields
-    }
-
-    private func parseKafkaFields(keyValues: [String: String]) -> [VaultField] {
-        var fields: [VaultField] = []
-        if let brokers = lookupValue(in: keyValues, keys: ["brokers", "bootstrap_servers", "bootstrap"]) {
-            fields.append(makeField(key: "brokers", label: "Brokers", value: brokers, semantic: "brokers", section: "Connection", order: 1))
-        }
-        if let mechanism = lookupValue(in: keyValues, keys: ["mechanism", "sasl_mechanism"]) {
-            fields.append(makeField(key: "mechanism", label: "Mechanism", value: mechanism, semantic: "mechanism", section: "Auth", order: 2))
-        }
-        if let topic = lookupValue(in: keyValues, keys: ["topic"]) {
-            fields.append(makeField(key: "topic", label: "Topic", value: topic, semantic: "topic", section: "Connection", order: 3))
-        }
-        if let username = lookupValue(in: keyValues, keys: ["sasl_username", "username", "user"]) {
-            fields.append(makeField(key: "username", label: "Username", value: username, semantic: "username", section: "Auth", order: 0))
-        }
-        return fields
-    }
-
-    private func parseAKSKFields(keyValues: [String: String]) -> [VaultField] {
-        var fields: [VaultField] = []
-        if let provider = lookupValue(in: keyValues, keys: ["provider", "cloud"]) {
-            fields.append(makeField(key: "provider", label: "Provider", value: provider, semantic: "provider", section: "Details", order: 1))
-        }
-        if let accessKey = lookupValue(in: keyValues, keys: ["access_key", "ak"]) {
-            fields.append(makeField(key: "access_key", label: "Access Key", value: accessKey, semantic: "access_key", section: "Auth", order: 2))
-        }
-        if let scope = lookupValue(in: keyValues, keys: ["scope", "project", "tenant"]) {
-            fields.append(makeField(key: "scope", label: "Scope", value: scope, semantic: "scope", section: "Details", order: 3))
-        }
-        if let region = lookupValue(in: keyValues, keys: ["region"]) {
-            fields.append(makeField(key: "region", label: "Region", value: region, semantic: "region", section: "Details", order: 4))
-        }
-        return fields
-    }
-
-    private func parseAccountFields(keyValues: [String: String]) -> [VaultField] {
-        var fields: [VaultField] = []
-        if let service = lookupValue(in: keyValues, keys: ["service", "site", "provider"]) {
-            fields.append(makeField(key: "service", label: "Service", value: service, semantic: "service", section: "Login", order: 1))
-        }
-        if let account = lookupValue(in: keyValues, keys: ["account", "email", "user", "username"]) {
-            fields.append(makeField(key: "account", label: "Account", value: account, semantic: "account", section: "Login", order: 2))
-        }
-        if let url = lookupValue(in: keyValues, keys: ["url", "site_url", "uri"]) {
-            fields.append(makeField(key: "url", label: "URL", value: url, valueType: "url", semantic: "uri", section: "Login", order: 3))
-        }
-        return fields
-    }
-
-    private func parseGenericFields(keyValues: [String: String]) -> [VaultField] {
-        let secretKeys: Set<String> = [
-            "password", "passwd", "pwd", "secret", "secret_key", "secretkey", "secret-key",
-            "token", "sk", "sasl_password", "api_key", "apikey", "aws_secret_access_key",
-            "rabbitmq_password", "rediscli_auth"
-        ]
-        var order = 1
-        var fields: [VaultField] = []
-        for (key, value) in keyValues.sorted(by: { $0.key < $1.key }) {
-            guard !secretKeys.contains(key) else { continue }
-            let valueType = key == "port" ? "number" : (["url", "uri", "dsn", "endpoint"].contains(key) ? "url" : "text")
-            fields.append(makeField(key: key, label: humanizedFieldName(key), value: value, valueType: valueType, semantic: key, section: "Details", order: order))
-            order += 1
-        }
-        return fields
-    }
-
-    private func parseCustomFields(_ text: String, keyValues: [String: String]) -> [VaultField] {
-        if text.lowercased().contains("amqp://") || text.lowercased().contains("rabbitmq") || keyValues.keys.contains("vhost") {
-            return parseRabbitMQFields(text, keyValues: keyValues)
-        }
-        return parseGenericFields(keyValues: keyValues)
-    }
-
-    private func enrichContextualFields(_ fields: [VaultField], text: String, keyValues: [String: String], secret: String?) -> [VaultField] {
-        var enriched = fields
-
-        func appendIfMissing(
-            key: String,
-            label: String,
-            value: String?,
-            valueType: String = "text",
-            semantic: String? = nil,
-            section: String,
-            order: Int
-        ) {
-            guard let value else { return }
-            let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { return }
-            guard !enriched.contains(where: { $0.key == key }) else { return }
-            enriched.append(makeField(key: key, label: label, value: trimmed, valueType: valueType, semantic: semantic, section: section, order: order))
-        }
-
-        let explicitURL = lookupValue(in: keyValues, keys: ["url", "uri", "site_url", "dsn", "database_url", "redis_url", "jdbc_url"])
-        let endpointURL = lookupValue(in: keyValues, keys: ["endpoint", "s3_endpoint"])
-        let detectedURL = firstCapture(in: text, pattern: #"((?:https?|redis|postgresql|postgres|mysql|mariadb|clickhouse|mongodb|amqp)://[^\s]+)"#)
-        appendIfMissing(
-            key: "url",
-            label: "URL",
-            value: redactExcerpt(explicitURL ?? detectedURL ?? endpointURL ?? "", secret: secret),
-            valueType: "url",
-            semantic: "uri",
-            section: "Connection",
-            order: 90
-        )
-
-        appendIfMissing(
-            key: "label",
-            label: "Label",
-            value: lookupValue(in: keyValues, keys: ["label", "service", "site", "app", "cluster"]),
-            semantic: "label",
-            section: "Metadata",
-            order: 91
-        )
-        appendIfMissing(
-            key: "env",
-            label: "Environment",
-            value: lookupValue(in: keyValues, keys: ["env", "environment", "namespace", "stage"]),
-            semantic: "environment",
-            section: "Metadata",
-            order: 92
-        )
-        appendIfMissing(
-            key: "region",
-            label: "Region",
-            value: lookupValue(in: keyValues, keys: ["region", "aws_default_region"]),
-            semantic: "region",
-            section: "Metadata",
-            order: 93
-        )
-        appendIfMissing(
-            key: "provider",
-            label: "Provider",
-            value: lookupValue(in: keyValues, keys: ["provider", "cloud"]),
-            semantic: "provider",
-            section: "Metadata",
-            order: 94
-        )
-        appendIfMissing(
-            key: "account",
-            label: "Account",
-            value: lookupValue(in: keyValues, keys: ["account", "email", "login", "user", "username", "sasl_username"]),
-            semantic: "account",
-            section: "Auth",
-            order: 95
-        )
-        appendIfMissing(
-            key: "database",
-            label: "Database",
-            value: lookupValue(in: keyValues, keys: ["database", "dbname", "db"]),
-            semantic: "database",
-            section: "Connection",
-            order: 96
-        )
-        appendIfMissing(
-            key: "bucket",
-            label: "Bucket",
-            value: lookupValue(in: keyValues, keys: ["bucket"]),
-            semantic: "bucket",
-            section: "Connection",
-            order: 97
-        )
-        appendIfMissing(
-            key: "topic",
-            label: "Topic",
-            value: lookupValue(in: keyValues, keys: ["topic", "queue"]),
-            semantic: "topic",
-            section: "Connection",
-            order: 98
-        )
-        appendIfMissing(
-            key: "scope",
-            label: "Scope",
-            value: lookupValue(in: keyValues, keys: ["scope", "project", "tenant"]),
-            semantic: "scope",
-            section: "Metadata",
-            order: 99
-        )
-        appendIfMissing(
-            key: "host",
-            label: "Host",
-            value: lookupValue(in: keyValues, keys: ["host", "hostname"]) ?? hostFromURLString(explicitURL ?? endpointURL ?? detectedURL),
-            semantic: "host",
-            section: "Connection",
-            order: 100
-        )
-
-        return enriched
-    }
-
-    private func parseRabbitMQFields(_ text: String, keyValues: [String: String]) -> [VaultField] {
-        var fields: [VaultField] = []
-        let pattern = #"amqp://(?:(?:([^:@/\s]+):)?([^@/\s]+)@)?([^:/\s]+):(\d+)(?:/([^\s]+))?"#
-        if let match = firstMatchGroups(in: text, pattern: pattern), match.count >= 5 {
-            if let username = match[0], !username.isEmpty {
-                fields.append(makeField(key: "username", label: "Username", value: username, semantic: "username", section: "Auth", order: 0))
-            }
-            if let host = match[2], !host.isEmpty {
-                fields.append(makeField(key: "host", label: "Host", value: host, semantic: "host", section: "Connection", order: 1))
-            }
-            if let port = match[3], !port.isEmpty {
-                fields.append(makeField(key: "port", label: "Port", value: port, valueType: "number", semantic: "port", section: "Connection", order: 2))
-            }
-            if let vhost = match[4], !vhost.isEmpty {
-                fields.append(makeField(key: "vhost", label: "VHost", value: vhost, semantic: "vhost", section: "Connection", order: 3))
-            }
-            return fields
-        }
-
-        if let host = lookupValue(in: keyValues, keys: ["host", "hostname"]) {
-            fields.append(makeField(key: "host", label: "Host", value: host, semantic: "host", section: "Connection", order: 1))
-        }
-        if let port = lookupValue(in: keyValues, keys: ["port"]) {
-            fields.append(makeField(key: "port", label: "Port", value: port, valueType: "number", semantic: "port", section: "Connection", order: 2))
-        }
-        if let vhost = lookupValue(in: keyValues, keys: ["vhost"]) {
-            fields.append(makeField(key: "vhost", label: "VHost", value: vhost, semantic: "vhost", section: "Connection", order: 3))
-        }
-        if let engine = lookupValue(in: keyValues, keys: ["engine"]), !engine.isEmpty {
-            fields.append(makeField(key: "engine", label: "Engine", value: engine, semantic: "engine", section: "Details", order: 4))
-        }
-        return fields
-    }
-
-    private func deriveRecordName(templateType: String, keyValues: [String: String], fields: [VaultField]) -> String {
-        let target = lookupValue(in: keyValues, keys: ["service", "bucket", "host", "database", "account", "provider"])
-        if templateType == "database", let target {
-            let engine = lookupValue(in: keyValues, keys: ["engine", "driver"]) ?? detectDatabaseEngine(in: keyValues.values.joined(separator: " ").lowercased())
-            if let engine {
-                return "\(engine.uppercased()) \(target)"
-            }
-        }
-        if let target {
-            return "\(templateType.uppercased()) \(target)"
-        }
-        if let host = fields.first(where: { $0.key == "host" })?.value {
-            return "\(templateType.uppercased()) \(host)"
-        }
-        return templateType.uppercased()
-    }
-
-    private func deriveNotes(templateType: String, keyValues: [String: String], redactedExcerpt: String?) -> String {
-        let env = lookupValue(in: keyValues, keys: ["env", "environment", "namespace"])
-        let target = lookupValue(in: keyValues, keys: ["service", "bucket", "database", "topic", "host"])
-        let parts = [env, target].compactMap { $0 }
-        if !parts.isEmpty {
-            return "\(templateType.uppercased()) credential for \(parts.joined(separator: " / "))"
-        }
-        if let redactedExcerpt, !redactedExcerpt.isEmpty {
-            return String(redactedExcerpt.prefix(140))
-        }
-        return "\(templateType.uppercased()) credential"
-    }
-
-    private func detectDatabaseEngine(in lowered: String) -> String? {
-        for engine in ["postgres", "postgresql", "mysql", "mariadb", "clickhouse", "oracle", "sqlserver", "mongodb"] {
-            if lowered.contains(engine) {
-                return engine == "postgresql" ? "postgres" : engine
-            }
-        }
-        return nil
-    }
-
-    private func detectSecretCarrier(in text: String, keyValues: [String: String]) -> String {
-        let lowered = text.lowercased()
-        let prioritizedKeys = [
-            "password", "passwd", "pwd", "secret", "secret_key", "token",
-            "sk", "sasl_password", "api_key", "apikey", "aws_secret_access_key"
-        ]
-        if let matchedKey = prioritizedKeys.first(where: { keyValues[$0] != nil }) {
-            return matchedKey
-        }
-        if lowered.contains("://") && lowered.contains("@") {
-            return "inline_uri_auth"
-        }
-        return "freeform_secret"
-    }
-
-    private func normalizeSignalValue(name: String, value: String) -> String {
-        let lowered = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        switch name {
-        case "url", "endpoint":
-            if let host = URL(string: value)?.host?.lowercased(), !host.isEmpty {
-                return host
-            }
-            return lowered
-        default:
-            return lowered
-        }
-    }
-
-    private func redactExcerpt(_ text: String, secret: String?) -> String? {
-        guard !text.isEmpty else { return nil }
-        guard let secret, !secret.isEmpty else { return text }
-        return text.replacingOccurrences(of: secret, with: "[REDACTED]")
-    }
-
-    private func deduplicateFields(_ fields: [VaultField]) -> [VaultField] {
-        var seen: [String: VaultField] = [:]
-        for field in fields {
-            seen[field.key] = field
-        }
-        // `key` breaks remaining ties: `Dictionary.values` order is randomized
-        // per process launch and must not decide the stored field order.
-        return seen.values.sorted { lhs, rhs in
-            (lhs.section ?? "", lhs.order, lhs.label, lhs.key) < (rhs.section ?? "", rhs.order, rhs.label, rhs.key)
-        }
-    }
-
-    private func deduplicateSignals(_ signals: [VaultSignal]) -> [VaultSignal] {
-        var seen: [String: VaultSignal] = [:]
-        for signal in signals {
-            seen[signal.id] = signal
-        }
-        return seen.values.sorted { lhs, rhs in
-            if lhs.category != rhs.category {
-                return lhs.category.rawValue < rhs.category.rawValue
-            }
-            if lhs.name != rhs.name {
-                return lhs.name < rhs.name
-            }
-            return lhs.normalizedValue < rhs.normalizedValue
-        }
-    }
 
     private func clusterPreferredValue(for record: VaultRecord, names: [String]) -> String? {
         if let signals = record.signals {
@@ -2790,54 +1974,6 @@ final class SecretBoxAppModel: ObservableObject {
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 
-    private func lookupValue(in keyValues: [String: String], keys: [String]) -> String? {
-        for key in keys {
-            if let value = keyValues[key], !value.isEmpty {
-                return value
-            }
-        }
-        return nil
-    }
-
-    private func hostFromURLString(_ candidate: String?) -> String? {
-        guard let candidate, !candidate.isEmpty else { return nil }
-        if let host = URL(string: candidate)?.host, !host.isEmpty {
-            return host
-        }
-        // URIs with unencoded characters in the userinfo (e.g. "#" in a password)
-        // make URL(string:) lose the host; parse the authority textually instead.
-        // The "#" must stay part of the authority here: it can appear inside the
-        // password before the "@" separator.
-        guard let schemeEnd = candidate.range(of: "://") else { return nil }
-        let rest = candidate[schemeEnd.upperBound...]
-        let authority = rest.prefix { !$0.isWhitespace && $0 != "/" && $0 != "?" }
-        guard !authority.isEmpty else { return nil }
-        if let at = authority.lastIndex(of: "@") {
-            let hostPort = authority[authority.index(after: at)...]
-            let host = hostPort.prefix { $0 != ":" && $0 != "#" }
-            return host.isEmpty ? nil : String(host)
-        }
-        let host = authority.prefix { $0 != ":" && $0 != "#" }
-        return host.isEmpty ? nil : String(host)
-    }
-
-    private func resourcePathFromURLString(_ candidate: String?) -> String? {
-        guard let candidate, !candidate.isEmpty,
-              let components = URLComponents(string: candidate) else {
-            return nil
-        }
-        let path = components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        return path.isEmpty ? nil : path
-    }
-
-    private func lowercasedScheme(in candidate: String?) -> String? {
-        guard let candidate, !candidate.isEmpty,
-              let scheme = URLComponents(string: candidate)?.scheme else {
-            return nil
-        }
-        return scheme.lowercased()
-    }
-
     private var prioritizedEditingSignalKeys: [String] {
         [
             "label", "service", "account", "username",
@@ -2845,55 +1981,6 @@ final class SecretBoxAppModel: ObservableObject {
             "database", "bucket", "topic", "scope", "project", "vhost",
             "env", "region", "provider", "engine", "mechanism", "access_key"
         ]
-    }
-
-    private func makeField(
-        key: String,
-        label: String,
-        value: String,
-        valueType: String = "text",
-        semantic: String? = nil,
-        section: String,
-        order: Int
-    ) -> VaultField {
-        VaultField(
-            key: key,
-            label: label,
-            value: value,
-            valueType: valueType,
-            semantic: semantic,
-            hidden: false,
-            section: section,
-            order: order
-        )
-    }
-
-    private func firstCapture(in text: String, pattern: String) -> String? {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
-            return nil
-        }
-        let range = NSRange(text.startIndex..<text.endIndex, in: text)
-        guard let match = regex.firstMatch(in: text, options: [], range: range),
-              let captureRange = Range(match.range(at: 1), in: text) else {
-            return nil
-        }
-        return String(text[captureRange])
-    }
-
-    private func firstMatchGroups(in text: String, pattern: String) -> [String?]? {
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
-            return nil
-        }
-        let range = NSRange(text.startIndex..<text.endIndex, in: text)
-        guard let match = regex.firstMatch(in: text, options: [], range: range) else {
-            return nil
-        }
-        return (1..<match.numberOfRanges).map { index in
-            guard let captureRange = Range(match.range(at: index), in: text) else {
-                return nil
-            }
-            return String(text[captureRange])
-        }
     }
 
     private func makeVaultFields() -> [VaultField] {
@@ -2918,7 +2005,7 @@ final class SecretBoxAppModel: ObservableObject {
                     value: value,
                     valueType: templateField.valueType,
                     semantic: templateField.semantic,
-                    hidden: false,
+                    hidden: isFieldHidden(templateField.key),
                     section: templateField.section,
                     order: order + 1
                 )
@@ -2950,7 +2037,7 @@ final class SecretBoxAppModel: ObservableObject {
                     value: value,
                     valueType: valueType,
                     semantic: key,
-                    hidden: false,
+                    hidden: isFieldHidden(key),
                     section: "Details",
                     order: 100 + offset
                 )

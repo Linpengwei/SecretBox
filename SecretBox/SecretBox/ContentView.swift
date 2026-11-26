@@ -48,6 +48,7 @@ struct ContentView: View {
                             } label: {
                                 Label("Settings", systemImage: "slider.horizontal.3")
                             }
+                            .accessibilityIdentifier("toolbar.settings")
                         }
                     }
                     #endif

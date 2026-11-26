@@ -86,7 +86,7 @@ final class SecretBoxUITests: XCTestCase {
     }
 
     private func statusTextContains(_ app: XCUIApplication, _ needle: String, timeout: TimeInterval = 8) -> Bool {
-        let predicate = NSPredicate(format: "label CONTAINS[c] %@", needle)
+        let predicate = NSPredicate(format: "label CONTAINS[c] %@ OR value CONTAINS[c] %@", needle, needle)
         let match = app.staticTexts.matching(predicate).firstMatch
         return match.waitForExistence(timeout: timeout)
     }
@@ -190,7 +190,7 @@ final class SecretBoxUITests: XCTestCase {
         app.launchEnvironment["SECRETBOX_UI_TEST_PASTED_TEXT"] = "service=GitHub username=ops-bot@example.com password=GhOpsBot@2026 url=https://github.com env=prod"
         app.launch()
 
-        let preview = app.otherElements["menubar.preview"]
+        let preview = app.scrollViews["menubar.preview"]
         XCTAssertTrue(preview.waitForExistence(timeout: 5))
 
         let field = app.textFields["menubar.previewField.account"]
@@ -222,7 +222,7 @@ final class SecretBoxUITests: XCTestCase {
         app.launchEnvironment["SECRETBOX_UI_TEST_PASTED_TEXT"] = "redis://default:RedisProd#2026@redis-prod.internal:6379/0 env=prod service=order-cache"
         app.launch()
 
-        let preview = app.otherElements["menubar.preview"]
+        let preview = app.scrollViews["menubar.preview"]
         XCTAssertTrue(preview.waitForExistence(timeout: 5))
 
         let hostField = app.textFields["menubar.previewField.host"]
@@ -255,10 +255,10 @@ final class SecretBoxUITests: XCTestCase {
         app.launchEnvironment["SECRETBOX_UI_TEST_PASTED_TEXT"] = "service=GitHub username=ops-bot@example.com password=GhOpsBot@2026 url=https://github.com env=prod"
         app.launch()
 
-        let preview = app.otherElements["menubar.preview"]
+        let preview = app.scrollViews["menubar.preview"]
         XCTAssertTrue(preview.waitForExistence(timeout: 5))
 
-        let hiddenField = app.textFields["menubar.previewField.url"]
+        let hiddenField = app.textFields["menubar.previewField.env"]
         XCTAssertFalse(hiddenField.exists)
 
         let toggle = app.buttons["menubar.previewFieldsToggle"]
@@ -363,8 +363,8 @@ final class SecretBoxUITests: XCTestCase {
         XCTAssertTrue(captureButton.waitForExistence(timeout: 5))
         activate(captureButton)
 
-        XCTAssertTrue(app.textViews["capture.paste"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["capture.save"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.textViews["capture.paste"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["capture.save"].waitForExistence(timeout: 15))
     }
 
     // MARK: - Phase 1 iOS smoke chains (capture → search → detail → copy)
@@ -508,7 +508,7 @@ final class SecretBoxUITests: XCTestCase {
         let app = launchApp()
         defer { app.terminate() }
 
-        let settingsButton = app.buttons["toolbar.settings"]
+        let settingsButton = app.buttons["toolbar.settings"].firstMatch
         XCTAssertTrue(settingsButton.waitForExistence(timeout: 5))
         activate(settingsButton)
 

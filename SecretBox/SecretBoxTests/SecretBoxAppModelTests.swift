@@ -402,6 +402,18 @@ final class SecretBoxAppModelTests: XCTestCase {
         XCTAssertEqual(model.selectedSearchRecord?.fieldMap["url"], "https://github.com")
     }
 
+    func testSourceExcerptKeepsFreeTextSearchRecall() async throws {
+        let model = SecretBoxAppModel(defaults: defaults, recordStore: InMemoryRecordStore())
+        model.pastedText = "redis://:CartProd2024@cart-redis.internal:6379/0  # prod 购物车"
+        await model.saveFromPastedText()
+        let record = try XCTUnwrap(model.latestSavedRecord)
+
+        model.searchQuery = "购物车"
+        await model.searchPasswords()
+
+        XCTAssertTrue(model.searchResults.contains(where: { $0.id == record.id }))
+    }
+
     func testLocalSearchPrioritizesLabelMatchesOverDescriptionMatches() async {
         let model = SecretBoxAppModel(defaults: defaults, recordStore: InMemoryRecordStore())
 
@@ -548,7 +560,7 @@ final class SecretBoxAppModelTests: XCTestCase {
         XCTAssertEqual(record.fieldMap["host"], "redis-prod.internal")
         XCTAssertEqual(record.fieldMap["port"], "6379")
         XCTAssertEqual(record.fieldMap["db"], "0")
-        XCTAssertEqual(record.fieldMap["source_excerpt"], "redis://default:[REDACTED]@redis-prod.internal:6379/0 env=prod service=order-cache")
+        XCTAssertEqual(record.fieldMap["source_excerpt"], "redis://redis-prod.internal:6379/0 env=prod service=order-cache")
         XCTAssertEqual(record.clusterID, CredentialClusterID.cacheCredential.rawValue)
         XCTAssertTrue(record.signals?.contains(where: { $0.category == .locator && $0.name == "host" && $0.normalizedValue == "redis-prod.internal" }) == true)
     }
@@ -561,7 +573,7 @@ final class SecretBoxAppModelTests: XCTestCase {
 
         let record = try XCTUnwrap(model.latestSavedRecord)
         XCTAssertEqual(record.recordType, "database")
-        XCTAssertEqual(record.password, "PgBilling%232026")
+        XCTAssertEqual(record.password, "PgBilling#2026")
         XCTAssertEqual(record.fieldMap["engine"], "postgres")
         XCTAssertEqual(record.fieldMap["host"], "billing-db.internal")
         XCTAssertEqual(record.fieldMap["port"], "5432")
@@ -627,7 +639,7 @@ final class SecretBoxAppModelTests: XCTestCase {
         XCTAssertEqual(record.fieldMap["host"], "mq-prod.internal")
         XCTAssertEqual(record.fieldMap["port"], "5672")
         XCTAssertEqual(record.fieldMap["vhost"], "prod-vhost")
-        XCTAssertEqual(record.fieldMap["source_excerpt"], "amqp://rabbit_user:[REDACTED]@mq-prod.internal:5672/prod-vhost service=payments queue=settlement")
+        XCTAssertEqual(record.fieldMap["source_excerpt"], "amqp://mq-prod.internal:5672/prod-vhost service=payments queue=settlement")
     }
 
     func testOfflinePastedMongoDBTextExtractsDatabaseFields() async throws {
@@ -638,7 +650,7 @@ final class SecretBoxAppModelTests: XCTestCase {
 
         let record = try XCTUnwrap(model.latestSavedRecord)
         XCTAssertEqual(record.recordType, "database")
-        XCTAssertEqual(record.password, "MongoReport%402026")
+        XCTAssertEqual(record.password, "MongoReport@2026")
         XCTAssertEqual(record.fieldMap["engine"], "mongodb")
         XCTAssertEqual(record.fieldMap["host"], "mongo-01.internal")
         XCTAssertEqual(record.fieldMap["port"], "27017")
@@ -1512,6 +1524,22 @@ final class SecretBoxAppModelTests: XCTestCase {
         XCTAssertEqual(model.displayedSecret(record, key: "password", value: "Gated#Secret1"), SecretBoxAppModel.secretMask, "a denied gate leaves it masked")
         XCTAssertEqual(denied.challengeCount, 1)
         XCTAssertEqual(model.statusMessage, "Authentication required to reveal password")
+    }
+
+    func testEditingPreservesConcealedSecondaryFields() async throws {
+        let model = makeOfflineModel()
+        model.pastedText = "host=redis.internal\npassword=Primary#1\nREDIS_AUTH=Secondary#2"
+        await model.saveFromPastedText()
+        let saved = try XCTUnwrap(model.latestSavedRecord)
+        XCTAssertTrue(saved.fields.first(where: { $0.key == "redis_auth" })?.hidden == true)
+
+        model.beginEditing(saved)
+        await model.saveRecord()
+
+        let updated = try XCTUnwrap(model.latestSavedRecord)
+        let secondary = updated.fields.first(where: { $0.key == "redis_auth" })
+        XCTAssertEqual(secondary?.value, "Secondary#2")
+        XCTAssertTrue(secondary?.hidden == true)
     }
 
     func testHiddenSecretRecordsAreNeverDisplayed() async throws {

@@ -81,20 +81,20 @@ The old roadmap's "Phase 2" maps to phases 3 and 4 here; its "Phase 3" items mov
 
 **Carried over, by phase**
 
-- Phase 1: `mcp-server/fuzzy_eval.py` swaps the real Keychain vault for a test vault and restores it only in a `finally`; evaluations must use a dedicated `SECRETBOX_KEYCHAIN_ACCOUNT`. In server mode the app uploads raw `pasted_text` and discards the user's Smart Preview corrections; the detail pane shows signal-derived values, so a corrected host is saved but displayed stale.
-- Phase 1/2: three iPhone navigation flows are skipped on macOS; seven macOS UI tests fail and need a run from a normal Terminal to tell environment from regression.
+- Phase 1: `mcp-server/fuzzy_eval.py` now defaults to the dedicated `secretbox-fuzzy-eval` Keychain account and refuses `localVault`; the backup/restore remains in a `finally`. The app uploads structured captures in server mode and applies Smart Preview corrections through the same parse used for display and storage.
+- Phase 1/2: resolved — all 11 macOS UI tests pass and the three iPhone navigation flows are covered by the seven passing iOS UI smoke chains. The macOS script now selects the native architecture explicitly.
 - Phase 2: the record model has one protected secret slot; a `hidden` field is concealed in the app but still stored in plaintext.
 - Phase 3: the dashboard renders through 16 `innerHTML` sinks with an escape helper — audit them and add tests before accounts exist; the Argon2 `password_hash` column is written and never read.
-- Any time: two documentation screenshots no longer match the app (`vault-main.png`, `quick-capture.png`); the snapshot tolerance of 2 % cannot see text-level changes.
+- Any time: the two documentation screenshots (`vault-main.png`, `quick-capture.png`) were regenerated from isolated demo data on 2026-11-26 and now match the masked-secret and current Smart Preview UI. The snapshot tolerance of 2 % still cannot see text-level changes.
 
-## Phase 1 — one capture engine (next)
+## Phase 1 — one capture engine (complete, 2026-11-26)
 
 **Goal.** The app captures what the server parser captures, every launch the same way, and there is one implementation to change.
 
 - Extract parsing and classification out of `SecretBoxAppModel` into pure, deterministic, non-main-actor code: `CaptureParser` (text → structured record), with an explicit "unclassified" outcome.
 - Port what the server parser already does and the client lacks: Chinese keys, full-width punctuation, natural-language phrases, bare passwords, percent-decoding of URI passwords, empty-username URIs, JDBC URLs, and values that must stop at sentence punctuation.
 - Produce structured records instead of one secret plus free text: several secret slots per record, and context made of labeled fields rather than an excerpt.
-- Replace both fixtures with one shared golden corpus (`testsets/capture_golden.json`: the 200 scenarios plus the 50 samples) that XCTest, pytest and the xUnit suite all read.
+- Replace both fixtures with one shared golden corpus (`testsets/capture_golden.json`: the 200 scenarios plus the 50 samples, authored shapes, and held-out/adversarial cases) that XCTest, pytest and the xUnit suite all read.
 - In server mode the app uploads structured records and never raw paste text; the server's parser stops being on the write path.
 - The scrubbed excerpt stays only as long as search needs it; recall is measured before it is removed.
 - Point `fuzzy_eval.py` and any other evaluation at a dedicated Keychain account.
@@ -102,6 +102,10 @@ The old roadmap's "Phase 2" maps to phases 3 and 4 here; its "Phase 3" items mov
 **Acceptance.** On the golden corpus the macOS and iOS app reach at least the server parser's numbers — paste-parse ≥ 93 %, correct secret ≥ 97 % — and twenty runs produce byte-identical output. The server's persona floors do not drop.
 
 **Must hold.** Nothing a user corrects in the preview is discarded; a secret under any label is never stored as an ordinary field or sent to the model.
+
+**Delivered.** `CaptureRules`, `CaptureExtraction`, `CaptureClassification` and `CaptureParser` are the single app engine, called by preview, local save, editor reclassification and organization. The shared corpus now has 341 cases: 303 positive and 38 negative (200 persona + 50 classifier + 13 authored + 78 held-out/adversarial). The app reaches 303/303 primary secrets, 302/303 templates, 8/8 secondary-secret cases, zero leaks and zero false positives; twenty complete structured-output runs are byte-identical on macOS and iOS. `CaptureParserGoldenTests` runs the corpus off the main actor. The server keeps a frozen parser for compatibility, with extraction floors 279/267/291; its scrub passes all 341 cases and is idempotent. One template miss remains: NOVI-037 is an access-account/secret-key paste whose S3-vs-account label is ambiguous.
+
+Excerpt removal was measured against 1,676 real corpus queries: dropping `source_excerpt` loses 371 hits (22.1%), including 371 of 396 excerpt-only queries. It is therefore retained deliberately, with `testSourceExcerptKeepsFreeTextSearchRecall` guarding the behavior. All 11 macOS UI tests pass (3 iPhone-navigation tests are skipped) and all seven iOS UI smoke chains pass. The two documentation screenshots have been regenerated from isolated demo data. Full server tests (144), MCP tests (34), Ruff, and the persona-200 floors pass.
 
 ## Phase 2 — lock and local security baseline
 

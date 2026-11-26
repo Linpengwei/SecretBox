@@ -4,6 +4,13 @@
 
 **English** · [简体中文](BETA_NOTES.zh-CN.md)
 
+## Capture engine update (2026-11-26, source only — no new beta artifact)
+
+- One deterministic capture engine now drives Smart Preview, local save, editor reclassification and organization on macOS and iOS. Preview corrections are reapplied to the structured record; secondary secrets remain concealed fields.
+- Server-mode capture uploads structured fields and the primary secret instead of raw `pasted_text`. TOTP still uses its dedicated encrypted channel. Editor-hidden fields stay hidden and render as secure inputs.
+- Shared regression corpus: 341 cases (303 positive, 38 negative). macOS and iOS golden tests pass 303/303 primary secrets, 302/303 templates, 8/8 secondary cases, zero leaks/false positives, and twenty byte-identical runs off the main actor. Server 144 tests, MCP 34 tests and persona-200 floors pass.
+- All 11 macOS UI tests pass (3 iPhone-navigation tests are skipped) and all seven iOS UI smoke chains pass. The two documentation screenshots were regenerated from isolated demo data. Ruff passes and the dedicated fuzzy evaluation passes 5/5.
+
 ## Beta 5 (2026-08-29)
 
 - Build date: 2026-08-29; artifact `beta/SecretBox-v1.0-beta5-macos.zip` (Release, ad-hoc signed; not in the public repo)

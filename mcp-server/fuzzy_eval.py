@@ -6,21 +6,28 @@ drives a REAL agent (OpenCode CLI) with vague, human-style requests. Scores
 whether the agent finds the CORRECT record, honors the permission filter,
 keeps plaintext out of its transcript, and reports wall-clock time per scenario.
 
-The vault blob is backed up before the run and restored afterwards.
+The vault blob is backed up before the run and restored afterwards. The
+Keychain account is always a dedicated test account, never the user's real
+`localVault`; override it with SECRETBOX_KEYCHAIN_ACCOUNT when needed.
 
-Usage: python3 mcp-server/fuzzy_eval.py [--keep-vault]
+Usage: SECRETBOX_KEYCHAIN_ACCOUNT=secretbox-fuzzy-eval python3 mcp-server/fuzzy_eval.py [--keep-vault]
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
 
-SERVICE = "Hendrix.SecretBox"
-ACCOUNT = "localVault"
+SERVICE = os.environ.get("SECRETBOX_KEYCHAIN_SERVICE", "Hendrix.SecretBox")
+# Never default to the user's real vault. Use a dedicated account for every
+# evaluation; the script replaces the whole blob before restoring it.
+ACCOUNT = os.environ.get("SECRETBOX_KEYCHAIN_ACCOUNT", "secretbox-fuzzy-eval")
+if ACCOUNT == "localVault":
+    raise SystemExit("Refusing to run fuzzy_eval against the real localVault; set SECRETBOX_KEYCHAIN_ACCOUNT to a dedicated test account.")
 
 
 def sec(*args: str, check: bool = True, input_: str | None = None) -> str:
@@ -32,7 +39,17 @@ def sec(*args: str, check: bool = True, input_: str | None = None) -> str:
 
 
 def read_vault() -> list[dict]:
-    blob = json.loads(sec("find-generic-password", "-s", SERVICE, "-a", ACCOUNT, "-w"))
+    result = subprocess.run(
+        ["security", "find-generic-password", "-s", SERVICE, "-a", ACCOUNT, "-w"],
+        capture_output=True, text=True, shell=False,
+    )
+    if result.returncode != 0:
+        # A dedicated evaluation account is allowed to start empty. Any other
+        # Keychain failure (including an unreadable real account) is an error.
+        if "could not be found" in result.stderr.lower():
+            return []
+        raise RuntimeError(f"security find-generic-password failed: {result.stderr.strip()}")
+    blob = json.loads(result.stdout)
     return blob.get("records", blob) if isinstance(blob, dict) else blob
 
 

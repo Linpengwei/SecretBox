@@ -39,11 +39,26 @@ AI_METADATA_FIELD_KEYS = frozenset(
 )
 
 # Substrings that mark a key as secret-class wherever they occur in one of
-# its words ("ScriptPassphrase", "aws_secret_access_key", "serial_number").
+# its words ("ScriptPassphrase", "aws_secret_access_key", "serial_number",
+# "apikey"). `apikey` is one word, so the "...key" rule never sees it.
 _SECRET_KEY_MARKERS = (
     "passw", "passcode", "passphrase", "pincode", "secret", "token",
     "credential", "license", "licence", "serial", "signature", "cookie",
-    "private",
+    "private", "apikey", "bearer", "totp", "authorization",
+)
+# Labels that talk about a password without carrying one: a hint, a policy,
+# or a reminder. Paths and URLs are handled as values instead: their keys
+# stay secret-class so a real secret under the same label is still hidden.
+_NEVER_SECRET_MARKERS = (
+    "密码提示", "密码策略", "密码规则", "密码要求", "提示", "password_hint", "passwordhint", "pwdpolicy",
+    "提醒", "通知", "轮换", "策略", "规则", "说明", "要求", "有效期", "过期", "时间", "命令", "脚本",
+    "policy", "hint", "reminder", "expiry", "expires", "expired", "updated", "changed_at", "rotation", "rotated",
+    "helper",
+)
+# Markers that lose to an `id`: "private_key_id" names a key, it does not
+# carry one.
+_STRONG_SECRET_MARKERS = frozenset(
+    {"passw", "passcode", "passphrase", "pincode", "token", "credential", "cookie", "signature", "authorization", "bearer", "totp"}
 )
 # Words that are secret-class only as a whole word. "laptop" is not an OTP,
 # "keynote" is not a key, "author" is not an auth.
@@ -88,10 +103,16 @@ def is_secret_key(key: str | None) -> bool:
     if not key:
         return False
     lowered = key.strip().lower()
+    if any(marker in lowered for marker in _NEVER_SECRET_MARKERS):
+        return False
     if any(marker in lowered for marker in _SECRET_KEY_CJK_MARKERS):
         return True
     words = key_words(key)
     if any(marker in word for word in words for marker in _SECRET_KEY_MARKERS):
+        # "...id" names the thing ("private_key_id", "secret_id") unless
+        # a marker names the value itself ("token_id" is a token).
+        if lowered.endswith("id") and not words & _STRONG_SECRET_MARKERS:
+            return False
         return True
     if words & _SECRET_KEY_WORDS:
         return True
@@ -122,11 +143,37 @@ _CLI_LONG_SECRET_FLAG_RE = re.compile(
 _CLI_SHORT_PASSWORD_RE = re.compile(
     r"(?:(?<=\s)|^)(-p)([ \t]+|=)(?!\d+(?:\s|$))(\"[^\"]*\"|'[^']*'|[^\s]+)", re.IGNORECASE
 )
+# A short password flag glued to a quoted value.
+_CLI_GLUED_PASSWORD_RE = re.compile(r"(?:(?<=\s)|^)(-p)([\"'])([^\"']+)\2", re.IGNORECASE)
+# A user flag carrying both username and password: keep the username.
+_CLI_USER_PASSWORD_RE = re.compile(
+    r"(?:(?<=\s)|^)(-u|--username|--user)([ \t]+)([^\s:]+):([^\s]+)", re.IGNORECASE
+)
+# HTTP authorization schemes: the token, not the scheme word, is secret.
+_AUTHORIZATION_RE = re.compile(
+    r"((?:proxy-)?authorization\s*[:：=＝]\s*(?:bearer|basic|token|digest)\s+)([^\s,;，；]+)",
+    re.IGNORECASE,
+)
+# JSON/YAML quoted keys. The ordinary KV expression deliberately stays
+# unchanged for the old parser's group numbers.
+_JSON_KV_RE = re.compile(
+    r"(?P<key>[\"'][^\"'\n]+[\"'])\s*:\s*(?P<value>\"[^\"\n]*\"|'[^'\n]*'|\[REDACTED\]|[^,\s}\]]+)"
+)
+# A pgpass line has no labels: host:port:database:user:password. The tail
+# expression also covers the parser's already-truncated `port:db:user:pass`.
+PGPASS_LINE_RE = re.compile(
+    r"^(?=[A-Za-z0-9.\-]*(?:\.|localhost))([A-Za-z0-9.\-]+):(\d{0,5}):([^:\s]*):([^:\s]*):([^\s]+)$",
+    re.MULTILINE,
+)
+_PGPASS_TAIL_RE = re.compile(r"(?<![\w])(\d{1,5}:[^:\s]*:[^:\s]*:)([^\s]+)")
+# The parser can hand us a URI authority without its scheme.
+_SCHEMELESS_USERINFO_RE = re.compile(r"(?:(?<=^)|(?<=[\s(\[{]))(//)[^/\s?\"'<>]+@")
 
 
 def strip_uri_credentials(text: str) -> str:
-    """Remove the userinfo from every `scheme://user:password@host` URI."""
-    return _URI_USERINFO_RE.sub(r"\1", text)
+    """Remove userinfo from URIs, including an authority split from its scheme."""
+    text = _URI_USERINFO_RE.sub(r"\1", text)
+    return _SCHEMELESS_USERINFO_RE.sub(r"\1", text)
 
 
 def redact_uri_params(text: str) -> str:
@@ -145,9 +192,32 @@ def redact_uri_params(text: str) -> str:
 
 
 def redact_cli_secret_flags(text: str) -> str:
-    """Blank the value of a password flag on a command line."""
+    """Blank password values in command-line flags and authorization headers."""
+    text = _CLI_USER_PASSWORD_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{m.group(3)}:{REDACTED}", text)
     text = _CLI_LONG_SECRET_FLAG_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{REDACTED}", text)
-    return _CLI_SHORT_PASSWORD_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{REDACTED}", text)
+    text = _CLI_SHORT_PASSWORD_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}{REDACTED}", text)
+    text = _CLI_GLUED_PASSWORD_RE.sub(lambda m: f"{m.group(1)}{REDACTED}", text)
+    return _AUTHORIZATION_RE.sub(lambda m: f"{m.group(1)}{REDACTED}", text)
+
+
+def cli_user_password_spans(text: str) -> list[tuple[int, int]]:
+    """Spans of `-u user:password` values, for the old field extractor."""
+    return [match.span() for match in _CLI_USER_PASSWORD_RE.finditer(text)]
+
+
+def redact_pgpass(text: str) -> str:
+    """Blank the final field of a pgpass line or its truncated tail."""
+    return _PGPASS_TAIL_RE.sub(lambda match: f"{match.group(1)}{REDACTED}", text)
+
+
+def redact_json_secret_values(text: str) -> list[tuple[int, int]]:
+    """Return value spans for secret-class quoted keys in JSON-like text."""
+    spans: list[tuple[int, int]] = []
+    for match in _JSON_KV_RE.finditer(text):
+        key = match.group("key").strip("\"'")
+        if is_secret_key(key):
+            spans.append(match.span("value"))
+    return spans
 
 
 def uri_spans(text: str) -> list[tuple[int, int]]:
